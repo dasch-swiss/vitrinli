@@ -1,6 +1,6 @@
 # Building with Bazel
 
-[Bazel](https://bazel.build/) is the build system for SIPI. It owns
+[Bazel](https://bazel.build/) is the build system for Vitrinli. It owns
 the entire build graph — every C/C++ target (sipi binary, the native
 third-party `cc_library` deps, unit + approval tests), the OCI Docker
 image, and the Rust e2e + smoke test binaries.
@@ -190,14 +190,14 @@ For Linux-target builds from a macOS host, see
 
 ## Reference
 
-- [`MODULE.bazel`](https://github.com/dasch-swiss/sipi/blob/main/MODULE.bazel)
+- [`MODULE.bazel`](https://github.com/dasch-swiss/vitrinli/blob/main/MODULE.bazel)
   — module manifest + every third-party `http_archive` pin
-- [`.bazelrc`](https://github.com/dasch-swiss/sipi/blob/main/.bazelrc)
+- [`.bazelrc`](https://github.com/dasch-swiss/vitrinli/blob/main/.bazelrc)
   — flag defaults, sanitizer/fuzz configs, production hardening
   (stack-protector-strong, _FORTIFY_SOURCE=2, stack-clash-protection,
   BindNow) with per-config exemptions for asan/ubsan (which `--config=fuzz`
   inherits when paired with them)
-- [`tools/workspace_status.sh`](https://github.com/dasch-swiss/sipi/blob/main/tools/workspace_status.sh)
+- [`tools/workspace_status.sh`](https://github.com/dasch-swiss/vitrinli/blob/main/tools/workspace_status.sh)
   — emits `STABLE_*` keys consumed by `expand_template` and
   `oci_image`'s stamping
 - [Bazel: BUILD files](https://bazel.build/concepts/build-files)

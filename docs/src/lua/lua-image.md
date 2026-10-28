@@ -1,13 +1,13 @@
 # Lua image functions
-Through Lua scripting, SIPI allows a wide area of utilities to analyze, manipulate and convert images to/from
-different formats. This functionality allows to use SIPI e.g. for offering image upload and converting these images
+Through Lua scripting, Vitrinli allows a wide area of utilities to analyze, manipulate and convert images to/from
+different formats. This functionality allows to use Vitrinli e.g. for offering image upload and converting these images
 into IIIF conformant long-term storage formats (e.g. JPEG2000). It allows to programmatically modify an image
 before delivering it to the client, or to extract data from the images.
 
 The basic concept is a specialized Lua image object that offers all methods to manipulate images.
 
 ### SipiImage.new(filename)
-This method creates a new image object by reading an image file that has to be located somewhere on the SIPI server.
+This method creates a new image object by reading an image file that has to be located somewhere on the Vitrinli server.
 
 The simple forms are:
 
@@ -50,7 +50,7 @@ The meaning of the parameters are:
   `sha1`, `sha256`, `sha384` and `sha512`), but the checksum algorithm actually
   used is decided at write time.
 
-For example to read an image and include the SIPI preservation metadata,
+For example to read an image and include the Vitrinli preservation metadata,
 the function is called as follows:
 
     SipiImage.new("path_to_file", { original="my_image.tif", hash="md5" }
@@ -131,7 +131,7 @@ second parameter is a boolean; `true` mirrors the image before rotating.
 ### SipiImage.topleft()
 Rotates an image to the standard TOPLEFT orientation if necessary. Please note
 that viewers using tiling (e.g. [openseadragon](https://openseadragon.github.io)) require images in TOPLEFT rotation.
-Thus, it is highly recommended that all images served by SIPI IIIF will be set to TOPLEFT orientation. This process may
+Thus, it is highly recommended that all images served by Vitrinli IIIF will be set to TOPLEFT orientation. This process may
 involve rotation of 90, 180 or 270 degrees and possible mirroring which does _not_ change the pixel values through interpolation.
 
 ### SipiImage.watermark(wm-file-path)
@@ -146,7 +146,7 @@ be a single channel 8-Bit gray value TIFF file.
     success, filepath = img:write(filepath)
     success, filepath = img:write('HTTP.jpg')
 
-The first version writes the image to a file on the SIPI server, the second
+The first version writes the image to a file on the Vitrinli server, the second
 streams the encoded file over the HTTP connection (which is done whenever the
 basename of the output file is `HTTP` or `http`). On success the second
 return value is the given filepath.
@@ -221,7 +221,7 @@ consistent.
 Please note that MIME type handling can be quite complex, since the correspondence between file extensions and
 MIME types is not unambiguous. In addition the file signature cannot identify all MIME types. For example, a "comma
 separated values" file (extension `.csv`) can have a MIME type of `application/csv`, `text/csv`, `text/x-csv`,
-`application/vnd.ms-excel` and more. However, the file signature will usually return `text/plain`. SIPI tries to cope
+`application/vnd.ms-excel` and more. However, the file signature will usually return `text/plain`. Vitrinli tries to cope
 with these ambiguities.
 
 ### Example: Image Processing Pipeline

@@ -1,6 +1,6 @@
 # Benchmarking
 
-Sipi uses [Google Benchmark](https://github.com/google/benchmark) for in-process
+Vitrinli uses [Google Benchmark](https://github.com/google/benchmark) for in-process
 microbenchmarks of the production codec and the IIIF parser front door. The
 suite exists to enforce one convention:
 
@@ -12,8 +12,8 @@ suite exists to enforce one convention:
 The suite was motivated by Ruven Pillay's *Evaluating IIIF Server
 Performance* (IIIF Annual Conference 2026,
 `docs/benchmarks/01_Ruven_Pillay_Evaluating_IIIF_Server_Performance.pdf`),
-which benchmarked SIPI as the slowest server tested for TIFF and JPEG. The
-microbenchmarks measure *intra-SIPI* per-stage cost — what can be measured
+which benchmarked Vitrinli as the slowest server tested for TIFF and JPEG. The
+microbenchmarks measure *intra-Vitrinli* per-stage cost — what can be measured
 rigorously and locally; the PDF's cross-server, end-to-end HTTP comparison
 is deliberately out of scope (apples-to-oranges across machines and OSes).
 
@@ -27,7 +27,7 @@ co-located with the module it measures:
 | `parse` | `src/iiifparser/cpp/value_objects/parse_benchmark.cpp` | The five IIIF URL component parsers + the full per-request parse. Pure CPU, no fixtures. |
 | `decode` | `src/format_handlers/cpp/decode_benchmark.cpp` | `SipiImage::read()` across the input-format matrix (tiled-pyramid TIFF none/zstd/webp, JP2, plain-JPEG and flat-TIFF slow baselines) in two access shapes: full-resolution tile and `!256,256` thumbnail; plus a full decode of the ISO/IEC 15444-4 `file3.jp2` (chroma subsampled 2x2), read from the source tree. |
 | `process` | `src/image_processing/cpp/process_benchmark.cpp` | The operators between decode and encode: `scaleFast`/`scaleMedium`/`scale`, `rotate` (90° fast path + 45° general), `crop`, `to8bps`, `convertToIcc`, `removeChannel`. |
-| `encode` | `src/format_handlers/cpp/encode_benchmark.cpp` | `SipiImage::write()` for the four formats SIPI emits: JPEG (Q75/Q90), PNG, TIFF, JPEG2000. |
+| `encode` | `src/format_handlers/cpp/encode_benchmark.cpp` | `SipiImage::write()` for the four formats Vitrinli emits: JPEG (Q75/Q90), PNG, TIFF, JPEG2000. |
 
 Benchmarks are co-located with the module they measure (ADR-0003 direction:
 `*_benchmark.cpp` beside the source, the Abseil/Bloomberg-BDE/Chromium
@@ -39,7 +39,7 @@ and the coverage build, and `tags = ["manual"]` keeps the targets out of
 `bazel test //...`.
 
 HTJ2K is absent from the decode matrix: Kakadu's HT block coder is
-license-gated (`FBC_ENABLED`, evaluation-only) and the production SIPI
+license-gated (`FBC_ENABLED`, evaluation-only) and the production Vitrinli
 build can neither encode nor decode HT codestreams.
 
 ## Fixtures

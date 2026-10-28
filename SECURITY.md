@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you believe you have found a security vulnerability in SIPI, please report
+If you believe you have found a security vulnerability in Vitrinli, please report
 it privately by emailing **security@dasch.swiss**. Do not open a public GitHub
 issue for suspected vulnerabilities.
 

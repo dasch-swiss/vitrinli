@@ -1,6 +1,6 @@
-# Building SIPI from Source Code
+# Building Vitrinli from Source Code
 
-SIPI's build system is **Bazel** (orchestrating every C/C++ target,
+Vitrinli's build system is **Bazel** (orchestrating every C/C++ target,
 the OCI Docker image, and the Rust e2e + smoke tests). Nix's role
 is reduced to **provisioning a dev shell** with bazelisk + the host
 tools the `gh_release_archive` repository_rule needs on PATH (`gh`, for
@@ -31,7 +31,7 @@ provides), see **[Nix dev shell](nix.md)**.
 
 ### Kakadu (JPEG 2000)
 
-SIPI uses [Kakadu](http://kakadusoftware.com/), a proprietary JPEG
+Vitrinli uses [Kakadu](http://kakadusoftware.com/), a proprietary JPEG
 2000 toolkit licensed separately. The archive is published as a
 release asset on the private
 [`dasch-swiss/dsp-ci-assets`](https://github.com/dasch-swiss/dsp-ci-assets)
@@ -51,7 +51,7 @@ procedure.
 
 ### Adobe ICC Color Profiles
 
-SIPI uses Adobe ICC color profiles, which are downloaded
+Vitrinli uses Adobe ICC color profiles, which are downloaded
 automatically by the Bazel build. The user is responsible for
 reading and agreeing with Adobe's license conditions, which are
 specified in `Color Profile EULA.pdf` at the repo root.

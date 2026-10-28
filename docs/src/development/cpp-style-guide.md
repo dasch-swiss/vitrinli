@@ -683,7 +683,7 @@ For testing conventions, see [`testing-strategy.md`](testing-strategy.md).
 
 ## 4. C Library Boundary Safety
 
-Sipi wraps several C libraries (libtiff, libpng, libjpeg, Kakadu, lcms2, Lua). These boundaries are where the type system cannot help — mismatched types compile silently and cause undefined behavior at runtime. Follow these rules for all code that calls C library APIs.
+Vitrinli wraps several C libraries (libtiff, libpng, libjpeg, Kakadu, lcms2, Lua). These boundaries are where the type system cannot help — mismatched types compile silently and cause undefined behavior at runtime. Follow these rules for all code that calls C library APIs.
 
 ### 4.1 Type Width at Variadic C APIs
 
@@ -944,7 +944,7 @@ run-clang-tidy -p . -header-filter='.*' \
 ### Build Acceleration
 
 - **include-what-you-use (IWYU):** Complementary to clang-tidy; enforces the "self-contained headers" rule and removes unused includes
-- **compile_commands.json:** Generated on demand by `just compile-commands`; see [Developing SIPI](developing.md#clangd)
+- **compile_commands.json:** Generated on demand by `just compile-commands`; see [Developing Vitrinli](developing.md#clangd)
 
 ---
 

@@ -1,4 +1,4 @@
-# Developing SIPI
+# Developing Vitrinli
 
 ## Using an IDE
 
@@ -199,7 +199,7 @@ sanitized build (`bazel build --config=asan`) when investigating
 ASan findings.
 
 !!! note "Sequential execution"
-    Each test starts its own SIPI server on a unique port. The
+    Each test starts its own Vitrinli server on a unique port. The
     `sipi_e2e_test` Bazel macro sets `--test-threads=1` so this
     works out of the box.
 

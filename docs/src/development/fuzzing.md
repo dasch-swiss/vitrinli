@@ -414,7 +414,7 @@ the `fuzz-crashes-<target>` artifact of a green leg. `-timeout_exitcode=0`
 is needed on top of `-ignore_timeouts=1` because the fork parent exits with
 its *last* child's exit code, so a tolerated timeout in the final child would
 otherwise still fail the step with 70. Crashes and OOMs still fail the leg. The other seven legs keep the strict per-input timeout: a hang
-in libtiff/libjpeg/libpng or in SIPI's own code is a fixable finding.
+in libtiff/libjpeg/libpng or in Vitrinli's own code is a fixable finding.
 
 The ASan pass runs every leg with `ASAN_OPTIONS=detect_container_overflow=0`.
 The fuzz binary links the libFuzzer runtime, which hermetic-llvm builds
@@ -476,10 +476,10 @@ A nightly failure is a manual triage, not an auto-filed issue:
 
 2. **Classify the finding** before deciding what to do with it — a nightly
    failure is not automatically a codec bug:
-   - **Sanitizer report inside SIPI code.** A real bug. Steps 3-5 below apply
+   - **Sanitizer report inside Vitrinli code.** A real bug. Steps 3-5 below apply
      as written.
    - **Sanitizer report whose stack is entirely inside libFuzzer or the C++
-     runtime.** Not a SIPI finding. One observed instance was an ASan report
+     runtime.** Not a Vitrinli finding. One observed instance was an ASan report
      inside libFuzzer's own `Sha1ToString` → `std::basic_stringbuf::str()` →
      libc++'s internal-buffer initialisation, with the saved reproducer being
      the *empty input* — a tell that the finding sits outside the target
@@ -503,7 +503,7 @@ A nightly failure is a manual triage, not an auto-filed issue:
 4. **Commit the reproducer** into the target's checked-in corpus directory
    (`src/iiifparser/corpus/` or `src/format_handlers/corpus/<fmt>/`) alongside the fix,
    so it replays forever in the `//src/...` sweeps rather than only living in a
-   30-day CI artifact. Skip this for a finding classified outside SIPI code, and
+   30-day CI artifact. Skip this for a finding classified outside Vitrinli code, and
    never do it for a timeout.
 5. **Open a Linear issue** tracking the finding and its fix.
 

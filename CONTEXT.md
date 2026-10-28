@@ -1,32 +1,32 @@
-# SIPI image server
+# Vitrinli image server
 
-SIPI is the **IIIF subdomain implementation** of the **Access Area** bounded context in the wider [`dsp-repository`](https://github.com/dasch-swiss/dsp-repository) system. It serves IIIF Image API 3.0 and IIIF Presentation API requests over the OCFL-backed Preservation Files held by the `dsp-repository` Archive context — producing Access Files (image tiles, IIIF Manifests) for IIIF clients.
+Vitrinli is the **IIIF subdomain implementation** of the **Access Area** bounded context in the wider [`dsp-repository`](https://github.com/dasch-swiss/dsp-repository) system. It serves IIIF Image API 3.0 and IIIF Presentation API requests over the OCFL-backed Preservation Files held by the `dsp-repository` Archive context — producing Access Files (image tiles, IIIF Manifests) for IIIF clients.
 
-For the system-level view of where SIPI fits — the Archive context, the Access Area subdomain shapes (IIIF, HTML/DPE, Custom Presentation, Asset/Download, SPARQL), the Producer-side flow from VRE through RDU-Tooling, and the Access Area's other subdomain implementations — see the upstream [`dsp-repository` Context Map](https://github.com/dasch-swiss/dsp-repository/blob/main/CONTEXT-MAP.md).
+For the system-level view of where Vitrinli fits — the Archive context, the Access Area subdomain shapes (IIIF, HTML/DPE, Custom Presentation, Asset/Download, SPARQL), the Producer-side flow from VRE through RDU-Tooling, and the Access Area's other subdomain implementations — see the upstream [`dsp-repository` Context Map](https://github.com/dasch-swiss/dsp-repository/blob/main/CONTEXT-MAP.md).
 
 ## Published Language (from Access Area)
 
-These three terms are **shared Published Language across contexts** at the system level. SIPI consumes them on input and produces them on output:
+These three terms are **shared Published Language across contexts** at the system level. Vitrinli consumes them on input and produces them on output:
 
-- **Preservation File** — owned by the Archive context. The canonical, long-term-stable byte stream stored in OCFL. SIPI reads these via the Archive's Binary retrieval API during Service File derivation.
-- **Service File** — owned by the Access Area context. The derivative form optimised for fast access (e.g. pyramidal TIFF or JP2 with an `Essentials` carrier for SIPI). Materialised by an Access Area subdomain (this one) on subscription to Archive events.
-- **Access File** — owned by the Access Area subdomain that serves the request. The on-the-wire form a Consumer actually receives — for SIPI, an IIIF tile (JPEG/PNG/TIFF/WebP) carved out of a Service File by the IIIF pipeline.
+- **Preservation File** — owned by the Archive context. The canonical, long-term-stable byte stream stored in OCFL. Vitrinli reads these via the Archive's Binary retrieval API during Service File derivation.
+- **Service File** — owned by the Access Area context. The derivative form optimised for fast access (e.g. pyramidal TIFF or JP2 with an `Essentials` carrier for Vitrinli). Materialised by an Access Area subdomain (this one) on subscription to Archive events.
+- **Access File** — owned by the Access Area subdomain that serves the request. The on-the-wire form a Consumer actually receives — for Vitrinli, an IIIF tile (JPEG/PNG/TIFF/WebP) carved out of a Service File by the IIIF pipeline.
 
-Use these terms in code, commits, ADRs, and PR descriptions when crossing the seam to the Archive or to another Access Area subdomain. Do not synonymize them with SIPI-internal vocabulary.
+Use these terms in code, commits, ADRs, and PR descriptions when crossing the seam to the Archive or to another Access Area subdomain. Do not synonymize them with Vitrinli-internal vocabulary.
 
 ## Upstream language (from the VRE)
 
-SIPI also runs inside the **VRE** — `dsp-api` and `dsp-ingest` — where researchers
+Vitrinli also runs inside the **VRE** — `dsp-api` and `dsp-ingest` — where researchers
 upload material and work on it before anything is archived. The VRE has its own
-vocabulary, and SIPI meets it at one seam: the access decision the *Preflight
+vocabulary, and Vitrinli meets it at one seam: the access decision the *Preflight
 script* fetches from `dsp-api` (`GET /admin/files/{shortcode}/{filename}`). That
-payload is authored by the VRE and speaks VRE terms; SIPI translates on receipt.
+payload is authored by the VRE and speaks VRE terms; Vitrinli translates on receipt.
 
 - **Original** — the byte stream a researcher uploaded. `dsp-ingest` serves it at
-  `/projects/{shortcode}/assets/{assetId}/original`. SIPI never serves an Original
+  `/projects/{shortcode}/assets/{assetId}/original`. Vitrinli never serves an Original
   under that name.
 - **Derivative** — what `dsp-ingest` produces from an Original at upload time and
-  what SIPI serves, whether through the IIIF pipeline as an *Image* or as-is
+  what Vitrinli serves, whether through the IIIF pipeline as an *Image* or as-is
   through `/file` as a *Bitstream*.
 
 **Only still images are transcoded.** `IngestService` dispatches on media type,
@@ -42,16 +42,16 @@ treats withholding one as withholding the content is wrong for those kinds.
 lifecycle rather than a translation table. When material is archived, the
 Original is archived *and* a *Preservation File* is derived from it for long-term
 bit preservation; the Access Area separately derives a *Service File*, from which
-SIPI carves *Access Files*. So an Original and a Preservation File are different
+Vitrinli carves *Access Files*. So an Original and a Preservation File are different
 artifacts that coexist, as are a Derivative and a Service File.
 
 Use VRE terms only when describing that seam — the preflight payload and the
 callers on either side of it. Everywhere else in this repo, the Access Area terms
-above and the SIPI glossary remain canonical.
+above and the Vitrinli glossary remain canonical.
 
-## Subdomain language (SIPI-local)
+## Subdomain language (Vitrinli-local)
 
-The canonical SIPI glossary is in [UBIQUITOUS_LANGUAGE.md](./UBIQUITOUS_LANGUAGE.md). It defines: Image vs Bitstream, Identifier (with embedded Page) + Prefix, Image root vs Document root, the IIIF pipeline terms (Region / Size / Rotation / Quality / Format / Decode level / Canonical URL / Cache key), Format handler vs Codec, Preservation metadata (umbrella) over Embedded metadata + Essentials packet, Image / Bitstream Information document, the three Lua entry points (Init script / Preflight script / Route handler), the eight Permission types, and the Throttling umbrella over Admission (the shell-side two-lane pool) + Decode memory budget.
+The canonical Vitrinli glossary is in [UBIQUITOUS_LANGUAGE.md](./UBIQUITOUS_LANGUAGE.md). It defines: Image vs Bitstream, Identifier (with embedded Page) + Prefix, Image root vs Document root, the IIIF pipeline terms (Region / Size / Rotation / Quality / Format / Decode level / Canonical URL / Cache key), Format handler vs Codec, Preservation metadata (umbrella) over Embedded metadata + Essentials packet, Image / Bitstream Information document, the three Lua entry points (Init script / Preflight script / Route handler), the eight Permission types, and the Throttling umbrella over Admission (the shell-side two-lane pool) + Decode memory budget.
 
 Prefer the glossary's canonical terms over the variant spellings in older code.
 
@@ -77,7 +77,7 @@ removal as ordinary top-level packages:
   `shttps::Error`, `shttps::Global`, `shttps::urldecode`).
 - `src/scripting/rust/` — the Rust-hosted mlua Lua runtime (ADR-0023): the
   hardened per-request VM, all `server.*`/`SipiImage`/sqlite bindings (JWT
-  sign/verify included, via `jsonwebtoken`), and SIPI's three Lua entry points.
+  sign/verify included, via `jsonwebtoken`), and Vitrinli's three Lua entry points.
 
 Their C++ symbols keep `namespace shttps` (only the file/package location moved),
 so a `shttps::` qualifier in code refers to one of these surviving modules, not to
@@ -85,7 +85,7 @@ a deleted HTTP transport. `src/shttps/` no longer exists.
 
 ### Naming clarification
 
-SIPI's **Route handler** (in `UBIQUITOUS_LANGUAGE.md`) is a *Lua script* bound to a
-URL pattern, run inside a request-scoped hardened VM of the Rust mlua runtime. SIPI's IIIF `/file`
+Vitrinli's **Route handler** (in `UBIQUITOUS_LANGUAGE.md`) is a *Lua script* bound to a
+URL pattern, run inside a request-scoped hardened VM of the Rust mlua runtime. Vitrinli's IIIF `/file`
 endpoint (the **Bitstream** path-through) is the `FILE_DOWNLOAD` case of the Rust
 IIIF classifier (`//src/iiifparser/rust:iiif_parser`), which reads from the **image root**.

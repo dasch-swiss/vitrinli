@@ -64,7 +64,7 @@ directly at the `catch` site, outside `policy_for`.
 
 ## Embedded metadata parse failures are fatal on read
 
-SIPI is a repository: it must not admit corrupt material. Every embedded
+Vitrinli is a repository: it must not admit corrupt material. Every embedded
 metadata blob a decode path hands to `Exif::parse`, `Iptc::parse`, or
 `Icc::parse` (JPEG's APP1/APP2/APP13 segments, J2K's UUID boxes and
 `colr` box, PNG's `iCCP`/`zTXt` chunks, TIFF's IPTC/ICC tags) must parse
@@ -89,7 +89,7 @@ chunk (`src/format_handlers/cpp/SipiIOPng.cpp`).
 `SipiIOTiff::writeExif` applies the same fatal-on-corruption stance to the
 write path. libtiff converts an EXIF rational tag to a `float` before
 storing it, so a scalar rational `n/0` with `n != 0` has no valid float
-representation; SIPI treats it as corrupt metadata and rejects the write
+representation; Vitrinli treats it as corrupt metadata and rejects the write
 with `kMetadataParseFailed` rather than silently dropping it. A scalar
 `0/0`, by contrast, is EXIF's own "no value" convention (e.g. an
 unmeasured `BrightnessValue`) and carries no value to reject — it is

@@ -1,16 +1,16 @@
 ---
-title: SIPI Documentation
-description: Documentation for SIPI, a high-performance IIIF-compatible media server
+title: Vitrinli Documentation
+description: Documentation for Vitrinli, a high-performance IIIF-compatible media server
 ---
 
-# SIPI Documentation
+# Vitrinli Documentation
 
-Welcome to the documentation for **SIPI** (Simple Image Presentation Interface).
+Welcome to the documentation for **Vitrinli** (formerly SIPI, the Simple Image Presentation Interface).
 
 ## User Guide
 
-- **[Overview](guide/index.md)** — What SIPI is and what it does
-- **[Introduction](guide/introduction.md)** — IIIF concepts and SIPI use cases
+- **[Overview](guide/index.md)** — What Vitrinli is and what it does
+- **[Introduction](guide/introduction.md)** — IIIF concepts and Vitrinli use cases
 - **[Reference](guide/sipi.md)** — IIIF URL syntax, CLI options, configuration parameters
 - **[Running](guide/running.md)** — CLI usage, server mode, logging, exit codes
 
