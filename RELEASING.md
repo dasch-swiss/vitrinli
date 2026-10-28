@@ -1,4 +1,4 @@
-# Releasing SIPI
+# Releasing Vitrinli
 
 Releases are fully automated via [release-please](https://github.com/googleapis/release-please).
 CI/CD details live in [`docs/src/development/ci.md`](docs/src/development/ci.md);

@@ -1,25 +1,25 @@
-# SIPI Lua Interface
-SIPI has an embedded [LUA](http://www.lua.org) interpreter. LUA is a simple script language that was developped
+# Vitrinli Lua Interface
+Vitrinli has an embedded [LUA](http://www.lua.org) interpreter. LUA is a simple script language that was developped
 specifically to be embedded into applications. For example the games [minecraft](https://www.minecraft.net) and
 [World of Warcraft](https://worldofwarcraft.com/de-de/) make extensive use of LUA scripting for customization and programming extensions.
 
-Each HTTP request to SIPI runs in a fresh, independent Lua instance
+Each HTTP request to Vitrinli runs in a fresh, independent Lua instance
 (language version 5.3). Therefore, LUA may be used in the following contexts:
 
 - Preflight function
 - Embedded in HTML pages
-- RESTful services using the SIPI routing
+- RESTful services using the Vitrinli routing
 
-Each lua-instance in SIPI includes additional SIPI-specific information:
+Each lua-instance in Vitrinli includes additional Vitrinli-specific information:
 
-- global variables about the SIPI configuration
+- global variables about the Vitrinli configuration
 - information about the current HTTP request
-- SIPI specific functions for
+- Vitrinli specific functions for
   - processing the request and send back information
   - getting image information and transforming images
   - accessing SQLite databases
 
-In general, the SIPI LUA function make use that a Lua function's return value may consist of
+In general, the Vitrinli LUA function make use that a Lua function's return value may consist of
 more than one element (see [Multiple Results](http://www.lua.org/pil/5.3.html)):
 
 *Each request runs in its own thread with its own, freshly built Lua VM.
@@ -88,10 +88,10 @@ Scripts run in a hardened, per-request Lua VM:
 ## Preflight function
 It is possible to define a LUA pre-flight function for *IIIF*-requests and independently one for *file*-requests
 (indicated by a _/file_ postfix in the URL). Both are optional and are best located in the init-script (see
-[configuration options](../guide/sipi.md#setup-of-sipi-directories) of SIPI). It is executed after the incoming
+[configuration options](../guide/sipi.md#setup-of-vitrinli-directories) of Vitrinli). It is executed after the incoming
 HTTP request data has been processed but before an action to respond to the request has been taken. It should
 be noted that the pre-flight script is only executed for IIIF-specific requests (either using the IIIF URL-syntax or the
-_/file_ postfix). All other HTTP requests are being directed to "normal" HTTP-server part of SIPI.
+_/file_ postfix). All other HTTP requests are being directed to "normal" HTTP-server part of Vitrinli.
 These can utilize the lua functionality by embedding LUA commands within the HTML.
 
 ### IIIF preflight function
@@ -109,7 +109,7 @@ The preflight function takes 3 parameter:
   *http(s)://{server}/__{prefix}__/{id}/{region}/{size}/{rotation}/{quality}.{format}*  
   Please note that the prefix may contain several "/" that can be used as path to the repository file
 - `identifier`: The image identifier (which must not correspond to an actual filename in the media files repositoy
-  of the SIPI IIIF server)
+  of the Vitrinli IIIF server)
   [mandatory]
 - `cookie`: A cookie containing authorization information. Usually the cookie contains a Json Web Token [optional]
 
@@ -146,10 +146,10 @@ The pre-flight function must return at least 2 parameters:
      `knora.json`. A size that leaves an axis below 2 px is refused with or without a watermark. An
      image already inside a box size (e.g. 100×80 under `!128,128`) is served at its native size.
     - `"stream"` marks the representation as one to be consumed in place rather than kept as a file —
-      streamed audio or video, typically. **It expresses intent and enforces nothing:** SIPI serves a
+      streamed audio or video, typically. **It expresses intent and enforces nothing:** Vitrinli serves a
       `stream` decision exactly as `allow`, with the same bytes and the same headers, and only counts
       it (`sipi.preflight.decisions{permission="stream"}`). Do not rely on it as an access control.
-    - SIPI also supports the [IIIF Authentification API](https://iiif.io/api/auth/1.0/). See section [IIIF
+    - Vitrinli also supports the [IIIF Authentification API](https://iiif.io/api/auth/1.0/). See section [IIIF
       Authentification]() on how to implement this feature in the pre-flight function.
 - `filepath`: The path to the Service File in the media files repository. This path can be assembled using the
   `prefix` and `identifier` using any additional information (e.g. accessing a database or using the LUA restful client)
@@ -170,7 +170,7 @@ Above example preflight function allows all files to be served without restricti
 
 #### Preflight access-cache (opt-in) and its contract
 
-SIPI can cache the `pre_flight` access decision to avoid re-running the hook for
+Vitrinli can cache the `pre_flight` access decision to avoid re-running the hook for
 repeated requests to the same image, which matters when the hook makes a remote
 call (e.g. to an auth service). The cache is **disabled by default** and is enabled
 with `--preflight-cache-ttl <secs>` / `SIPI_PREFLIGHT_CACHE_TTL` (the TTL is the
@@ -194,11 +194,11 @@ the keyed fields.
 
 #### More complex example of preflight function 
 
-The following example uses some SIPI lua funtions
+The following example uses some Vitrinli lua funtions
 to access an authorization server to check if the user (identified by a cookie) is allowed to see the specific image. We are
-using [Json Web Tokens](https://jwt.io) (JWT) which are supported by SIPI specific LUA functions. Please note that the
-SIPI JTW-functions support an arbitrary payload that has not to follow the JWT recommendations. In order to encode, the
-JWT_ALG_HS256 is beeing used together with the key that is defined in the SIPI configuration as
+using [Json Web Tokens](https://jwt.io) (JWT) which are supported by Vitrinli specific LUA functions. Please note that the
+Vitrinli JTW-functions support an arbitrary payload that has not to follow the JWT recommendations. In order to encode, the
+JWT_ALG_HS256 is beeing used together with the key that is defined in the Vitrinli configuration as
 [jwt_secret](../guide/sipi.md#jwt-secret).
 ```lua
 function pre_flight(prefix, identifier, cookie) 
@@ -263,7 +263,7 @@ Above example assumes that the cookie data is a string that contains encrypted u
 Jason Web Token. This token is decoded and the information about the image to be displayed is added. Then the information
 is encoded as a new token that ist transmitted to the RESTful interface of the authentification server. The answer is
 assumed to be json containing information about the type ('allow', 'deny', 'restrict') and the restriction settings.
-The pre-flight function uses the following SIPI-specific LUA global variables and function:
+The pre-flight function uses the following Vitrinli-specific LUA global variables and function:
 
 - [config.imgroot](#configimgroot): (Global variable) Root directory of the image repository.
 - [server.http()](#serverhttp): (Function) Used to create a RESTful GET request.
@@ -289,15 +289,15 @@ function file_pre_flight(filepath, cookie)
     end
 end
 ```
-This script would deny all other file access and the SIPI IIIF server responds with a `401 Unauthorized` error.
+This script would deny all other file access and the Vitrinli IIIF server responds with a `401 Unauthorized` error.
 
 ## LUA embedded in HTML
-The HTTP server that is included in SIPI can serve any type of file which are just transfered as is to the client.
-However, if a file has an extension of `.elua`, it is assumed to be a HTML file with embedded LUA code. ALL SIPI-specific
+The HTTP server that is included in Vitrinli can serve any type of file which are just transfered as is to the client.
+However, if a file has an extension of `.elua`, it is assumed to be a HTML file with embedded LUA code. ALL Vitrinli-specific
 LUA functions and global variables are available.
 
 Embedding works with the special tag `<lua>` and `</lua>`. All text between the opening and closing tag is interpreted
-as LUA code. SIPI provides an extra LUA function to output data to the client ([server.print](#serverprint)). Thus, dynamic,
+as LUA code. Vitrinli provides an extra LUA function to output data to the client ([server.print](#serverprint)). Thus, dynamic,
 server-generated HTML may be created. A sample page that displays some information about the server configuration and
 client info could like follows:
 ```html
@@ -410,23 +410,23 @@ proteced by a user name and password. It is used as follows by adding the follow
 ```
 where `expectedUser` and `extectedPassword` are the user/password combination the user is expected to enter.
 
-### File uploads to SIPI
+### File uploads to Vitrinli
 
-The SIPI specific LUA function allow the upload of files using POST requests with `multipart/form-data` content.
+The Vitrinli specific LUA function allow the upload of files using POST requests with `multipart/form-data` content.
 The global variable `server.uploads` contains`the information about the uploads. The following variables and
 function help to deal with uploads:
 
 - [server.uploads](#serveruploads) : information about the files in the upload request.
 - [server.copyTmpfile](#servercopytmpfile) : copies a fie from the upload location to the destination directory.
 
-In addition the file system functions that SIPI provides may be used.
+In addition the file system functions that Vitrinli provides may be used.
 
 See the scripts `upload.elua` and `do-upload.elua` in the server directory, and `upload.lua` in the scripts directory
 for a working example.
 
 ## RESTful API and custom routes
 
-Custom routes to implement a RESTful API can be defined in Sipi's configuration file using the
+Custom routes to implement a RESTful API can be defined in Vitrinli's configuration file using the
 `routes` configuration variable. For example:
 
     routes = {
@@ -442,7 +442,7 @@ Custom routes to implement a RESTful API can be defined in Sipi's configuration 
         }
     }
 
-Sipi looks for these scripts in the directory specified by `scriptdir`
+Vitrinli looks for these scripts in the directory specified by `scriptdir`
 in its configuration file. The first route that matches the beginning of
 the requested URL path will be used.
 
@@ -454,7 +454,7 @@ the requested URL path will be used.
 > secrets in a `Cookie` or `Authorization` header (the `pre_flight` examples
 > above use a cookie), never in the URL.
 
-## IIIF Authentication API 1.0 in SIPI
+## IIIF Authentication API 1.0 in Vitrinli
 The `pre_flight` function is also responsible for activating the IIIF Auth API. In order to do so, the pre_flight script
 returns a table that contains all necessary information. For details about the IIIF Authentication API 1.0 see the
 [IIIF documentation](https://iiif.io/api/auth/1.0/). The following fields have to be returned by the
@@ -487,18 +487,18 @@ return {
 }, filepath
 ```
 
-SIPI will use this information returned by the `pre_flight` function to return the appropriate responses to the
+Vitrinli will use this information returned by the `pre_flight` function to return the appropriate responses to the
 client requests based on the IIIF Authentication API 1.0. Check for support of the IIIF Authentication API 1.0
 for [mirador](https://projectmirador.org) and [universalviewer](https://universalviewer.io), both applications which
 suppport the IIIF standards.
 
 
-## SIPI variables available to Lua scripts
-There are many globally accessible LUA variables made available which reflext the configuration of SIPI and the
+## Vitrinli variables available to Lua scripts
+There are many globally accessible LUA variables made available which reflext the configuration of Vitrinli and the
 state of the server and request. This variables a read only and created for every request.
 
-### SIPI configuration variables
-This variables are defined ither in the configuration file if SIPI, in environemt variables at startup or
+### Vitrinli configuration variables
+This variables are defined ither in the configuration file if Vitrinli, in environemt variables at startup or
 as command line option when starting the server.
 
 #### config.hostname
@@ -512,14 +512,14 @@ preview URLs). Defaults to `localhost`; not used by the server itself.
 
     config.port
     
-Portnumber where the SIPI server listens
+Portnumber where the Vitrinli server listens
 (see [serverport](../guide/sipi.md#portnum) in configuration description).
 
 #### config.sslport
 
     config.sslport
     
-Portnumber for SSL connections of SIPI
+Portnumber for SSL connections of Vitrinli
 (see [sslport](../guide/sipi.md#sslport) in configuration description).
 
 ####config.imgroot
@@ -589,10 +589,10 @@ Maximal number of files in cache.
 
     config.jpeg_quality
     
-Unfortunately, the IIIF Image API does not allow to give a JPEG quality (=compression) on the IIIF URL. SIPI
+Unfortunately, the IIIF Image API does not allow to give a JPEG quality (=compression) on the IIIF URL. Vitrinli
 allows to configure the compression quality system wide with this parameter. Allowed values are in he range
 \[1..100\] where 1 the worst quality (and highest compression factor = smallest file size) and 100 the highest
-quality (with lowest compression factor = biggest file size). Please note that SIPI is not able to provide
+quality (with lowest compression factor = biggest file size). Please note that Vitrinli is not able to provide
 lossless compression for JPEG files.
 (see [jpeg_quality](../guide/sipi.md#jpegquality) in configuration description).
 
@@ -617,8 +617,8 @@ Maximal size of POST data allowed
 Temporary directory to store uploads.
 (see [tmpdir](../guide/sipi.md#tmpdir) in configuration description).
 
-### SIPI Server Variables
-Sipi server variables are dependent on the incoming request and are created by SIPI automatically for each
+### Vitrinli Server Variables
+Vitrinli server variables are dependent on the incoming request and are created by Vitrinli automatically for each
 request.
 
 #### server.method
@@ -631,7 +631,7 @@ The HTTP request method. Is one of `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DEL
 
     server.has_openssl
     
-`true` if OpenSSL is available. This variable is determined compilation time. Usually SSL should be included, but SIPI
+`true` if OpenSSL is available. This variable is determined compilation time. Usually SSL should be included, but Vitrinli
 can be compiled without SSL support. There is no option in the configuration file for this.
 
 #### server.secure
@@ -644,13 +644,13 @@ can be compiled without SSL support. There is no option in the configuration fil
 
     server.host
     
-The hostname of the Sipi server that was used in the request.
+The hostname of the Vitrinli server that was used in the request.
 
 #### server.client\_ip
 
     server.client_ip
     
-The IPv4 or IPv6 address of the client connecting to Sipi.
+The IPv4 or IPv6 address of the client connecting to Vitrinli.
 
 #### server.client\_port
 
@@ -662,7 +662,7 @@ The port number of the client socket.
 
     server.uri
     
-The URL path used to access Sipi (does not include the hostname).
+The URL path used to access Vitrinli (does not include the hostname).
 
 #### server.header
 
@@ -737,7 +737,7 @@ end
 ```
 
 ### Knora-specific variables
-The development of SIPI came out of the need to have a flexible, high performance IIIF server for the Swiss National
+The development of Vitrinli came out of the need to have a flexible, high performance IIIF server for the Swiss National
 research infrastructure [Data and Service Center for the Humanities](https://dasch.swiss) (DaSCH). The aim of the DaSCH
 is to guarantee long-term accessibility of research data from the Humanities. The operates a specialized platform
 [Knora](https://knora.org). The following variables are for internal use only.
@@ -746,7 +746,7 @@ is to guarantee long-term accessibility of research data from the Humanities. Th
 
     config.knora_path
     
-Path to knora REST API (only for SIPI used with Knora)
+Path to knora REST API (only for Vitrinli used with Knora)
 
 #### config.knora\_port
 
@@ -755,15 +755,15 @@ Path to knora REST API (only for SIPI used with Knora)
 Port that the Knora API uses
 
 
-## SIPI functions available to Lua scripts
+## Vitrinli functions available to Lua scripts
 
-Sipi provides the following functions that can be called from Lua
+Vitrinli provides the following functions that can be called from Lua
 scripts. Each function returns two values. The first value is `true` if
 the operation succeeded, `false` otherwise. If the operation succeeded,
 the second value is the result of the operation, otherwise it is an
 error message.
 
-### SIPI Connection Functions
+### Vitrinli Connection Functions
 These LUA function alter the way the HTTP connection is handled.
 
 #### server.setBuffer
@@ -903,7 +903,7 @@ Example:
     end
 
 
-### SIPI File System Function
+### Vitrinli File System Function
 These functions offer tools to manipuale files and directories, and to gather file information.
 
 #### server.fs.ftype
@@ -1025,7 +1025,7 @@ Hardened semantics:
 -   The response body is capped at 16 MiB; a larger body fails the call.
 -   Authentication is not supported.
 
-When SIPI is handling a request under an active distributed trace, `server.http`
+When Vitrinli is handling a request under an active distributed trace, `server.http`
 automatically adds a W3C `traceparent` header to the outbound request so the
 downstream service continues the same trace (e.g. a `pre_flight` authorization
 call to dsp-api). If the `header` table already contains a `traceparent`, that
@@ -1146,7 +1146,7 @@ mimetype corresponds to the file extension.
 
     success, errormsg = server.copyTmpfile(from, to)
 
-Sipi saves each uploaded file in a temporary location (given by the
+Vitrinli saves each uploaded file in a temporary location (given by the
 config variable `tmpdir`) and deletes it after the request has been
 served. This function is used to copy the file to another location where
 it can be retrieved later. Returns `true, nil` on success or
@@ -1218,7 +1218,7 @@ on success or `false, errormsg` on failure.
 
 ## Helper Functions
 
-The `helper` table carries SIPI-internal helpers.
+The `helper` table carries Vitrinli-internal helpers.
 
 #### helper.filename\_hash
 
@@ -1226,7 +1226,7 @@ The `helper` table carries SIPI-internal helpers.
 success, hashed_path = helper.filename_hash(filename)
 ```
 
-Converts a filename into SIPI's hashed storage path (the on-disk layout the
+Converts a filename into Vitrinli's hashed storage path (the on-disk layout the
 repository uses). Returns `true, hashed_path` on success or
 `false, errormsg` on failure.
 

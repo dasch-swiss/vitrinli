@@ -1,6 +1,6 @@
-# Running SIPI
+# Running Vitrinli
 
-SIPI can be run either as a command-line image converter or as an IIIF media server.
+Vitrinli can be run either as a command-line image converter or as an IIIF media server.
 
 ## Quick Start with Docker
 
@@ -8,9 +8,9 @@ SIPI can be run either as a command-line image converter or as an IIIF media ser
 docker run -p 1024:1024 daschswiss/sipi
 ```
 
-## Running SIPI as a Command-line Image Converter
+## Running Vitrinli as a Command-line Image Converter
 
-SIPI now uses verb-noun subcommands (`convert`, `query`, `compare`,
+Vitrinli now uses verb-noun subcommands (`convert`, `query`, `compare`,
 `verify`, `server`, `health`) instead of the legacy `--convert` / `--query` /
 `--compare` / `--file` / `--outf` flags. A bare `sipi` invocation
 errors with a usage message — every operation needs an explicit
@@ -34,7 +34,7 @@ Compare two image files pixel-wise:
 sipi compare file1.tif file2.jpg
 ```
 
-## Running SIPI as a Server
+## Running Vitrinli as a Server
 
 ```bash
 sipi server --config config/sipi.config.lua
@@ -71,13 +71,13 @@ admin = {
 
 `--config` accepts either a Lua file (`.lua`) or a TOML file (`.toml`),
 dispatched on the extension. The Lua file is parsed by the engine's Lua VM
-(SIPI's historical format); a TOML file is parsed directly by the server and
+(Vitrinli's historical format); a TOML file is parsed directly by the server and
 needs no Lua VM in the config path. Route *scripts* are always Lua — TOML
 replaces the config *file*, not the scripting.
 
 > **TOML config is experimental.** It is the first of the native (Rust/TOML)
-> alternatives SIPI is introducing for everything Lua is used for today (see
-> [ADR-0017](https://github.com/dasch-swiss/sipi/blob/main/docs/adr/0017-extensibility-lua-and-rust.md)).
+> alternatives Vitrinli is introducing for everything Lua is used for today (see
+> [ADR-0017](https://github.com/dasch-swiss/vitrinli/blob/main/docs/adr/0017-extensibility-lua-and-rust.md)).
 > The schema may change without the usual compatibility guarantees until it is
 > validated in production; the server logs a warning on startup when a `.toml`
 > config is loaded. The Lua config path stays fully supported. Once the native
@@ -178,7 +178,7 @@ container/orchestrator liveness command (see
 
 ## Logging
 
-SIPI uses two logging modes depending on how it is running:
+Vitrinli uses two logging modes depending on how it is running:
 
 - **CLI mode** (`convert`, `compare`, `query`): Plain text output.
   Errors go to **stderr**, informational messages go to **stdout**.
@@ -194,7 +194,7 @@ SIPI uses two logging modes depending on how it is running:
 
 ### Log Levels
 
-SIPI supports the following log levels (in order of increasing severity):
+Vitrinli supports the following log levels (in order of increasing severity):
 
 | Level | Description |
 | ----- | ----------- |
@@ -407,7 +407,7 @@ flags.
 
 ### Exit Codes
 
-When running SIPI as a command-line image converter, the process exit code indicates
+When running Vitrinli as a command-line image converter, the process exit code indicates
 whether the conversion succeeded:
 
 - **0** — Success. The output file was written correctly.
@@ -423,7 +423,7 @@ non-200).
 
 ### Error Output
 
-On failure, SIPI prints a short error message to **stderr** indicating the failure
+On failure, Vitrinli prints a short error message to **stderr** indicating the failure
 phase and the specific error. The format is:
 
 ```
@@ -452,7 +452,7 @@ and the error message. This is the diagnostic surface for CLI failures —
 
 | Error | Meaning |
 | ----- | ------- |
-| Unsupported colorspace (JCS_UNKNOWN) | The JPEG uses a colorspace SIPI cannot convert. Re-encode the source image in sRGB. |
+| Unsupported colorspace (JCS_UNKNOWN) | The JPEG uses a colorspace Vitrinli cannot convert. Re-encode the source image in sRGB. |
 | Unsupported bits/sample | Only 8 and 16 bits/sample are supported. Images with other bit depths must be converted first. |
 | Channel/colorspace mismatch | The number of channels does not match the declared colorspace (e.g., 4 channels but RGB). The file metadata may be corrupt. |
 | ICC profile incompatible | The ICC profile does not match the channel count (e.g., CMYK profile on a 3-channel image). |
@@ -462,7 +462,7 @@ and the error message. This is the diagnostic surface for CLI failures —
 
 ### Integration Notes for Calling Services
 
-If you call SIPI CLI from another service (e.g., a Java service):
+If you call Vitrinli CLI from another service (e.g., a Java service):
 
 1. **Check the exit code.** Non-zero means failure — do not assume the output file
    exists or is valid.
@@ -475,7 +475,7 @@ If you call SIPI CLI from another service (e.g., a Java service):
 
 ## Configuration Files
 
-SIPI's configuration file is written in [Lua](https://www.lua.org/). You
+Vitrinli's configuration file is written in [Lua](https://www.lua.org/). You
 can make your own configuration file by adapting
 `config/sipi.config.lua`.
 
@@ -490,16 +490,16 @@ For more information, see the comments in `config/sipi.config.lua` and the
 
 ### HTTPS Support
 
-SIPI supports SSL/TLS encryption if the
+Vitrinli supports SSL/TLS encryption if the
 [OpenSSL](https://www.openssl.org/) library is installed. You will need
 to install a certificate; see `config/sipi.config.lua` for instructions.
 
 ### IIIF Prefixes
 
-SIPI supports [IIIF Image API
+Vitrinli supports [IIIF Image API
 URLs](https://iiif.io/api/image/3.0/#21-image-request-uri-syntax).
 
 If the configuration property `prefix_as_path` is set to `true`, the
 IIIF `prefix` portion of the URL is interpreted as a subdirectory of
-`imgroot`, and SIPI looks for the requested image file in that
+`imgroot`, and Vitrinli looks for the requested image file in that
 subdirectory. Otherwise, it looks for the file in `imgroot`.

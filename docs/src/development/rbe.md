@@ -1,6 +1,6 @@
 # Remote Build Execution
 
-This page documents SIPI's Remote Build Execution (RBE) setup: its purpose, how the
+This page documents Vitrinli's Remote Build Execution (RBE) setup: its purpose, how the
 cross-compilation pattern works, the key correctness fix in the hermetic-llvm toolchain,
 measured performance characteristics, and how CI wires everything together.
 
@@ -11,7 +11,7 @@ in [`infra`](https://github.com/dasch-swiss/infra)
 (`OS/ansible/roles/dasch.nativelink`, including its README and store-topology
 notes).
 
-## Why SIPI uses RBE
+## Why Vitrinli uses RBE
 
 The goal is **cross-compilation**: building all three supported targets — `linux-amd64`,
 `linux-aarch64`, and `darwin-aarch64` — on a single x86_64 worker, so each GitHub Actions
@@ -195,7 +195,7 @@ E2E tests are tagged `exclusive-if-local` and `no-sandbox` in
 - `no-sandbox` disables the Bazel sandbox for the TEST RUN only (the compile is
   unaffected). It does not prevent cross-compilation.
 
-The reason e2e tests need `no-sandbox` at all: SIPI's `validate_resolved_path` guard
+The reason e2e tests need `no-sandbox` at all: Vitrinli's `validate_resolved_path` guard
 in `src/server/rust/src/path.rs` canonicalises the request path via `realpath(3)`
 (Rust's `std::fs::canonicalize`). Under the Bazel sandbox, path resolution returns the
 writable runfiles path rather than the `TEST_TMPDIR` copy, so sipi rejects legitimate

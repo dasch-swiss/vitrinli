@@ -1,6 +1,6 @@
 # Admission Control
 
-SIPI admits requests through a **cost-based two-partition pool** that protects
+Vitrinli admits requests through a **cost-based two-partition pool** that protects
 viewer tile traffic and the RAM envelope from expensive full-image decodes
 (overwhelmingly distributed crawler bots). Each request is classified into a
 **Tile** or **Full** partition; tiles get a guaranteed thread floor and burst
@@ -137,5 +137,5 @@ counters) are documented in [Memory Budget](memory-budget.md).
 > **Temporality.** The `sipi_admission_*` counters are cumulative (monotonic)
 > OTLP sums that live for the whole process and reset only on restart, so
 > `rate()` / `increase()` read them correctly. (The `max_over_time()` idiom some
-> SIPI dashboards use is for windowed *extremes* over gauges, a different query
+> Vitrinli dashboards use is for windowed *extremes* over gauges, a different query
 > pattern — it does not apply to these counters.)

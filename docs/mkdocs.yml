@@ -1,8 +1,8 @@
-site_name: SIPI Documentation
+site_name: Vitrinli Documentation
 site_url: https://sipi.io
 
-repo_url: https://github.com/dasch-swiss/sipi
-repo_name: dasch-swiss/sipi
+repo_url: https://github.com/dasch-swiss/vitrinli
+repo_name: dasch-swiss/vitrinli
 edit_uri: blob/main/docs/
 copyright: "&copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>"
 
@@ -70,7 +70,7 @@ plugins:
   - search
   - llmstxt:
       markdown_description: >
-        SIPI is a multithreaded, high-performance IIIF-compatible media server
+        Vitrinli is a multithreaded, high-performance IIIF-compatible media server
         written in C++. It provides image format conversions, metadata preservation,
         and a Lua scripting interface.
       full_output: llms-full.txt
@@ -78,7 +78,7 @@ plugins:
         "Overview":
           - guide/index.md: "Project overview and features"
         "User Guide":
-          - guide/introduction.md: "IIIF concepts and SIPI use cases"
+          - guide/introduction.md: "IIIF concepts and Vitrinli use cases"
           - guide/running.md: "CLI usage, server mode, logging, error codes"
           - guide/sipi.md: "IIIF URL syntax, configuration reference"
           - guide/json-output.md: "Structured JSON CLI output schema (--json)"

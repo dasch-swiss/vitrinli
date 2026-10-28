@@ -1,6 +1,6 @@
 # Profiling
 
-Sipi integrates [Tracy](https://github.com/wolfpld/tracy), a real-time,
+Vitrinli integrates [Tracy](https://github.com/wolfpld/tracy), a real-time,
 nanosecond-resolution instrumentation profiler, to answer one question that the
 production metrics cannot: **for a given workload, where inside the request does
 the time actually go?** Tracy is opt-in, local-dev only, and adds zero overhead
@@ -8,7 +8,7 @@ to normal builds.
 
 ## When to use what
 
-Sipi has several observability and measurement tools. They do not overlap — each
+Vitrinli has several observability and measurement tools. They do not overlap — each
 answers a different question, in a different place. Reaching for the wrong one
 wastes effort.
 
@@ -25,7 +25,7 @@ A note on the production stack, because the three pieces are often conflated:
 **OpenTelemetry** is the instrumentation *standard* (how telemetry is emitted),
 **Prometheus** is the aggregate *metrics store* (the counters/gauges/histograms,
 which the collector derives from the OTLP stream), and **Grafana** is the
-*visualization* layer on top. Sipi's Rust server emits **OpenTelemetry traces +
+*visualization* layer on top. Vitrinli's Rust server emits **OpenTelemetry traces +
 OTLP metrics** (with Sentry for errors): per-request spans via `OtelAxumLayer`,
 W3C `traceparent` continuation in and out (incl. propagation to dsp-api on the
 Lua preflight's outbound call), the engine counters bridged to OTLP, and the

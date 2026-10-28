@@ -1,6 +1,6 @@
 # CI and Release
 
-This page documents SIPI's CI pipeline and release automation.
+This page documents Vitrinli's CI pipeline and release automation.
 
 ## Release automation (release-please)
 
@@ -145,14 +145,14 @@ asan-ubsan job was previously split into `asan-ubsan-unit / amd64` +
 `asan-ubsan-e2e / amd64`; the ruleset must be updated to the merged name.)
 
 **`main` is protected by a *ruleset*, not by classic branch protection.**
-`GET /repos/dasch-swiss/sipi/branches/main/protection` therefore answers
+`GET /repos/dasch-swiss/vitrinli/branches/main/protection` therefore answers
 `404 Branch not protected`, which is true only of the classic mechanism and
 says nothing about the ruleset. Read the rules from the rulesets API instead,
 or just read this section:
 
 ```bash
-gh api repos/dasch-swiss/sipi/rulesets                 # find the ruleset id
-gh api repos/dasch-swiss/sipi/rulesets/<id> --jq '[.rules[].type]'
+gh api repos/dasch-swiss/vitrinli/rulesets                 # find the ruleset id
+gh api repos/dasch-swiss/vitrinli/rulesets/<id> --jq '[.rules[].type]'
 ```
 
 The same ruleset pins **`rebase` as the only allowed merge method** (alongside

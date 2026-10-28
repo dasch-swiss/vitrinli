@@ -1,6 +1,6 @@
 # Basic Information and Reference
 
-This section provides the basic information to use SIPI as a high performance, versatile media server implementing the
+This section provides the basic information to use Vitrinli as a high performance, versatile media server implementing the
 [IIIF](https://iiif.io) standards that can be used in many different settings, from a small standalone server providing
 basic metadata to the deployment in a complex environment. For more information about the IIIF standard see
 [https://iiif.io](https://iiif.io). The basic idea is that an image or rectangular region of an image can be downloaded
@@ -14,14 +14,14 @@ The parts do have the following meaning:
 - `{server}`: The DNS name of the server, eg. `iiif.dasch.swiss`. The server may include a portnumber,
   eg. `iiif2.dasch.swiss:8080`.
 - `{prefix}`: A path (that may include `/`'s) to organize the assets. Usually the prefix reflect the internal
-  directory or folder hierarchy. However this can be overridden using special features of SIPI (see pre-flight-script
+  directory or folder hierarchy. However this can be overridden using special features of Vitrinli (see pre-flight-script
   and sipi configuration file).
 - `{identifier}`: The identifier of the requested image. By default, it is the filename and its extension.
 - `{region}`: a region of interest that should be displayed. `full` indicates that the whole image is being requested.
   For more details see [IIIF regions](https://iiif.io/api/image/3.0/#41-region)
 - `{size}`: The size of the displayed image (part). `max` indicates the the "natural" maximal resolution should be used.
   For more details see [IIIF size](https://iiif.io/api/image/3.0/#42-size)
-- `{rotations}`: The image can be rotated and mirrored before being transmitted to the client. SIPI allows for
+- `{rotations}`: The image can be rotated and mirrored before being transmitted to the client. Vitrinli allows for
   arbitrary rotations. The rotation is a non-negative decimal — digits and `.` only — per
   [IIIF Image API 3.0 §5.1.1](https://iiif.io/api/image/3.0/#511-rotation). The value `0` indicates no rotation.
   Prefix with `!` to mirror first, then rotate. See [IIIF rotation](https://iiif.io/api/image/3.0/#43-rotation).
@@ -32,7 +32,7 @@ The parts do have the following meaning:
   - `gray`: A gray value representation
   - `bitonal`: A bitonal representation
   
-  All quality values are supported by SIPI
+  All quality values are supported by Vitrinli
 - `{format}`: The file format that should be delivered. The IIIF endpoint supports the following formats,
   independent of the image's storage format:
   - `jpg`: JPEG. The IIIF spec does not allow per-request selection of the JPEG compression ratio; a server-wide
@@ -44,14 +44,14 @@ The parts do have the following meaning:
   `info.json` advertises `extraFormats: ["tif", "jp2"]`; JPEG and PNG are the IIIF default set.
 
 
-## The SIPI Executable
-The SIPI executable is a statically linked program that can be started as
+## The Vitrinli executable (`sipi`)
+The Vitrinli executable is a statically linked program that can be started as
 - _command line tool_ to perform image operations, mainly format conversions
 - _as server deamon_ that provides IIIF conforming media server
 
-### Using SIPI as Command Line Tool
+### Using Vitrinli as Command Line Tool
 
-The SIPI command line mode can be used for the following tasks:
+The Vitrinli command line mode can be used for the following tasks:
 
 #### Format Conversions:
 
@@ -79,18 +79,18 @@ is ignored for comparison:
 ```
 
 #### Health Check
-Probe a running SIPI server's `/health` endpoint and exit `0` (healthy) or `1`
+Probe a running Vitrinli server's `/health` endpoint and exit `0` (healthy) or `1`
 (unhealthy). Used as the container/orchestrator liveness command:
 
 ```bash
 /path/to/sipi health [--port <n>]   # default port 1024
 ```
 
-See [Running SIPI](running.md) and [Health Endpoint](../operation/health-endpoint.md)
+See [Running Vitrinli](running.md) and [Health Endpoint](../operation/health-endpoint.md)
 for details.
 
 #### General Options for the Command Line Use 
-In command line mode, SIPI supports the following options:
+In command line mode, Vitrinli supports the following options:
 
 - `-h`, `--help`: Display a short help with all options available
 - `-F <fmt>`, `--format <fmt>`: The format of the output file. Valid are `jpx`, `jp2`, `jpg`, `png`, `tif`, `webp`, and `gif`.
@@ -130,7 +130,7 @@ In command line mode, SIPI supports the following options:
   ```
   
 #### JPEG2000 Specific Options
-Usually, the SIPI command line tool is used to create JPEG2000 images suitable for a IIIF repository. SIPI supports
+Usually, the Vitrinli command line tool is used to create JPEG2000 images suitable for a IIIF repository. Vitrinli supports
 the following JPEG2000 specific options. For a in detail description of these options consult the kakadu documentation!
 
 - `--Sprofile <profile>`: The following JPEG2000 profiles are supported: `PROFILE0`, `PROFILE1`, `PROFILE2`, `PART2`,
@@ -149,8 +149,8 @@ the following JPEG2000 specific options. For a in detail description of these op
   whose product may not exceed 4096). Default: `"{64,64}"`.
 - `--Cuse_sop <val>`: Include SOP markers (i.e., resync markers). Default: yes.
 
-### Using SIPI as IIIF Media Server
-In order to use SIPI as IIIF media server, some setup work has to be done. The *configuration* of SIPI can be done
+### Using Vitrinli as IIIF Media Server
+In order to use Vitrinli as IIIF media server, some setup work has to be done. The *configuration* of Vitrinli can be done
 using a configuration file (written in Lua or, equivalently, in TOML — see
 [Configuration file format](running.md#configuration-file-format-lua-or-toml)) and/or using environment variables,
 and/or command line options.
@@ -158,23 +158,23 @@ and/or command line options.
 The priority is as follows: *`configuration file parameters` are overwritten by `environment variables` are overwritten
 by `command line options`*.
 
-The SIPI server requires a few directories to be setup and listed in the configuration file. Then the SIPI server is
+The Vitrinli server requires a few directories to be setup and listed in the configuration file. Then the Vitrinli server is
 launched as follows:
 
 ```bash
 /path/to/sipi server --config /path/to/config-file.lua
 ```
 
-#### SIPI specific extensions to IIIF
-SIPI implements some backwards compatible, non-standard extensions to the IIIF Image API:
+#### Vitrinli specific extensions to IIIF
+Vitrinli implements some backwards compatible, non-standard extensions to the IIIF Image API:
 
 ##### Access to a raw files
 Sometimes it may be usefull to store non-image files such as XML-sidecars, manifests as JSON or complete PDF's, etc. in
-the same environment as the images. For this reason SIPI supports an extension of the IIIF API:
+the same environment as the images. For this reason Vitrinli supports an extension of the IIIF API:
 
     http(s)://{server}/{prefix}/{identifier}/file
     
-The `/file`-path at the end of the URL makes SIPI to send the file as it is. Thus, for example a manifest file could
+The `/file`-path at the end of the URL makes Vitrinli to send the file as it is. Thus, for example a manifest file could
 be accessed by
 
     https://iiif.my.server/images/myimage.json/file
@@ -197,25 +197,25 @@ following format:
 }
 ```
 
-#### Setup of SIPI Directories
-SIPI needs the following directories and files setup and accessible (the real names of the directories must be indicated in the
+#### Setup of Vitrinli Directories
+Vitrinli needs the following directories and files setup and accessible (the real names of the directories must be indicated in the
 configuration file). The following configuration parameters are in the `sipi`-table of the configuration script:
 
-- <a name="imgroot"></a>`imgroot=path`: This is the top-directory of the media file repository. SIPI should at least have read access to it. If
-  SIPI is used to upload and convert files, it must also have write access. The path may be given as absolute path or
+- <a name="imgroot"></a>`imgroot=path`: This is the top-directory of the media file repository. Vitrinli should at least have read access to it. If
+  Vitrinli is used to upload and convert files, it must also have write access. The path may be given as absolute path or
   as relative path.  
   *Cmdline option: `--imgroot`*  
   *Environment variable: `SIPI_IMGROOT`*  
   *Default: `./images`*
   
-- <a name="scriptinit"></a>`initscript=path/to/init.lua`: SIPI needs a minmal set of LUA functions that can be adapted to the local installation.
+- <a name="scriptinit"></a>`initscript=path/to/init.lua`: Vitrinli needs a minmal set of LUA functions that can be adapted to the local installation.
   These mandatory functions are definied in a init-script (usually it can be found in the config directory where also
   the configuration file is located).  
   *Cmdline option: `--initscript`*  
   *Environment variable: `SIPI_INITSCRIPT`*  
   *Default: `./config/sipi.init.lua`*
   
-- <a name="tmpdir"></a>`tmpdir=path`: For the support of multipart POST SIPI requires read/write access to a directory to save temporary
+- <a name="tmpdir"></a>`tmpdir=path`: For the support of multipart POST Vitrinli requires read/write access to a directory to save temporary
   files.  
   *Cmdline option: `--tmpdir`*  
   *Environment variable: `SIPI_IMGROOT`*  
@@ -226,30 +226,30 @@ configuration file). The following configuration parameters are in the `sipi`-ta
   *Environment variable: `SIPI_SCRIPTDIR`*  
   *Default: `./scripts`*
   
-- <a name="cachedir"></a>`cachedir=path`: SIPI may optionally use a cache directory to store converted image in order to avoid computationally
-  intensive conversions if a specific variant is requested several times. Sipi starts with a warning if the cache
+- <a name="cachedir"></a>`cachedir=path`: Vitrinli may optionally use a cache directory to store converted image in order to avoid computationally
+  intensive conversions if a specific variant is requested several times. Vitrinli starts with a warning if the cache
   directory is defined but not existing.  
   *Cmdline option: `--cachedir`*  
   *Environment variable: `SIPI_CACHEDIR`*  
   *Default: `./cache`*
   
-In addition, SIPI can act as a webserver that offers image upload and conversion as web service. In order to use this
+In addition, Vitrinli can act as a webserver that offers image upload and conversion as web service. In order to use this
 feature, a server directory has to be defined. This definition ist in the `fileserver`-table of the configuration file:
 
-- <a name="docroot"></a>`docroot=path`: Path to the document root of the SIPI web server.  
+- <a name="docroot"></a>`docroot=path`: Path to the document root of the Vitrinli web server.  
   *Cmdline option: `--docroot`*  
   *Environment variable: `SIPI_DOCROOT`*  
   *Default: `./server`*
   
-#### SIPI Configuration Parameters
-The following configuration parameters are used by the SIPI server:
+#### Vitrinli Configuration Parameters
+The following configuration parameters are used by the Vitrinli server:
 
-- <a name="portnum"></a>`port=portnum`: Portnumber SIPI should listen on for incoming HTTP requests.  
+- <a name="portnum"></a>`port=portnum`: Portnumber Vitrinli should listen on for incoming HTTP requests.  
   *Cmdline option: `--serverport`*  
   *Environment variable: `SIPI_SERVERPORT`*  
   *Default: `80`*
   
-- <a name="sslport"></a>`ssl_port=portnum`: Portnumber SIPI should listen on for incoming SHTTP requests (using SSL).  
+- <a name="sslport"></a>`ssl_port=portnum`: Portnumber Vitrinli should listen on for incoming SHTTP requests (using SSL).  
   *Cmdline option: `--sslport`*  
   *Environment variable: `SIPI_SSLPORT`*  
   *Default: `443`*
@@ -277,13 +277,13 @@ The following configuration parameters are used by the SIPI server:
 Request queuing (how many requests may wait for a worker, and how long) is not a
 config-file key. It is controlled by the `--max-waiting` / `SIPI_MAX_WAITING` and
 `--queue-timeout` / `SIPI_QUEUE_TIMEOUT` CLI flags — see
-[Running SIPI](running.md#command-line-options).
+[Running Vitrinli](running.md#command-line-options).
 
 - <a name="jpegquality">`jpeg_quality=num`: Compression parameter when producing JPEG output. Must be a number
-  between 1 and 100. Unfortunately, the IIIF Image API does not allow to give a JPEG quality (=compression) on the IIIF URL. SIPI
+  between 1 and 100. Unfortunately, the IIIF Image API does not allow to give a JPEG quality (=compression) on the IIIF URL. Vitrinli
   allows to configure the compression quality system wide with this parameter. Allowed values are in he range
   \[1..100\] where 1 the worst quality (and highest compression factor = smallest file size) and 100 the highest
-  quality (with the lowest compression factor = biggest file size). Please note that SIPI is not able to provide
+  quality (with the lowest compression factor = biggest file size). Please note that Vitrinli is not able to provide
   lossless compression for JPEG files.  
   *Cmdline option: `--quality`*  
   *Environment variable: `SIPI_JPEGQUALITY`*  
@@ -302,7 +302,7 @@ config-file key. It is controlled by the `--max-waiting` / `SIPI_MAX_WAITING` an
   *Default: `86400`* (one day)
   
 #### Cache Configuration
-SIPI uses a file-based LRU cache to store converted images, avoiding expensive re-conversions when the same
+Vitrinli uses a file-based LRU cache to store converted images, avoiding expensive re-conversions when the same
 variant is requested multiple times. The cache is keyed by the canonical IIIF URL and validated against
 the source file's modification time — stale entries are automatically replaced.
 
@@ -316,7 +316,7 @@ independently — whichever is reached first triggers eviction.
 - `'0'` — cache disabled entirely (no files are cached)
 - `'200M'`, `'1G'` — enforced limit with LRU eviction
 
-**Monitoring:** SIPI exports its metrics over OTLP, to the endpoint in
+**Monitoring:** Vitrinli exports its metrics over OTLP, to the endpoint in
 `OTEL_EXPORTER_OTLP_ENDPOINT`; there is no `GET /metrics` scrape endpoint. The names below are what
 the standard OTLP-to-Prometheus normalization produces at the collector. Cache counters
 (`sipi_cache_hits_total`, `sipi_cache_misses_total`, `sipi_cache_evictions_total`, `sipi_cache_skips_total`)
@@ -355,7 +355,7 @@ The following configuration parameters determine the behaviour of the cache:
     always uses a fixed 80% low-water mark. See `DEPRECATIONS.md` for details.
   
 #### Configuration of the HTTP File Server
-SIPI offers  HTTP file server for HTML and other files. Files with the ending `.elua` are HTTP-files with embeded
+Vitrinli offers  HTTP file server for HTML and other files. Files with the ending `.elua` are HTTP-files with embeded
 LUA code. Everything between the <lua>...</lua> tags is interpreted as LUA code and the output embedded in the
 data stream for the client.
 
@@ -373,7 +373,7 @@ All configurations for the HTTP server are in the `fileserver` table:
   *Default: `/server`*
   
 #### Configuration of Administrator Access
-SIPI allows special administrator access for some tasks. In order to allow for this, an administrator has to be defined
+Vitrinli allows special administrator access for some tasks. In order to allow for this, an administrator has to be defined
 as follows:
 ```lua
 admin = {
@@ -391,14 +391,14 @@ admin = {
 If You're using the administrator user, please make sure that the config file is not exposed!
 
 #### Routing Table
-SIPI allows to implement RESTful interfaces or other services based on LUA-scripts which are located in the scripts
+Vitrinli allows to implement RESTful interfaces or other services based on LUA-scripts which are located in the scripts
 directory. In order to use these LUA-scripts as endpoints, the appropriate routes have to be defined in the
 `routes` table. An entry has the following form:
 - `method`: the HTTP request. Supported are `GET`, `POST`, `PUT` and `DELETE`.
 - `route`: A URL path that may contain `/`'s.
 - `script`: Name of the LUA script in the script directory.
 
-Thus, the routing section of a SIPI configuration file may look as follows:
+Thus, the routing section of a Vitrinli configuration file may look as follows:
 
 ```lua
 routes = {

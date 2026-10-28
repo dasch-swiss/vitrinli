@@ -5,7 +5,7 @@ last_verified_commit: none   # not SHA-tracked: rebase-merge rewrites branch SHA
 date: 2026-09-12
 ---
 
-# ARCH-MAP.md — SIPI
+# ARCH-MAP.md — Vitrinli
 
 Pull-on-demand architecture map. Not auto-loaded; open it for blast-radius and
 boundary questions. Vocabulary lives in [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md);
@@ -14,7 +14,7 @@ this map lifts in [`CONVENTIONS.md`](CONVENTIONS.md).
 
 ## Overview
 
-SIPI is a IIIF Image API 3.0 media server. Production is a **Rust axum shell**
+Vitrinli is a IIIF Image API 3.0 media server. Production is a **Rust axum shell**
 (`server` + `cli`) that drives a **C++ image engine** (`libsipi`) across a
 hand-mirrored `extern "C"` FFI seam (`src/ffi`); the former C++ HTTP server was
 removed (ADR-0020), so the C++ `sipi` binary now provides only offline verbs
@@ -96,7 +96,7 @@ engine-side memory budget under one component. Supersedes the former
 `memory-budget` entry.
 
 - **Paths:** `:(glob)src/throttling/rust/**` (admission, shell-side), `:(glob)src/throttling/cpp/**` (memory_budget, engine-side).
-- **Purpose:** SIPI's load-driven request-rejection (Throttling). Three sub-policies: **Admission** (the two-partition thread pool — tile floor + full hard cap, pre-dispatch), the **Decode memory budget** (the full partition's decode-RAM cap, post-cache, 503/413 under advanced mode), and the **Decode watchdog** (a per-decode wall-clock deadline, `EngineContext::decode_timeout_ms` default 120000ms; on timeout the wedged worker is detached and counted in the `wedged_threads` gauge — the DEV-7080 unpatchable-Kakadu-hang availability guard, enacted at the `decode_guard.cpp` acquire site via `run_with_deadline`/`run_guarded_decode`).
+- **Purpose:** Vitrinli's load-driven request-rejection (Throttling). Three sub-policies: **Admission** (the two-partition thread pool — tile floor + full hard cap, pre-dispatch), the **Decode memory budget** (the full partition's decode-RAM cap, post-cache, 503/413 under advanced mode), and the **Decode watchdog** (a per-decode wall-clock deadline, `EngineContext::decode_timeout_ms` default 120000ms; on timeout the wedged worker is detached and counted in the `wedged_threads` gauge — the DEV-7080 unpatchable-Kakadu-hang availability guard, enacted at the `decode_guard.cpp` acquire site via `run_with_deadline`/`run_guarded_decode`).
 - **Key entities:** Rust `admission::{Admission, AdmissionKind, AdmissionMode, AdmissionConfig, AdmissionSnapshot, Permit, default_pool_size}` (`//src/throttling/rust:admission`); C++ `Sipi::SipiMemoryBudget` + `MemoryBudgetGuard` + `enum class AdmissionMode { BASIC, ADVANCED }` + `Sipi::estimate_peak_memory` (`//src/throttling/cpp:memory_budget`).
 - **Public interface:** `Admission` (owned by `server` `AppState`; `classify`/`acquire`/`snapshot`); `SipiMemoryBudget` + `MemoryBudgetGuard` (via `//src/throttling/cpp:memory_budget`).
 - **Local-context kit:** `src/throttling/rust/lib.rs`, `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`, `src/throttling/cpp/SipiPeakMemory.h`, `src/ffi/cpp/decode_guard.{h,cpp}` (the single acquire site: `acquire_full_lane_budget` + `run_guarded_decode`, shared by both decode entry points), `src/ffi/cpp/serve_image.cpp` and `src/ffi/cpp/image_handle.cpp` (the two callers), `src/ffi/cpp/init.cpp` (resolves the config), `src/server/rust/src/routes.rs` (`AppState`, classify/acquire call sites), `UBIQUITOUS_LANGUAGE.md` (Throttling), `docs/adr/0022-two-lane-admission-control.md`.
@@ -172,11 +172,11 @@ engine-side memory budget under one component. Supersedes the former
 ### util
 
 - **Paths:** `:(glob)src/util/**`
-- **Purpose:** Generic SIPI-domain helpers (MIME/string parsing, file hashing, filename-to-subdirectory hashing, error/global types, URL decode) extracted from shttps; a leaf. Namespace stays `shttps::`.
+- **Purpose:** Generic Vitrinli-domain helpers (MIME/string parsing, file hashing, filename-to-subdirectory hashing, error/global types, URL decode) extracted from shttps; a leaf. Namespace stays `shttps::`.
 - **Key entities:** `shttps::Error`, `shttps::Hash` + `enum HashType` (on-disk contract, ADR-0005), `shttps::Parsing::{getFileMimetype,getBestFileMimetype,parseMimetype}`, `shttps::urldecode`, `Global::as_integer`, `SipiFilenameHash`, `SipiFilenameHash::setLevels`, `SipiFilenameHash::migrateToLevels`
 - **Public interface:** the free functions + value types (via `//src/util`, `include_prefix="util"` + `strip_include_prefix="/src/util/cpp"` → `#include "util/…"`).
 - **Local-context kit:** `src/util/BUILD.bazel`, `src/util/cpp/Parsing.h`, `src/util/cpp/Hash.h`, `src/util/cpp/Error.h`, `src/util/cpp/UrlDecode.h`, `src/util/cpp/SipiFilenameHash.h`
-- **Depends on:** openssl (Hash), libmagic (Parsing MIME sniff), logging (`SipiFilenameHash`'s `log_debug` calls) — the one SIPI-internal dep.
+- **Depends on:** openssl (Hash), libmagic (Parsing MIME sniff), logging (`SipiFilenameHash`'s `log_debug` calls) — the one Vitrinli-internal dep.
 - **Used by:** image, format_handlers, iiifparser, metadata, cli, ffi (broadly used leaf)
 - **Boundary rules:** a leaf — deps only `logging` internally; colocated `util_test` links only `:util`, so a forbidden cross-module include is a build error, not a `sipi_lib`-wide slip. *Enforcement: `structure`*.
 - **Durable state:** `Hash::HashType` values are an on-disk contract (mirrored in `essentials.proto`); `Parsing` ships a compiled-in `magic.mgc` blob (read-only); `SipiFilenameHash::__levels` (static, set via `setLevels`/`migrateToLevels`).

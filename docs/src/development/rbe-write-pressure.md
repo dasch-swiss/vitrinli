@@ -1,6 +1,6 @@
 # RBE Write Pressure
 
-This page is the durable record of how SIPI's CI writes to the Remote Build
+This page is the durable record of how Vitrinli's CI writes to the Remote Build
 Execution (RBE) backend, so the "why is the RBE disk writing so much?" question
 does not get re-investigated from scratch. It covers the mechanism, the numbers
 as measured, the client-side levers that actually move the needle, and how to
@@ -141,9 +141,9 @@ steps in `.github/workflows/ci.yml`.
 # find a completed run that carries the artifacts
 gh run list --workflow=ci.yml --limit 20 \
   --json databaseId,headBranch,conclusion,createdAt
-gh api "repos/dasch-swiss/sipi/actions/runs/<run-id>/artifacts" \
+gh api "repos/dasch-swiss/vitrinli/actions/runs/<run-id>/artifacts" \
   --jq '.artifacts[].name'
-gh run download <run-id> -R dasch-swiss/sipi -D ./bep
+gh run download <run-id> -R dasch-swiss/vitrinli -D ./bep
 ```
 
 ### 2. Read the write-relevant BEP fields

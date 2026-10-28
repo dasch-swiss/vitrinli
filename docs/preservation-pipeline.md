@@ -1,6 +1,6 @@
 # Preservation pipeline
 
-SIPI's `convert`-family subcommands form an explicit pipeline that moves
+Vitrinli's `convert`-family subcommands form an explicit pipeline that moves
 files through preservation stages. Each subcommand has documented
 prerequisites it checks at entry and produces a specific output. A
 file's stage in the pipeline is the *outcome* of going through the

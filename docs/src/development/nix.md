@@ -1,6 +1,6 @@
 # Nix dev shell
 
-Nix's role in SIPI is **dev-shell provisioning only**. It assembles
+Nix's role in Vitrinli is **dev-shell provisioning only**. It assembles
 a reproducible bash environment with bazelisk, `gh` (consumed by the
 `gh_release_archive` repository_rule for the Kakadu fetch), `crane`
 (used by `bazel-docker-publish-manifest`), and `jpylyzer` (JP2
@@ -10,7 +10,7 @@ hermetic LLVM toolchain. Rust + LLVM toolchains are provisioned
 hermetically by Bazel (`rules_rust` + the BCR `llvm` (hermetic-llvm) module in
 `MODULE.bazel`) — the Bazel cc actions never use the dev-shell `clang`.
 
-It is **not** the build system. Sipi's binaries, tests, and Docker
+It is **not** the build system. Vitrinli's binaries, tests, and Docker
 image are all produced by Bazel. See [Building with Bazel](bazel.md).
 
 ## One-time setup

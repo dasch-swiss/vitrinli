@@ -211,14 +211,14 @@ reads all of it.
 ### Rules
 
 1. Each `feat:` or `fix:` commit = one changelog entry in the sections
-   developers deploying Sipi read first.
+   developers deploying Vitrinli read first.
 2. Internal work (`build:`, `ci:`, `refactor:`, `docs:`, `chore:`,
    `test:`) lands in its own changelog section further down. Squash
    aggressively, in service of the agent reader: fold every working,
    fixup and trial-and-error commit until each commit is one module in
    one slice, and stop there. Squashing past that point makes the history
    too coarse for `git blame`.
-3. Ask: "would a developer deploying Sipi care about this change?"
+3. Ask: "would a developer deploying Vitrinli care about this change?"
    If yes → `feat:` or `fix:`. If no → an internal-work prefix.
 4. Debugging journeys (trial-and-error, reverts of in-branch mistakes,
    iterative fixes) belong in the PR description, not the commit history.

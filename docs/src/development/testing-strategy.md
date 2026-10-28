@@ -4,13 +4,13 @@
 
 This document defines the authoritative testing strategy for sipi. It maps the IIIF Image API 3.0 specification, sipi's extensions (Lua scripting, cache, CLI, knora integration), and Rust migration readiness onto a concrete testing pyramid. Use this document to determine **where** a new test should live, **what** layer it belongs to, and **how** to assess coverage.
 
-## Sipi Feature Inventory
+## Vitrinli Feature Inventory
 
-Sipi is a multithreaded, high-performance, IIIF-compatible media server written in C++23. The following is an exhaustive inventory of every feature area. Each feature needs test coverage — the [coverage matrices](#iiif-image-api-30-coverage-matrix) later in this document track the current state.
+Vitrinli is a multithreaded, high-performance, IIIF-compatible media server written in C++23. The following is an exhaustive inventory of every feature area. Each feature needs test coverage — the [coverage matrices](#iiif-image-api-30-coverage-matrix) later in this document track the current state.
 
 ### IIIF Image API 3.0
 
-Sipi implements the full [IIIF Image API 3.0](https://iiif.io/api/image/3.0/) at Level 2 compliance:
+Vitrinli implements the full [IIIF Image API 3.0](https://iiif.io/api/image/3.0/) at Level 2 compliance:
 
 | Feature Area | Parameters | Source |
 |---|---|---|
@@ -26,7 +26,7 @@ Sipi implements the full [IIIF Image API 3.0](https://iiif.io/api/image/3.0/) at
 | **IIIF Extension: `red:n`** | Reduce factor for JP2 (faster subsampling on read) — sipi-specific, not in IIIF spec | `src/iiifparser/cpp/value_objects/SipiSize.cpp` |
 
 !!! note "IIIF Auth exclusion"
-    Sipi does **not** implement the IIIF Authentication API. Access control is handled via custom Lua preflight scripts (`pre_flight`, `file_pre_flight`) that return allow/deny/restrict permissions. This is intentional — the Knora/DSP integration requires custom auth flows (cookie-based sessions) that don't map to the IIIF Auth spec.
+    Vitrinli does **not** implement the IIIF Authentication API. Access control is handled via custom Lua preflight scripts (`pre_flight`, `file_pre_flight`) that return allow/deny/restrict permissions. This is intentional — the Knora/DSP integration requires custom auth flows (cookie-based sessions) that don't map to the IIIF Auth spec.
 
 ### Image Format Support
 
@@ -163,7 +163,7 @@ Per-request isolated Lua 5.3.5 interpreter with full server access:
 
 ### CLI Mode
 
-Sipi operates in three CLI modes (`src/cli/cpp/cli_app.cpp`):
+Vitrinli operates in three CLI modes (`src/cli/cpp/cli_app.cpp`):
 
 **File Conversion:** `sipi infile outfile [options]`
 
@@ -574,7 +574,7 @@ The following matrix maps every testable IIIF spec requirement to its test statu
 | Non-ASCII identifiers | :white_check_mark: | `id_non_ascii` | |
 | ARK/URN identifiers | :x: GAP | — | Not tested (may not apply — sipi identifiers are opaque path segments, not a namespaced scheme) |
 
-## Sipi Extension Coverage Matrix
+## Vitrinli Extension Coverage Matrix
 
 Two Rust-shell features the C++-era gap list assumed are permanently **removed**, not gaps: the Prometheus `/metrics` scrape (OTLP replaces it) and the Lua `/api/cache` admin endpoint (the route is unregistered and the Lua `cache` table bindings were never carried over). SSL/TLS is likewise **N/A** — TLS terminates at Traefik in front of the shell; `sslcert`/`sslkey` parse but are inert. `admin_upload.lua` / `/admin/upload` never existed in this repo.
 
@@ -704,12 +704,12 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | CORS | 13 | 0 | 100% |
 | HTTP behavior | 13 | 0 | 100% |
 | Identifiers | 4 | 1 (ARK/URN) | 80% |
-| Sipi extensions | 100 | 7 | 93% |
+| Vitrinli extensions | 100 | 7 | 93% |
 | **Total** | **200** | **8** | **96%** |
 
-*(Three additional Sipi-extension rows — Prometheus `/metrics`, `/api/cache`, SSL/TLS — are excluded from this count entirely: they are removed-on-the-Rust-shell features, not gaps. See the N/A note above the extension matrix.)*
+*(Three additional Vitrinli-extension rows — Prometheus `/metrics`, `/api/cache`, SSL/TLS — are excluded from this count entirely: they are removed-on-the-Rust-shell features, not gaps. See the N/A note above the extension matrix.)*
 
-**Key remaining gap categories** (7 rows, all in Sipi extensions):
+**Key remaining gap categories** (7 rows, all in Vitrinli extensions):
 
 - **Deep metadata survival** (1 gap): ICC profile HTTP-level round-trip — EXIF/IPTC/XMP now covered
 - **Concurrency edge cases** (1 gap): thread-pool-exhaustion saturation test (`concurrent_requests`/`lua_state_thread_isolation` are written and correct, just `#[ignore]`'d for the unrelated 503-shedding reason above — not gaps)
@@ -768,7 +768,7 @@ Memory leaks and undefined behavior are not a separate pyramid layer but a **bui
 
 ## Snapshot Review Workflow
 
-Sipi uses [insta](https://insta.rs/) for golden baseline snapshots. When a snapshot changes:
+Vitrinli uses [insta](https://insta.rs/) for golden baseline snapshots. When a snapshot changes:
 
 1. Run tests: `just bazel-test-e2e` (pending snapshots are written as
    `*.snap.new` next to the existing `*.snap`)

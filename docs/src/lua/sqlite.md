@@ -1,6 +1,6 @@
-# Using SQLite in SIPI
+# Using SQLite in Vitrinli
 
-Sipi supports [SQLite](https://www.sqlite.org/) 3 databases, which can
+Vitrinli supports [SQLite](https://www.sqlite.org/) 3 databases, which can
 be accessed from Lua scripts. You should use
 [pcall](https://www.lua.org/pil/8.4.html) to handle errors that may be
 returned by SQLite.
@@ -14,8 +14,8 @@ This creates a new opaque database object. Errors raise real Lua errors
 
 - `path_to_db`: path to the sqlite3 database file.
 - `access`: Method of opening the database. Allowed are
-    - `'RO'`: readonly access. The file must exist and the SIPI server must have read access to it.
-    - `'RW'`: read and write access. The file must exist and the SIPI server must have read/write access to it. This is the default when the parameter is omitted.
+    - `'RO'`: readonly access. The file must exist and the Vitrinli server must have read access to it.
+    - `'RW'`: read and write access. The file must exist and the Vitrinli server must have read/write access to it. This is the default when the parameter is omitted.
     - `'CRW'`: If the database file does not exist, it will be created and opened with read/write access.
 
 If the database is locked by another writer, calls wait at most the remaining
@@ -32,7 +32,7 @@ Alternatively, Lua's garbage collection will free the database object and all
 resources when they are no longer used.
 
 ### Preparing a Query
-The SIPI sqlite interface supports direct queries as well as prepared statements. A direct query is constructed as
+The Vitrinli sqlite interface supports direct queries as well as prepared statements. A direct query is constructed as
 follows:
 
     qry = db << 'SELECT * FROM image'

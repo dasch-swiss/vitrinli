@@ -2,9 +2,9 @@
 
 This page documents which runtime packages the `daschswiss/sipi` Docker image provides and why, so downstream consumers don't need to rediscover this.
 
-## Sipi's Bundled Lua Scripts
+## Vitrinli's Bundled Lua Scripts
 
-The Lua scripts shipped with Sipi (`sipi.config.lua`, `sipi.init.lua`, `send_response.lua`) have **no system tool dependencies**. They use only Sipi's built-in Lua API (`server.http()`, `server.decode_jwt()`, `server.parse_mimetype()`, etc.) — no `io.popen()` or `os.execute()` calls.
+The Lua scripts shipped with Vitrinli (`sipi.config.lua`, `sipi.init.lua`, `send_response.lua`) have **no system tool dependencies**. They use only Vitrinli's built-in Lua API (`server.http()`, `server.decode_jwt()`, `server.parse_mimetype()`, etc.) — no `io.popen()` or `os.execute()` calls.
 
 ## Runtime Image Packages
 

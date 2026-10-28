@@ -2,7 +2,7 @@
 
 The full-lane decode memory budget prevents OOM from concurrent large image
 decodes by capping the aggregate memory in-flight full-lane decodes may hold. It
-is the memory half of SIPI's two-lane admission control: expensive full-image
+is the memory half of Vitrinli's two-lane admission control: expensive full-image
 decodes are hard-capped in decode bytes, while cheap tile decodes bypass the
 budget entirely and are never charged.
 
@@ -69,7 +69,7 @@ observing in `basic` before returning to the enforcing `advanced` default is
 | `admission_mode` | `"advanced"` | `"basic"` (advanced tier shadow-counts only) or `"advanced"` (reject over budget). There is no `"off"` — the budget is always accounted |
 | `large_decode_threshold_bytes` | `33554432` (32 MiB) | Estimated peak-memory at/above which a decode is charged to the full lane; below it bypasses as a tile |
 
-Available via (see also [Running SIPI](../guide/running.md)):
+Available via (see also [Running Vitrinli](../guide/running.md)):
 
 - CLI flags: `--memory-limit`, `--tiles-memory-ratio`, `--admission-mode`, `--large-decode-threshold-bytes`
 - Environment: `SIPI_MEMORY_LIMIT`, `SIPI_TILES_MEMORY_RATIO`, `SIPI_ADMISSION_MODE`, `SIPI_LARGE_DECODE_THRESHOLD_BYTES`
@@ -80,7 +80,7 @@ surface above and applied over the seam at init.
 
 The DEFAULT (an unset `admission_mode`) is `"advanced"`. An UNRECOGNIZED value
 (e.g. a stale `"off"` from an old template, or a legacy `"monitor"`/`"enforce"`)
-is a different case — it is not a startup error, SIPI silently falls back to
+is a different case — it is not a startup error, Vitrinli silently falls back to
 `"basic"`.
 
 ### Auto-Detection
@@ -96,9 +96,9 @@ When `memory_limit = "0"` (default), the envelope is the detected available RAM:
 The full lane then gets `envelope × (1 − tiles_memory_ratio)`; the reserve is the
 headroom for tiles and the non-decode floor.
 
-> On `vre-prod-01` SIPI is not cgroup-capped, so `memory_limit = "0"` would size
+> On `vre-prod-01` Vitrinli is not cgroup-capped, so `memory_limit = "0"` would size
 > the envelope to the whole VM RAM. Set `memory_limit` explicitly (ops-deploy
-> renders `DSP_IIIF_MEMORY_LIMIT` into it) to hold SIPI to the intended cap.
+> renders `DSP_IIIF_MEMORY_LIMIT` into it) to hold Vitrinli to the intended cap.
 
 ## Advanced behaviour: 503 vs 413
 
@@ -141,7 +141,7 @@ shadow counters before enforcing — e.g. before tuning `memory_limit`/
 
 ## Prometheus Metrics
 
-SIPI exports over OTLP, so these are the names the collector renders after
+Vitrinli exports over OTLP, so these are the names the collector renders after
 normalization, not the output of a scrape endpoint.
 
 | Metric | Type | Labels | Description |

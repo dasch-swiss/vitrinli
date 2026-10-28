@@ -1,6 +1,6 @@
-# Kakadu SDK and Sipi builds
+# Kakadu SDK and Vitrinli builds
 
-Sipi's JPEG2000 support uses the proprietary **Kakadu SDK**. The
+Vitrinli's JPEG2000 support uses the proprietary **Kakadu SDK**. The
 SDK is not redistributable, so it lives in the private
 [`dasch-swiss/dsp-ci-assets`](https://github.com/dasch-swiss/dsp-ci-assets)
 repo as a release asset. Bazel fetches it at build time via a
@@ -12,9 +12,9 @@ reproducible and verifiable.
 ## How it works
 
 The repository_rule is declared in
-[`bazel/gh_release.bzl`](https://github.com/dasch-swiss/sipi/blob/main/bazel/gh_release.bzl)
+[`bazel/gh_release.bzl`](https://github.com/dasch-swiss/vitrinli/blob/main/bazel/gh_release.bzl)
 and instantiated by the `kakadu_extension` module extension
-([`bazel/kakadu_extension.bzl`](https://github.com/dasch-swiss/sipi/blob/main/bazel/kakadu_extension.bzl),
+([`bazel/kakadu_extension.bzl`](https://github.com/dasch-swiss/vitrinli/blob/main/bazel/kakadu_extension.bzl),
 wired in `MODULE.bazel`). On the first `bazel build`
 invocation that needs Kakadu (most do — `//src/cli:sipi`,
 `//src:sipi_image`, every test that links sipi), Bazel:
@@ -81,7 +81,7 @@ cache.
 
 ## Why not vendor it directly?
 
-- Sipi is a public repo; Kakadu is proprietary — committing it
+- Vitrinli is a public repo; Kakadu is proprietary — committing it
   would be a licence breach.
 - Keeping it in `dsp-ci-assets` aligns the licence-compliance
   boundary with repo membership.
