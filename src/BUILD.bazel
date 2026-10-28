@@ -382,11 +382,11 @@ expand_template(
         "v0.0.0-unstamped": "v{{STABLE_SIPI_VERSION}}",
     },
     template = [
-        "org.opencontainers.image.source=https://github.com/dasch-swiss/sipi",
+        "org.opencontainers.image.source=https://github.com/dasch-swiss/vitrinli",
         "org.opencontainers.image.revision=0000000000000000000000000000000000000000",
         "org.opencontainers.image.version=v0.0.0-unstamped",
         "org.opencontainers.image.licenses=AGPL-3.0-only",
-        "org.opencontainers.image.title=Sipi",
+        "org.opencontainers.image.title=Vitrinli",
         "org.opencontainers.image.description=IIIF-compatible media server.",
     ],
 )
