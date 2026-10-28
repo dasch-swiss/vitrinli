@@ -72,7 +72,7 @@ jobs:
         uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: dasch-swiss/sipi
+          slug: dasch-swiss/vitrinli
           files: bazel-out/_coverage/_coverage_report.dat
 
       # Persist the repository cache even when the job fails — the paired
