@@ -410,8 +410,8 @@ jobs:
 
   # Advisory scan over the checked-in Cargo-format lockfile (`Cargo.Bazel.lock`,
   # materialized by `crate.from_specs(cargo_lockfile = ...)` in MODULE.bazel).
-  # Covers the production `@crates` hub — the one dependency graph Dependabot's
-  # `cargo` entry (scoped to `/test/e2e`) cannot see. See `just audit`.
+  # Covers the single `@crates` hub: every Rust crate in the build, the e2e
+  # suite included. See `just audit`.
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest

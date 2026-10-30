@@ -151,8 +151,8 @@ bazel-clippy-check *FLAGS='':
 # Advisory scan over the checked-in Cargo-format lockfile (`Cargo.Bazel.lock`,
 # materialized from `crate.from_specs(cargo_lockfile = ...)` in MODULE.bazel —
 # cargo-audit/OSV-Scanner read Cargo.lock syntax, not MODULE.bazel.lock's
-# JSON). Covers the production `@crates` hub (server/cli/scripting); the
-# `/test/e2e` cargo manifest is covered separately by Dependabot.
+# JSON). Covers the single `@crates` hub: server, cli, scripting and the e2e
+# suite.
 #
 # Neither tool exposes a CLI severity threshold (RustSec advisories and OSV
 # entries don't uniformly carry a Critical/High label), so both fail on any
