@@ -542,7 +542,8 @@ crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
 # //src/server/rust — the `sipi` server library
 crate.spec(package = "axum", version = "0.8", features = ["multipart"])
-crate.spec(package = "tokio", version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"])
+# tokio: security floor for RUSTSEC-2026-0386 (AsyncFd I/O safety), fixed in 1.53.3.
+crate.spec(package = "tokio", version = "1.53.3", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"])
 crate.spec(package = "tokio-stream", version = "0.1")
 crate.spec(package = "tower", version = "0.5", features = ["util"])
 crate.spec(package = "tower-http", version = "0.6", features = ["timeout"])
