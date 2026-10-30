@@ -10,3 +10,11 @@ reason = "rsa Marvin timing side-channel; no fixed upstream release. `rsa` is a 
 [[IgnoredVulns]]
 id = "GHSA-w9wp-h8wv-79jx"
 reason = "opentelemetry_sdk unbounded-allocation DoS in the W3C Baggage propagator (extract_with_context on oversized inbound `baggage` headers); fixed in 0.32.1. Unreachable in SIPI: telemetry.rs installs TraceContextPropagator only (no BaggagePropagator, no composite), so inbound baggage headers are never parsed. Ignored pending the coordinated opentelemetry* 0.31→0.32 lockstep bump (tracked as a follow-up), not blocking on it because the vulnerable path cannot execute."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0387"
+reason = "crypto-bigint 0.5 timing variability; fixed only in 0.7.6+, which needs elliptic-curve 0.14. `crypto-bigint` is transitive via `jsonwebtoken` -> `p256`/`p384` 0.13 (ES256/ES384 support only), and jsonwebtoken 10.x and 11.1 still require 0.13. Vitrinli pins JWT to HS256 (decode Validation and encode Header), so no elliptic-curve operation runs and the timing leak is unreachable. Revisit when jsonwebtoken moves to p256 0.14."
+
+[[IgnoredVulns]]
+id = "GHSA-qwgh-2vcv-g2f7"
+reason = "block-buffer 0.10 cursor corruption after a caught panic inside a block-compression callback; fixed only in 0.12.1, which needs the digest 0.11 / sha2 0.11 / hmac 0.13 stack, and jsonwebtoken still requires sha2 0.10. Unreachable in Vitrinli: the callbacks are the RustCrypto compression functions (sha2 for HS256, plus the unused RSA/ECDSA paths), which are pure arithmetic and cannot panic, and no caller catches a panic and reuses the hasher. Revisit when jsonwebtoken moves to sha2 0.11."
