@@ -195,12 +195,14 @@ lockfile materialized by `crate.from_specs(cargo_lockfile = ...)` in
 `MODULE.bazel` (`crate_universe`'s own `MODULE.bazel.lock` is JSON, which
 neither tool reads). Repin with
 `CARGO_BAZEL_REPIN=1 bazel build //src/server/rust:lib` after any
-`crate.spec()` change. Covers the production `@crates` hub
-(server/cli/scripting); `/test/e2e`'s own `Cargo.toml`/`Cargo.lock` is
-covered separately by Dependabot's `cargo` entry.
+`crate.spec()` change. Covers the single `@crates` hub: server, cli,
+scripting and the e2e suite.
 
-This closes one gap, not the whole dependency surface: neither Dependabot nor
-`dependency-audit` sees the native `http_archive` / `cc_library` pins below —
+Dependabot is off: no version-update or security-update PRs. GitHub Actions,
+the Nix flake inputs and the BCR `bazel_dep`s are bumped by hand.
+
+This closes one gap, not the whole dependency surface: `dependency-audit`
+does not see the native `http_archive` / `cc_library` pins below —
 they have no lockfile-based advisory feed. Docker Scout (`ci.yml`'s PR-time
 CVE scan and `publish.yml`'s release-time Critical gate) covers OS/runtime
 packages in the *image layers*, which also does not reach these
