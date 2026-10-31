@@ -345,7 +345,7 @@ jobs:
       # each needs its own chain.
       - name: Upload minimized corpus (chains into the next nightly)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: fuzz-corpus-${{ matrix.target }}
           path: .fuzz/merged
@@ -411,7 +411,7 @@ jobs:
       # and artifact names must be unique within it.
       - name: Upload build event JSON (cache-hit-rate analysis)
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bep-fuzz-${{ matrix.target }}
           path: bep-fuzz*.json
@@ -423,7 +423,7 @@ jobs:
       # uniqueness reason as the BEP upload.
       - name: Upload crash reproducers + libFuzzer logs
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: fuzz-crashes-${{ matrix.target }}
           path: |
