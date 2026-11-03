@@ -647,6 +647,14 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
   kdu_core::kdu_dims dims;
   codestream.get_dims(0, dims, true);
 
+  // A region at the image edge can reduce to no samples: at reduction 32,
+  // ceil(512/32) - ceil(508/32) = 0. Kakadu's decode must not see an empty
+  // window; x86-64 dies there with SIGFPE.
+  if (dims.size.x <= 0 || dims.size.y <= 0) {
+    return std::unexpected(SipiValueError{ ErrorCode::kInvalidRequestParameter,
+      "Cannot read JPEG2000 file \"" + filepath + "\": the requested region and size leave no samples to decode" });
+  }
+
   // bitdepth of zeroth component, assumed valid for all; nc is not the same as
   // the number of colors. No pixel buffer exists yet, so geometry alone moves.
   img->set_geometry(dims.size.x, dims.size.y, nc, codestream.get_bit_depth(0));

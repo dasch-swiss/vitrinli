@@ -248,3 +248,21 @@ fn oversized_rotation_returns_400() {
         "oversized rotation parameter should return 400"
     );
 }
+
+// A narrow region at the image edge can reduce to no samples: at reduction 32,
+// ceil(512/32) - ceil(508/32) = 0. x86-64 traps the resulting division by zero
+// and kills the server, while arm64 does not, so this asserts the response on
+// every platform rather than relying on the crash.
+#[test]
+fn region_reduced_to_zero_samples_returns_400() {
+    let srv = server();
+    for path in [
+        "508,0,4,512/!100,16",
+        "496,0,16,512/!100,16",
+        "0,508,512,4/!16,100",
+    ] {
+        let url = format!("{}/unit/lena512.jp2/{}/0/default.jpg", srv.base_url, path);
+        let resp = client().get(&url).send().expect("request failed");
+        assert_eq!(resp.status().as_u16(), 400, "{url}");
+    }
+}
