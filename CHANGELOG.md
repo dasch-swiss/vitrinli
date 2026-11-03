@@ -1,5 +1,34 @@
 # Changelog
 
+## [10.0.1](https://github.com/dasch-swiss/vitrinli/compare/v10.0.0...v10.0.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **deps:** Raise tokio past RUSTSEC-2026-0386 ([64c7690](https://github.com/dasch-swiss/vitrinli/commit/64c769088eb219444c84358bf702a469f98de619))
+* **format_handlers:** Reject a JPEG 2000 region that reduces to no samples ([e7aba1c](https://github.com/dasch-swiss/vitrinli/commit/e7aba1cca3627054c0e6569cabecb2633795273f))
+* **server:** Send CORS headers on every IIIF-route response ([4fd154f](https://github.com/dasch-swiss/vitrinli/commit/4fd154f4e81489c748652cd0facd7b7733c6ded8))
+
+
+### Documentation
+
+* **docs:** Describe how maintainers fix a vulnerability privately ([5616e30](https://github.com/dasch-swiss/vitrinli/commit/5616e3058abacf17ad8890680e580f7ea0c22732))
+* **docs:** Rename the product from SIPI to Vitrinli ([2cf2b55](https://github.com/dasch-swiss/vitrinli/commit/2cf2b5557ae1d99578516ccbda99323113b40698))
+* **docs:** Stack dependent PRs with gh stack ([cf8ec44](https://github.com/dasch-swiss/vitrinli/commit/cf8ec44dc1242d30122f691dcbd37e31e9ae7fca))
+* **specs:** Add the Vitrinli rename plan ([fd56024](https://github.com/dasch-swiss/vitrinli/commit/fd560247a85dd7ef537d890413f693f4e7a125bb))
+
+
+### Build System
+
+* **docker:** Label the image Vitrinli from dasch-swiss/vitrinli ([660128f](https://github.com/dasch-swiss/vitrinli/commit/660128f00871da94f24569dcfec8eb41d85c171d))
+
+
+### Miscellaneous Chores
+
+* **ci:** Point the Codecov upload at dasch-swiss/vitrinli ([4efe043](https://github.com/dasch-swiss/vitrinli/commit/4efe043350e6bedf8a53e048586b8d6126944942))
+* **ci:** Turn off Dependabot ([1ce86a2](https://github.com/dasch-swiss/vitrinli/commit/1ce86a2c4c6b799a2829de36c1a36587607e8a68))
+* **deps:** Ignore the crypto-bigint and block-buffer advisories ([80aa0e0](https://github.com/dasch-swiss/vitrinli/commit/80aa0e0e0d7af8660744afcfbf3f32475074cf07))
+
 ## [10.0.0](https://github.com/dasch-swiss/sipi/compare/v9.1.1...v10.0.0) (2026-10-22)
 
 
