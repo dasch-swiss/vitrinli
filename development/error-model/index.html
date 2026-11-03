@@ -1,0 +1,1426 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/error-model/">
+      
+      
+        <link rel="prev" href="../developing/">
+      
+      
+        <link rel="next" href="../fuzzing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Error Model - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#error-model" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Error Model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-value-type-sipisipivalueerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The value type: Sipi::SipiValueError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#policy-as-data-policy_forerrorcode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Policy as data: policy_for(ErrorCode)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#embedded-metadata-parse-failures-are-fatal-on-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedded metadata parse failures are fatal on read
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Embedded metadata parse failures are fatal on read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exif-rationals-on-tiff-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EXIF rationals on TIFF write
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-mechanisms-and-their-disposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy mechanisms and their disposition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-three-seams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three seams
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-variant-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error-variant principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="error-model">Error Model<a class="headerlink" href="#error-model" title="Permanent link">&para;</a></h1>
+<p>The image/codec layer's failure contract: what type carries an error, what
+policy each failure maps to at the three seams that consume it, and which
+exception mechanisms remain in permanent, deliberate use. The decision this
+document reflects is <a href="../../adr/0024-value-based-image-errors.md">ADR-0024</a>;
+this page is the living catalog of the contract as it stands, not the
+decision record itself.</p>
+<h2 id="the-value-type-sipisipivalueerror">The value type: <code>Sipi::SipiValueError</code><a class="headerlink" href="#the-value-type-sipisipivalueerror" title="Permanent link">&para;</a></h2>
+<p><code>src/error/cpp/SipiValueError.h</code> (<code>//src/error</code>) defines:</p>
+<ul>
+<li><code>ErrorCode</code> — an <code>enum class</code>, one variant per distinct failure category a
+  caller can act on (decode rejection, unsupported format, malformed/oversized
+  input, encode/write failure, client-abort, shape-probe failure,
+  metadata-parse failure, invalid request parameter). New failure categories
+  get a new variant — never folded into an existing one.</li>
+<li><code>SipiValueError</code> — the value itself: an <code>ErrorCode</code>, a diagnostic message, and
+  a <code>std::source_location</code> captured at construction. Cheap to move; the
+  diagnostic string is not eagerly formatted.</li>
+<li><code>client_message()</code> — path-redacted, no source location. Safe to surface in an
+  HTTP response body or a Lua-visible error string.</li>
+<li><code>diagnostic_message()</code> — full detail (source file + line), for server-side
+  logs and Sentry.</li>
+<li><code>Result&lt;T&gt;</code> — <code>template &lt;typename T&gt; using Result = std::expected&lt;T,
+  SipiValueError&gt;;</code>, defined in the same header.</li>
+</ul>
+<h2 id="policy-as-data-policy_forerrorcode">Policy as data: <code>policy_for(ErrorCode)</code><a class="headerlink" href="#policy-as-data-policy_forerrorcode" title="Permanent link">&para;</a></h2>
+<p>A <code>constexpr ErrorPolicy policy_for(ErrorCode)</code> returns
+<code>{ HttpStatusClass, SentryPolicy, MetricHint }</code> for a given code. This is the
+single source of truth for a <code>SipiValueError</code>'s failure policy — no seam
+dispatches on <code>ErrorCode</code> with its own scattered <code>catch</code>-equivalent <code>switch</code>.
+Each seam maps the returned <code>HttpStatusClass</code> to its own vocabulary — a
+concrete <code>SipiStatus</code> on the HTTP seam, an emitted error string on the Lua
+seam, an exit code on the CLI seam.</p>
+<table>
+<thead>
+<tr>
+<th><code>ErrorCode</code></th>
+<th><code>HttpStatusClass</code></th>
+<th><code>SentryPolicy</code></th>
+<th><code>MetricHint</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kDecodeFailed</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kReport</code> (+ <code>ImageContext</code>)</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kUnsupportedFormat</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kReport</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kMalformedInput</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kReport</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kWriteFailed</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kReport</code> (+ <code>ImageContext</code>)</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kClientAbort</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kSkip</code></td>
+<td><code>kClientDisconnected</code></td>
+</tr>
+<tr>
+<td><code>kShapeProbeFailed</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kReport</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kMetadataParseFailed</code></td>
+<td><code>kInternalError</code></td>
+<td><code>kReport</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kInvalidRequestParameter</code></td>
+<td><code>kClientError</code></td>
+<td><code>kSkip</code></td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p><code>kInvalidRequestParameter</code> is the one <code>ErrorCode</code> whose <code>HttpStatusClass</code> is
+<code>kClientError</code> rather than <code>kInternalError</code>: it marks a client-supplied IIIF
+parameter the engine cannot honour (for example, a requested scale target of
+one sample or fewer on an otherwise well-formed source image), as distinct
+from <code>kMalformedInput</code>, which stays <code>kInternalError</code> because it flags a
+problem with the repository's own content (a corrupt or degenerate source
+file) rather than with the request.</p>
+<p><code>std::bad_alloc</code> is deliberately not an <code>ErrorCode</code> and never appears in this
+table — it stays exception-based permanently (ADR-0024 Decision 7). It has no
+<code>MetricHint</code> to key on, since it never carries an <code>ErrorCode</code>: every seam maps
+it to <code>HttpStatusClass::kInternalError</code> and increments the
+<code>memory_alloc_failures_total</code> metric (<code>src/observability/cpp/metrics.h</code>)
+directly at the <code>catch</code> site, outside <code>policy_for</code>.</p>
+<h2 id="embedded-metadata-parse-failures-are-fatal-on-read">Embedded metadata parse failures are fatal on read<a class="headerlink" href="#embedded-metadata-parse-failures-are-fatal-on-read" title="Permanent link">&para;</a></h2>
+<p>Vitrinli is a repository: it must not admit corrupt material. Every embedded
+metadata blob a decode path hands to <code>Exif::parse</code>, <code>Iptc::parse</code>, or
+<code>Icc::parse</code> (JPEG's APP1/APP2/APP13 segments, J2K's UUID boxes and
+<code>colr</code> box, PNG's <code>iCCP</code>/<code>zTXt</code> chunks, TIFF's IPTC/ICC tags) must parse
+cleanly or the read fails with <code>kMetadataParseFailed</code> — there is no
+partial-metadata success path. A handler that decoded past a malformed
+blob with the metadata simply dropped was a pre-repository-era shortcut,
+not a supported outcome. <code>Icc::createRGB</code> is a different operation — it
+synthesizes an ICC profile from a file's colour tags rather than parsing
+an embedded blob — but the same ground applies: colour tags that cannot
+be built into a profile mean the file is corrupt, so synthesis failure
+is fatal too. <code>Xmp</code> is stored verbatim (see <code>src/metadata/cpp/xmp.h</code>)
+and has no parse step to fail.</p>
+<p>There is no reader-level exception to this contract: malformed ICC,
+IPTC, and EXIF — whether parsed from an embedded blob or synthesized by
+<code>Icc::createRGB</code> from colour tags — are all fatal in every codec handler
+(JPEG, J2K, PNG, TIFF), including PNG's "Raw profile type exif" text
+chunk (<code>src/format_handlers/cpp/SipiIOPng.cpp</code>).</p>
+<h3 id="exif-rationals-on-tiff-write">EXIF rationals on TIFF write<a class="headerlink" href="#exif-rationals-on-tiff-write" title="Permanent link">&para;</a></h3>
+<p><code>SipiIOTiff::writeExif</code> applies the same fatal-on-corruption stance to the
+write path. libtiff converts an EXIF rational tag to a <code>float</code> before
+storing it, so a scalar rational <code>n/0</code> with <code>n != 0</code> has no valid float
+representation; Vitrinli treats it as corrupt metadata and rejects the write
+with <code>kMetadataParseFailed</code> rather than silently dropping it. A scalar
+<code>0/0</code>, by contrast, is EXIF's own "no value" convention (e.g. an
+unmeasured <code>BrightnessValue</code>) and carries no value to reject — it is
+skipped, and the tag is simply omitted from the output. The
+<code>LensSpecification</code> tag (<code>EXIF_DT_RATIONAL_PTR</code>, a fixed four-rational
+array) is written all-or-nothing: any <code>n/0</code> element rejects the whole
+write, and otherwise any <code>0/0</code> element skips the whole tag, since
+libtiff's fixed-count <code>TIFFSetField</code> call has no per-element "unknown"
+encoding.</p>
+<h2 id="legacy-mechanisms-and-their-disposition">Legacy mechanisms and their disposition<a class="headerlink" href="#legacy-mechanisms-and-their-disposition" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Package</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sipi::SipiError</code></td>
+<td><code>iiifparser</code></td>
+<td>Unchanged. Exception-based, out of scope for this migration — a different package with its own lifetime (ADR-0021). The seams keep catching it by type for HTTP-400 dispatch.</td>
+</tr>
+<tr>
+<td><code>Sipi::SipiSizeError</code></td>
+<td><code>iiifparser</code></td>
+<td>Unchanged, same reasoning as <code>SipiError</code>.</td>
+</tr>
+<tr>
+<td><code>Sipi::SipiImageError</code></td>
+<td><code>image</code></td>
+<td>No fallible operation throws it. Narrowed to the unrecoverable/invariant class: allocation-size overflow (<code>checked_buf_size_or_throw</code> in <code>SipiImage.cpp</code>, <code>SipiIOTiff.cpp</code>, <code>compose.cpp</code>), <code>memTiffOpen</code>'s raw <code>malloc</code> failures, <code>SipiImage</code>'s construction/geometry invariants, and the <code>getPixel</code>/<code>setPixel</code> accessors — all programming errors with no input path.</td>
+</tr>
+<tr>
+<td><code>Sipi::InfoError</code> (bare <code>enum</code>)</td>
+<td><code>image</code></td>
+<td>Deleted; superseded by the dedicated <code>ErrorCode</code> variant <code>kShapeProbeFailed</code>.</td>
+</tr>
+<tr>
+<td><code>std::bad_alloc</code></td>
+<td>n/a</td>
+<td>Unchanged, permanent. See above.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-three-seams">The three seams<a class="headerlink" href="#the-three-seams" title="Permanent link">&para;</a></h2>
+<p>Each seam converts a fallible operation's <code>Result</code>/<code>SipiValueError</code> into its
+own failure vocabulary. What each seam catches by exception type differs:</p>
+<ul>
+<li><strong><code>src/ffi/cpp/serve_image.cpp</code></strong> (HTTP) — <code>HttpStatusClass</code> → <code>SipiStatus</code>;
+  <code>SentryPolicy::kReport</code> populates an <code>ImageContext</code> and calls
+  <code>report_image_error</code>; <code>MetricHint</code> increments the matching
+  <code>Sipi::observability::Metrics</code> counter. Its own <code>try</code>/<code>catch</code> blocks vary by
+  step: the image-read step catches <code>std::bad_alloc</code>, <code>SipiImageError</code>, and
+  <code>Sipi::SipiSizeError</code>; the later rotate/quality-conversion steps catch
+  <code>std::bad_alloc</code> and <code>Sipi::SipiError</code>; the watermark step catches
+  <code>Sipi::SipiError</code> and <code>std::exception</code>. It also catches <code>iiifparser</code>'s
+  <code>SipiError</code>/<code>SipiSizeError</code> elsewhere in the file (out of scope for this
+  migration, ADR-0021) for its HTTP 400. None of these name <code>kdu_exception</code>.</li>
+<li><strong><code>src/ffi/cpp/image_handle.cpp</code></strong> (Lua userdata surface, behind
+  <code>src/scripting/rust/bindings/image.rs</code>) — <code>client_message()</code> is emitted as the
+  Lua-visible error string; there is no HTTP status or Sentry report on this
+  surface. <code>sipi_image_new</code> (the entry that calls <code>SipiImage::read</code>) hand-rolls
+  its own three-stage catch, in order: <code>Sipi::SipiError</code>, then <code>std::exception</code>,
+  then a bare <code>catch (...)</code>.</li>
+<li><strong>CLI offline verbs</strong> (<code>src/cli/cpp/cli_app.cpp</code>,
+  <code>src/cli/cpp/commands/convert_access_file.cpp</code>, <code>convert_service_file.cpp</code>,
+  <code>verify.cpp</code>, <code>health.cpp</code>) — <code>diagnostic_message()</code> reaches the operator
+  through the verb's own reporting path: <code>log_err</code> to stderr, plus the
+  optional <code>--json</code> report on <code>sipi convert</code> (<code>emit_json_report</code>) or
+  <code>report_error</code> on <code>convert access-file</code>. The exit code is a plain binary
+  <code>EXIT_SUCCESS</code>/<code>EXIT_FAILURE</code> — a richer <code>HttpStatusClass</code>-derived exit-code
+  mapping is not implemented today. Each verb body catches <code>SipiImageError</code>
+  and/or <code>std::exception</code> around its own calls; none name <code>kdu_exception</code>.</li>
+</ul>
+<p>None of the three seams' own <code>try</code>/<code>catch</code> blocks name Kakadu's
+<code>kdu_exception</code> (an <code>int</code>-like type, not a <code>std::exception</code>) — and none need
+to, because it is stopped further out by a bare <code>catch (...)</code> wall. Inside
+<code>SipiIOJ2k::read</code>, only the source-open/<code>access_codestream</code>/<code>open_stream</code> call
+and the <code>codestream.create</code> call are wrapped in <code>try</code>/<code>catch (kdu_exception&amp;)</code>,
+converting those two failures to a <code>Result</code>. Several later calls on the same
+decode path are not inside any <code>try</code>: <code>codestream.access_siz()</code>,
+<code>codestream.apply_input_restrictions(...)</code>, <code>codestream.get_dims(...)</code>, and
+<code>jpx_layer.access_colour(0)</code>. A <code>kdu_exception</code> raised from any of those
+escapes <code>SipiIOJ2k::read</code> uncaught by any type-specific handler in the call
+chain above it, and is stopped only by the outer catch-all at each seam's
+boundary: <code>sipi_guard</code>'s bare <code>catch (...)</code> at the <code>extern "C"</code> boundary
+(<code>src/ffi/cpp/serve_response.h</code>) for the HTTP entries that go through
+<code>sipi_serve_image</code>, <code>sipi_image_new</code>'s own bare <code>catch (...)</code> for the Lua
+userdata surface, and <code>sipi_cli_main</code>'s bare <code>catch (...)</code> around
+<code>CLI11_PARSE</code> for the CLI. This is why
+<code>src/format_handlers/fuzz/codec_fuzz_harness.h</code> keeps a bare <code>catch (...)</code>
+around its own <code>read</code> calls — it exercises the same decode path directly,
+outside any seam.</p>
+<h2 id="error-variant-principle">Error-variant principle<a class="headerlink" href="#error-variant-principle" title="Permanent link">&para;</a></h2>
+<p>Enumerate failure variants per operation; never collapse distinct failures into
+one generic code to avoid extending the <code>policy_for</code> table. A catch-all that
+silently genericizes a new failure is the failure mode this model exists to
+prevent.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

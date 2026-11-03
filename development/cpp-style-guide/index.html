@@ -1,0 +1,2064 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/cpp-style-guide/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>C++23 Style Guide — 2026 Edition - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#c23-style-guide-2026-edition" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              C++23 Style Guide — 2026 Edition
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="c23-style-guide-2026-edition">C++23 Style Guide — 2026 Edition<a class="headerlink" href="#c23-style-guide-2026-edition" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Scope:</strong> General modern C++ best practices targeting C++23, for establishing a style guide, modernizing legacy code, and CI/tooling enforcement.</p>
+<p><strong>Primary authority:</strong> <a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines">C++ Core Guidelines</a> — supersedes Google's guide for C++23 work (Google's guide still targets C++20 as of 2026).</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#1-language-standard--compiler-flags">Language Standard &amp; Compiler Flags</a></li>
+<li><a href="#2-c23-features-to-adopt">C++23 Features to Adopt</a></li>
+<li><a href="#3-core-style-rules">Core Style Rules</a></li>
+<li><a href="#4-c-library-boundary-safety">C Library Boundary Safety</a></li>
+<li><a href="#5-legacy-code-modernization">Legacy Code Modernization</a></li>
+<li><a href="#6-tooling-configuration">Tooling Configuration</a></li>
+<li><a href="#7-ci-enforcement">CI Enforcement</a></li>
+<li><a href="#8-reference-anchors">Reference Anchors</a></li>
+</ol>
+<hr />
+<h2 id="1-language-standard-compiler-flags">1. Language Standard &amp; Compiler Flags<a class="headerlink" href="#1-language-standard-compiler-flags" title="Permanent link">&para;</a></h2>
+<p>Set this baseline in CMake:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="s">23</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD_REQUIRED</span><span class="w"> </span><span class="s">ON</span><span class="p">)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_EXTENSIONS</span><span class="w"> </span><span class="s">OFF</span><span class="p">)</span><span class="w">   </span><span class="c"># Enforces -std=c++23, not -std=gnu++23</span>
+</code></pre></div>
+<blockquote>
+<p><strong>Note:</strong> <code>CMAKE_CXX_EXTENSIONS OFF</code> is required for clang-tidy compatibility.
+GCC passes <code>-std=gnu++23</code> by default, which older clang-tidy versions reject.
+Pin clang-tidy to LLVM 19+ for full C++23 support and modern checks.</p>
+</blockquote>
+<h3 id="recommended-warnings-gccclang">Recommended Warnings (GCC/Clang)<a class="headerlink" href="#recommended-warnings-gccclang" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">target_compile_options</span><span class="p">(</span><span class="s">mylib</span><span class="w"> </span><span class="s">PRIVATE</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="s">-Wall</span><span class="w"> </span><span class="s">-Wextra</span><span class="w"> </span><span class="s">-Wpedantic</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="s">-Wshadow</span><span class="w"> </span><span class="s">-Wnon-virtual-dtor</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="s">-Wold-style-cast</span><span class="w"> </span><span class="s">-Wcast-align</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="s">-Woverloaded-virtual</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="s">-Wconversion</span><span class="w"> </span><span class="s">-Wsign-conversion</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="s">-Wnull-dereference</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="s">-Wdouble-promotion</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="s">-Wimplicit-fallthrough</span><span class="w">          </span><span class="c"># Missing break/[[fallthrough]] in switch</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="s">-Wformat=2</span><span class="w">                      </span><span class="c"># Stricter format string checking (includes -Wformat-security)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="s">-Wundef</span><span class="w">                         </span><span class="c"># Undefined identifier in #if</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="s">-Wswitch-enum</span><span class="w">                   </span><span class="c"># Switch on enum doesn&#39;t handle all values</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="s">-Werror</span><span class="w">                         </span><span class="c"># CI only — not enforced in local dev builds</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="sanitizer-flags-debugtest-builds">Sanitizer Flags (Debug/Test Builds)<a class="headerlink" href="#sanitizer-flags-debugtest-builds" title="Permanent link">&para;</a></h3>
+<p>Enable address and undefined behavior sanitizers in Bazel via the
+<code>--config=asan</code> and <code>--config=ubsan</code> blocks in <code>.bazelrc</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bazel<span class="w"> </span>build<span class="w"> </span>--config<span class="o">=</span>asan<span class="w"> </span>--config<span class="o">=</span>ubsan<span class="w"> </span>//src/cli:sipi
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># or via the wrapper:</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>just<span class="w"> </span>bazel-build-sanitized
+</code></pre></div>
+<p>The configs apply <code>-fsanitize=address</code> / <code>-fsanitize=undefined</code> together
+with <code>-fno-omit-frame-pointer</code>, <code>-fno-optimize-sibling-calls</code>,
+<code>--compilation_mode=dbg</code>, and <code>--strip=never</code> — DWARF must stay inline
+so LSan's symbol-name suppressions in <code>.lsan_suppressions.txt</code> resolve.</p>
+<p>Run tests under sanitizers regularly to catch memory bugs and undefined
+behavior early. Thread sanitizer (<code>-fsanitize=thread</code>) is incompatible
+with ASan — run it separately.</p>
+<hr />
+<h2 id="2-c23-features-to-adopt">2. C++23 Features to Adopt<a class="headerlink" href="#2-c23-features-to-adopt" title="Permanent link">&para;</a></h2>
+<h3 id="adopt-aggressively">Adopt Aggressively<a class="headerlink" href="#adopt-aggressively" title="Permanent link">&para;</a></h3>
+<h4 id="stdprint-stdprintln"><code>std::print</code> / <code>std::println</code><a class="headerlink" href="#stdprint-stdprintln" title="Permanent link">&para;</a></h4>
+<p>Replace <code>printf</code> and <code>std::cout</code> chains entirely.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Before</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello %s, you are %d years old</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span><span class="w"> </span><span class="n">age</span><span class="p">);</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// After (C++23)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Hello {}, you are {} years old&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">age</span><span class="p">);</span>
+</code></pre></div>
+<h4 id="stdexpectedt-e"><code>std::expected&lt;T, E&gt;</code><a class="headerlink" href="#stdexpectedt-e" title="Permanent link">&para;</a></h4>
+<p>Replace exception-heavy error handling for fallible operations.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">auto</span><span class="w"> </span><span class="n">parse_config</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">Config</span><span class="p">,</span><span class="w"> </span><span class="n">ParseError</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>Prefer <code>std::expected</code> over exceptions for:
+- Functions that commonly fail as part of normal operation (parsing, I/O)
+- API boundaries where callers need to handle errors explicitly
+- Performance-sensitive paths where exception overhead matters</p>
+<p>Continue using exceptions for:
+- Truly exceptional, unrecoverable conditions
+- Constructor failures</p>
+<h4 id="stdflat_map-stdflat_set"><code>std::flat_map</code> / <code>std::flat_set</code><a class="headerlink" href="#stdflat_map-stdflat_set" title="Permanent link">&para;</a></h4>
+<p>Cache-friendly replacements for <code>std::map</code>/<code>std::set</code> when iteration dominates over insertion.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">std</span><span class="o">::</span><span class="n">flat_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lookup</span><span class="p">;</span><span class="w"> </span><span class="c1">// contiguous storage, faster iteration</span>
+</code></pre></div>
+<p>Use <code>std::map</code>/<code>std::set</code> when you need pointer/iterator stability across mutations.</p>
+<h4 id="if-consteval"><code>if consteval</code><a class="headerlink" href="#if-consteval" title="Permanent link">&para;</a></h4>
+<p>Cleaner compile-time branching than <code>if constexpr</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="k">consteval</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">fast_consteval_path</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="k">else</span><span class="w">         </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">runtime_path</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="ranges-c23-additions">Ranges (C++23 additions)<a class="headerlink" href="#ranges-c23-additions" title="Permanent link">&para;</a></h4>
+<p>Use freely — the C++23 additions are well-supported in GCC 13+ and Clang 17+.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// fold_left, contains, starts_with, ends_with, find_last, iota</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">fold_left</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="p">{});</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">contains</span><span class="p">(</span><span class="n">allowed</span><span class="p">,</span><span class="w"> </span><span class="n">user_input</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<h4 id="multidimensional-operator">Multidimensional <code>operator[]</code><a class="headerlink" href="#multidimensional-operator" title="Permanent link">&para;</a></h4>
+<p>Useful for matrix, image, and tensor types.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">auto</span><span class="w"> </span><span class="n">pixel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">image</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">];</span><span class="w">   </span><span class="c1">// C++23 — replaces image(row, col) or image[row][col]</span>
+</code></pre></div>
+<h4 id="stdmdspan"><code>std::mdspan</code><a class="headerlink" href="#stdmdspan" title="Permanent link">&para;</a></h4>
+<p>Non-owning multidimensional view over contiguous data. Directly useful for image pixel buffers.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// Wrap a raw pixel buffer as a 2D view</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">pixels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">mdspan</span><span class="p">(</span><span class="n">raw_buffer</span><span class="p">,</span><span class="w"> </span><span class="n">height</span><span class="p">,</span><span class="w"> </span><span class="n">width</span><span class="p">);</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pixels</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">];</span><span class="w">   </span><span class="c1">// bounds-checked with extents</span>
+</code></pre></div>
+<p>Replaces ad-hoc <code>buffer[row * width + col]</code> indexing patterns with a type-safe abstraction. Combine with multidimensional <code>operator[]</code> for clean image processing code.</p>
+<h4 id="stdunreachable"><code>std::unreachable()</code><a class="headerlink" href="#stdunreachable" title="Permanent link">&para;</a></h4>
+<p>Standardized unreachable hint. Use in switch defaults after exhaustive enum handling.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">direction</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">Direction</span><span class="o">::</span><span class="no">North</span><span class="p">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">};</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">Direction</span><span class="o">::</span><span class="no">South</span><span class="p">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">Direction</span><span class="o">::</span><span class="no">East</span><span class="p">:</span><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">Direction</span><span class="o">::</span><span class="no">West</span><span class="p">:</span><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">}</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">std</span><span class="o">::</span><span class="n">unreachable</span><span class="p">();</span><span class="w">   </span><span class="c1">// replaces __builtin_unreachable()</span>
+</code></pre></div>
+<h4 id="stdto_underlying"><code>std::to_underlying()</code><a class="headerlink" href="#stdto_underlying" title="Permanent link">&para;</a></h4>
+<p>Clean enum-to-integer conversion.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// Before</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">underlying_type_t</span><span class="o">&lt;</span><span class="n">Color</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">color</span><span class="p">);</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1">// After (C++23)</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">auto</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_underlying</span><span class="p">(</span><span class="n">color</span><span class="p">);</span>
+</code></pre></div>
+<h4 id="monadic-stdoptional-operations">Monadic <code>std::optional</code> operations<a class="headerlink" href="#monadic-stdoptional-operations" title="Permanent link">&para;</a></h4>
+<p><code>and_then</code>, <code>transform</code>, <code>or_else</code> enable functional-style chaining.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// Before</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Image</span><span class="o">&gt;</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">auto</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">findFile</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loadData</span><span class="p">(</span><span class="o">*</span><span class="n">file</span><span class="p">);</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">decode</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">);</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="p">}</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="c1">// After (C++23)</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">findFile</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">    </span><span class="p">.</span><span class="n">and_then</span><span class="p">(</span><span class="n">loadData</span><span class="p">)</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">    </span><span class="p">.</span><span class="n">and_then</span><span class="p">(</span><span class="n">decode</span><span class="p">);</span>
+</code></pre></div>
+<h4 id="stdmove_only_function"><code>std::move_only_function</code><a class="headerlink" href="#stdmove_only_function" title="Permanent link">&para;</a></h4>
+<p>Replacement for <code>std::function</code> when the callback captures move-only types.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// ❌ Won&#39;t compile — unique_ptr is not copyable</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span><span class="p">()]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1">// ✅ Accepts move-only captures</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">std</span><span class="o">::</span><span class="n">move_only_function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span><span class="p">()]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span><span class="w"> </span><span class="p">};</span>
+</code></pre></div>
+<p>Prefer <code>std::move_only_function</code> over <code>std::function</code> for stored callbacks. Prefer templates for generic callback parameters.</p>
+<hr />
+<h3 id="adopt-with-care">Adopt with Care<a class="headerlink" href="#adopt-with-care" title="Permanent link">&para;</a></h3>
+<h4 id="c23-modules-import-std">C++23 Modules (<code>import std;</code>)<a class="headerlink" href="#c23-modules-import-std" title="Permanent link">&para;</a></h4>
+<p>Module support remains inconsistent across toolchains as of 2026. Header units and <code>import std;</code> interoperability across translation units is fragile. Defer unless your entire build pipeline uses CMake 3.30+ with Clang 19+/GCC 14+, and all third-party dependencies support modules.</p>
+<h4 id="stdgeneratort-coroutine-generator"><code>std::generator&lt;T&gt;</code> (coroutine generator)<a class="headerlink" href="#stdgeneratort-coroutine-generator" title="Permanent link">&para;</a></h4>
+<p>Now supported by GCC 14+, Clang 18+, and MSVC 17.13+. Use when lazy evaluation of sequences provides clear benefits (e.g., streaming large result sets without materializing them). Ensure team familiarity with coroutine lifetime semantics — captured references and dangling is a common footgun.</p>
+<h4 id="deducing-this-explicit-object-parameter">Deducing <code>this</code> (explicit object parameter)<a class="headerlink" href="#deducing-this-explicit-object-parameter" title="Permanent link">&para;</a></h4>
+<p>Eliminates CRTP boilerplate and deduplicates const/non-const overloads. Well-supported in GCC 14+, Clang 18+, MSVC 17.2+.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Before — duplicated const/non-const overloads</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">data_</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">data_</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="c1">// After — single definition, deduced value category</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">get</span><span class="p">(</span><span class="k">this</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">forward_like</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">data_</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Use for new code where it simplifies overload sets. Avoid in public API headers consumed by downstream code on older compilers.</p>
+<h4 id="stdstacktrace"><code>std::stacktrace</code><a class="headerlink" href="#stdstacktrace" title="Permanent link">&para;</a></h4>
+<p>Useful for error reporting and diagnostics. Library support varies — verify availability in your toolchain before adopting. Do not use in hot paths (capturing a stack trace is expensive).</p>
+<hr />
+<h3 id="do-not-use">Do Not Use<a class="headerlink" href="#do-not-use" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>std::bind</code></strong> — always prefer lambdas (see <a href="#3-core-style-rules">Core Style Rules</a>)</li>
+<li><strong><code>std::function</code></strong> for performance-sensitive callbacks — prefer templates or <code>std::move_only_function</code> (C++23)</li>
+<li><strong>VLAs</strong> (Variable-Length Arrays) — use <code>std::vector</code> or <code>std::array</code></li>
+<li><strong><code>reinterpret_cast</code></strong> — if unavoidable, isolate and document clearly</li>
+<li><strong>Raw owning pointers</strong> — see ownership rules below</li>
+<li><strong><code>[[assume(expr)]]</code></strong> — introduces undefined behavior if the assumption is wrong; risk outweighs benefit for most code. Use <code>assert</code> for debug-only checks instead.</li>
+</ul>
+<hr />
+<h2 id="3-core-style-rules">3. Core Style Rules<a class="headerlink" href="#3-core-style-rules" title="Permanent link">&para;</a></h2>
+<h3 id="31-naming-conventions">3.1 Naming Conventions<a class="headerlink" href="#31-naming-conventions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Convention</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Types / Classes</td>
+<td><code>PascalCase</code></td>
+<td><code>ImageProcessor</code>, <code>ParseResult</code></td>
+</tr>
+<tr>
+<td>Functions / Methods</td>
+<td><code>camelCase</code></td>
+<td><code>parseHeader()</code>, <code>loadFile()</code></td>
+</tr>
+<tr>
+<td>Local variables</td>
+<td><code>snake_case</code></td>
+<td><code>pixel_count</code>, <code>file_path</code></td>
+</tr>
+<tr>
+<td>Parameters</td>
+<td><code>snake_case</code></td>
+<td><code>buffer_size</code>, <code>input_path</code></td>
+</tr>
+<tr>
+<td>Constants / <code>constexpr</code></td>
+<td><code>kPascalCase</code></td>
+<td><code>kMaxRetries</code>, <code>kDefaultTimeout</code></td>
+</tr>
+<tr>
+<td>Enum values</td>
+<td><code>kPascalCase</code></td>
+<td><code>kNotFound</code>, <code>kSuccess</code></td>
+</tr>
+<tr>
+<td>Private members</td>
+<td><code>trailing_underscore_</code></td>
+<td><code>buffer_</code>, <code>size_</code></td>
+</tr>
+<tr>
+<td>Namespaces</td>
+<td><code>snake_case</code></td>
+<td><code>dasch::iiif::</code></td>
+</tr>
+<tr>
+<td>Macros</td>
+<td><code>SCREAMING_SNAKE</code></td>
+<td><code>DASCH_ASSERT(x)</code></td>
+</tr>
+<tr>
+<td>Template parameters</td>
+<td><code>PascalCase</code></td>
+<td><code>template &lt;typename ValueType&gt;</code></td>
+</tr>
+<tr>
+<td>Concepts</td>
+<td><code>PascalCase</code> (adjective/predicate)</td>
+<td><code>Sortable</code>, <code>Hashable</code>, <code>Renderable</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Minimize macros.</strong> Prefer <code>constexpr</code>, <code>inline constexpr</code>, <code>[[nodiscard]]</code>, and templates.</p>
+<hr />
+<h3 id="32-headers">3.2 Headers<a class="headerlink" href="#32-headers" title="Permanent link">&para;</a></h3>
+<p><strong>File extensions.</strong> First-party C++ sources use <code>.cpp</code>; headers use <code>.h</code>. Do not
+introduce <code>.cc</code>, <code>.cxx</code>, <code>.hpp</code>, or <code>.hh</code> for first-party code. This matches the
+existing tree and the tooling in §6 (the <code>.clang-format</code> / <code>.clang-tidy</code>
+invocations glob <code>*.cpp</code> and <code>*.h</code>, so any other extension silently escapes
+formatting and lint). Google's <code>.cc</code> convention was rejected — renaming the whole
+tree buys nothing against the industry-dominant <code>.cpp</code>. Vendored third-party
+single headers keep their upstream extension (e.g. <code>CLI11.hpp</code>). The separate
+question of file-<em>name casing</em> (<code>SipiCache.cpp</code> vs <code>cache.cpp</code>) is deferred to its
+own ADR.</p>
+<ul>
+<li>Always use <code>#pragma once</code> — not include guards (simpler, universally supported)</li>
+<li>Headers must be self-contained (compilable on their own)</li>
+<li>Use forward declarations aggressively to reduce compile times</li>
+<li>Organize includes in this order, each group alphabetically sorted:</li>
+<li>Own header (for <code>.cpp</code> files)</li>
+<li>Standard library</li>
+<li>Third-party</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="cp">#pragma once</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1">// Own</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;image_processor.h&quot;</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="c1">// Standard</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;expected&gt;</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;span&gt;</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string_view&gt;</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="c1">// Third-party</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;spdlog/spdlog.h&gt;</span>
+</code></pre></div>
+<hr />
+<h3 id="33-auto-usage">3.3 <code>auto</code> Usage<a class="headerlink" href="#33-auto-usage" title="Permanent link">&para;</a></h3>
+<p>Adopt an "almost always auto" policy with these guardrails:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w">                        </span><span class="c1">// ✅ — type is obvious</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_header</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span><span class="w">    </span><span class="c1">// ✅ — name conveys intent</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">container</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="w">        </span><span class="c1">// ✅ — iterator boilerplate</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compute</span><span class="p">();</span><span class="w">                  </span><span class="c1">// ✅ — explicit when preferred</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getView</span><span class="p">();</span><span class="w">          </span><span class="c1">// ✅ — explicit to prevent accidental string_view binding</span>
+</code></pre></div>
+<p>Use trailing return types for non-trivial function signatures:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">auto</span><span class="w"> </span><span class="n">loadFile</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="n">IOError</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">transform</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="o">&gt;</span><span class="w"> </span><span class="n">input</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<hr />
+<h3 id="34-ownership-memory">3.4 Ownership &amp; Memory<a class="headerlink" href="#34-ownership-memory" title="Permanent link">&para;</a></h3>
+<p>Follow the C++ Core Guidelines ownership model. Raw owning pointers are banned.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// ❌ Banned</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">Foo</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Foo</span><span class="p">();</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="k">delete</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1">// ✅ Unique ownership (default choice)</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="k">auto</span><span class="w"> </span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span><span class="p">();</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="c1">// ✅ Shared ownership (use sparingly — only when ownership is genuinely shared)</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="k">auto</span><span class="w"> </span><span class="n">shared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span><span class="p">();</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="c1">// ✅ Non-owning observer pointer (OK — not stored, not freed)</span>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="kt">void</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Image</span><span class="o">*</span><span class="w"> </span><span class="n">img</span><span class="p">);</span>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
+<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="c1">// ✅ Prefer value semantics when lifetime is clear</span>
+<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="n">Foo</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span>
+</code></pre></div>
+<p><strong>Prefer value semantics first.</strong> Reach for heap allocation only when you need polymorphism, ownership transfer, or lifetime extension.</p>
+<p>For non-memory resources (file handles, sockets, locks), use RAII wrappers — <code>std::unique_ptr</code> with a custom deleter or a dedicated RAII class:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// RAII for non-memory resources</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="kt">FILE</span><span class="p">,</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="o">&amp;</span><span class="n">fclose</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fopen</span><span class="p">(</span><span class="s">&quot;data.bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;rb&quot;</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">fclose</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="35-move-semantics-special-member-functions">3.5 Move Semantics &amp; Special Member Functions<a class="headerlink" href="#35-move-semantics-special-member-functions" title="Permanent link">&para;</a></h3>
+<p>Follow the <strong>Rule of Zero</strong> by default — prefer value members so the compiler generates correct copy/move/destructor automatically. If you must manage a resource directly, follow the <strong>Rule of Five</strong>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1">// ✅ Rule of Zero — compiler generates everything correctly</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ImageMetadata</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">title_</span><span class="p">;</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">tags_</span><span class="p">;</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">IccProfile</span><span class="o">&gt;</span><span class="w"> </span><span class="n">icc_</span><span class="p">;</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">    </span><span class="c1">// No need for destructor, copy ctor, move ctor, copy assign, move assign</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="p">};</span>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="c1">// ✅ Rule of Five — when manual resource management is unavoidable</span>
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="k">class</span><span class="w"> </span><span class="nc">PixelBuffer</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="k">public</span><span class="o">:</span>
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="w">    </span><span class="n">PixelBuffer</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">);</span>
+<a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">    </span><span class="o">~</span><span class="n">PixelBuffer</span><span class="p">();</span>
+<a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">    </span><span class="n">PixelBuffer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">PixelBuffer</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">);</span>
+<a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="w">    </span><span class="n">PixelBuffer</span><span class="p">(</span><span class="n">PixelBuffer</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span><span class="w">           </span><span class="c1">// must be noexcept</span>
+<a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="w">    </span><span class="n">PixelBuffer</span><span class="o">&amp;</span><span class="w"> </span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">PixelBuffer</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">);</span>
+<a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a><span class="w">    </span><span class="n">PixelBuffer</span><span class="o">&amp;</span><span class="w"> </span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">PixelBuffer</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span><span class="w"> </span><span class="c1">// must be noexcept</span>
+<a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a><span class="p">};</span>
+</code></pre></div>
+<p><strong>Rules:</strong>
+- Mark move constructors and move assignment operators <code>noexcept</code> — this enables <code>std::vector</code> move optimizations and is required for strong exception safety
+- Use <code>= default</code> for special member functions when possible
+- Use <code>= delete</code> to explicitly prevent copying when a type should be move-only
+- After a move, the source object must be in a valid-but-unspecified state (C++ Core Guidelines C.64)
+- Assignment operators must handle self-assignment correctly</p>
+<hr />
+<h3 id="36-api-boundaries-prefer-views">3.6 API Boundaries: Prefer Views<a class="headerlink" href="#36-api-boundaries-prefer-views" title="Permanent link">&para;</a></h3>
+<p>Use <code>std::span</code> and <code>std::string_view</code> at function boundaries — zero-copy, works with any contiguous range.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1">// ❌ Forces allocation or copy</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="kt">void</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">uint8_t</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">data</span><span class="p">);</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">msg</span><span class="p">);</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1">// ✅ View — no copy, works with vector, array, raw buffer, string literal</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="kt">void</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">);</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">msg</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="37-const-correctness">3.7 <code>const</code> Correctness<a class="headerlink" href="#37-const-correctness" title="Permanent link">&para;</a></h3>
+<p>Be rigorous. Apply <code>const</code> everywhere it is valid.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">getName</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="p">;</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">;</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="kt">void</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Config</span><span class="o">&amp;</span><span class="w"> </span><span class="n">config</span><span class="p">);</span><span class="w">        </span><span class="c1">// const ref for input params</span>
+</code></pre></div>
+<hr />
+<h3 id="38-nodiscard">3.8 <code>[[nodiscard]]</code><a class="headerlink" href="#38-nodiscard" title="Permanent link">&para;</a></h3>
+<p>Apply to all functions where ignoring the return value is almost certainly a bug.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">loadFile</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">;</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span><span class="p">;</span>
+</code></pre></div>
+<hr />
+<h3 id="39-noexcept-policy">3.9 <code>noexcept</code> Policy<a class="headerlink" href="#39-noexcept-policy" title="Permanent link">&para;</a></h3>
+<p>Mark <code>noexcept</code> when a function genuinely cannot throw. Do not mark speculatively.</p>
+<p><strong>Always <code>noexcept</code>:</strong>
+- Destructors (implicit, but be explicit if non-trivial)
+- Move constructors and move assignment operators
+- <code>swap</code> functions
+- Simple getters and observers</p>
+<p><strong>Never <code>noexcept</code>:</strong>
+- Functions that allocate memory (<code>new</code> can throw <code>std::bad_alloc</code>)
+- Functions that call potentially-throwing code without catching</p>
+<p><strong>Be aware:</strong> <code>noexcept</code> is part of the type system since C++17 — removing it from a public API is an ABI break.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1">// ✅ Correct</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="o">~</span><span class="n">PixelBuffer</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span><span class="w">                            </span><span class="c1">// implicit, but explicit is fine</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">PixelBuffer</span><span class="p">(</span><span class="n">PixelBuffer</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="k">auto</span><span class="w"> </span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">;</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="k">friend</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">swap</span><span class="p">(</span><span class="n">PixelBuffer</span><span class="o">&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">PixelBuffer</span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1">// ❌ Wrong — new can throw</span>
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="k">auto</span><span class="w"> </span><span class="n">clone</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">PixelBuffer</span><span class="p">;</span><span class="w">   </span><span class="c1">// don&#39;t promise what you can&#39;t guarantee</span>
+</code></pre></div>
+<hr />
+<h3 id="310-enum-class">3.10 <code>enum class</code><a class="headerlink" href="#310-enum-class" title="Permanent link">&para;</a></h3>
+<p>Always use <code>enum class</code> for new enumerations. Unscoped <code>enum</code> leaks names into the enclosing scope and permits implicit integer conversion.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1">// ❌ Unscoped — names leak, implicit int conversion</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="k">enum</span><span class="w"> </span><span class="nc">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Red</span><span class="p">,</span><span class="w"> </span><span class="n">Green</span><span class="p">,</span><span class="w"> </span><span class="n">Blue</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Red</span><span class="p">;</span><span class="w">   </span><span class="c1">// compiles silently</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="c1">// ✅ Scoped — type-safe, no name leakage</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">kRed</span><span class="p">,</span><span class="w"> </span><span class="n">kGreen</span><span class="p">,</span><span class="w"> </span><span class="n">kBlue</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="k">auto</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_underlying</span><span class="p">(</span><span class="n">Color</span><span class="o">::</span><span class="n">kRed</span><span class="p">);</span><span class="w">   </span><span class="c1">// explicit conversion (C++23)</span>
+</code></pre></div>
+<hr />
+<h3 id="311-structured-bindings">3.11 Structured Bindings<a class="headerlink" href="#311-structured-bindings" title="Permanent link">&para;</a></h3>
+<p>Use structured bindings to decompose tuples, pairs, and aggregates.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1">// ❌ Verbose</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">map</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">map</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">it</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="n">process</span><span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">);</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
+<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>
+<a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="c1">// ✅ Clean</span>
+<a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="p">[</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">map</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="w">    </span><span class="n">process</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+<a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="p">}</span>
+<a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>
+<a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a><span class="c1">// ✅ With tuple returns</span>
+<a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fetchResult</span><span class="p">();</span>
+</code></pre></div>
+<p>Use <code>const auto&amp;</code> to avoid copies. Use <code>auto&amp;&amp;</code> when forwarding.</p>
+<hr />
+<h3 id="312-concepts-and-constraints">3.12 Concepts and Constraints<a class="headerlink" href="#312-concepts-and-constraints" title="Permanent link">&para;</a></h3>
+<p>Prefer concepts over SFINAE for constraining templates (C++ Core Guidelines T.10, T.11).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1">// ❌ SFINAE — hard to read, worse error messages</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">enable_if_t</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_integral_v</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;&gt;</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="k">auto</span><span class="w"> </span><span class="n">process</span><span class="p">(</span><span class="n">T</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="c1">// ✅ Concept — clear intent, readable error messages</span>
+<a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">integral</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span>
+<a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="k">auto</span><span class="w"> </span><span class="n">process</span><span class="p">(</span><span class="n">T</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>
+<a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="c1">// ✅ requires clause for compound constraints</span>
+<a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
+<a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="w">    </span><span class="k">requires</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">copyable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">regular</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
+<a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="p">(</span><span class="n">T</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="p">;</span>
+</code></pre></div>
+<p><strong>Rules:</strong>
+- Use standard library concepts (<code>std::integral</code>, <code>std::floating_point</code>, <code>std::invocable</code>, <code>std::ranges::range</code>) before defining custom ones
+- Name custom concepts as adjectives or predicates: <code>Sortable</code>, <code>Hashable</code>, <code>Renderable</code>
+- Prefer terse syntax (<code>template &lt;std::integral T&gt;</code>) over verbose <code>requires</code> when a single concept suffices</p>
+<hr />
+<h3 id="313-lambdas-over-stdbind">3.13 Lambdas Over <code>std::bind</code><a class="headerlink" href="#313-lambdas-over-stdbind" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1">// ❌ std::bind — verbose, opaque, error-prone</span>
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Foo</span><span class="o">::</span><span class="n">bar</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">placeholders</span><span class="o">::</span><span class="n">_1</span><span class="p">);</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1">// ✅ Lambda — clear, inlineable, captures are explicit</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="k">auto</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">bar</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="p">};</span>
+</code></pre></div>
+<hr />
+<h3 id="314-error-handling-strategy">3.14 Error Handling Strategy<a class="headerlink" href="#314-error-handling-strategy" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fallible operations (parsing, I/O, validation)</td>
+<td><code>std::expected&lt;T, E&gt;</code></td>
+</tr>
+<tr>
+<td>Truly unrecoverable / programming errors</td>
+<td><code>throw</code> / exceptions</td>
+</tr>
+<tr>
+<td>Precondition violations in debug builds</td>
+<td><code>assert</code> / custom <code>ASSERT</code> macro</td>
+</tr>
+<tr>
+<td>Performance-critical error paths</td>
+<td>Error codes via <code>std::expected</code></td>
+</tr>
+<tr>
+<td>Resource exhaustion (OOM)</td>
+<td>Catch <code>std::bad_alloc</code>, degrade gracefully</td>
+</tr>
+</tbody>
+</table>
+<p>Never use exceptions for control flow.</p>
+<h4 id="exception-safety-guarantees">Exception Safety Guarantees<a class="headerlink" href="#exception-safety-guarantees" title="Permanent link">&para;</a></h4>
+<p>All functions must provide at least the <strong>basic guarantee</strong>. Document which functions provide stronger guarantees.</p>
+<table>
+<thead>
+<tr>
+<th>Guarantee</th>
+<th>Contract</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nothrow</strong></td>
+<td>Operation cannot fail. Mark <code>noexcept</code>.</td>
+<td>Destructors, <code>swap</code>, move operations</td>
+</tr>
+<tr>
+<td><strong>Strong</strong></td>
+<td>Operation succeeds completely or state is unchanged (commit-or-rollback).</td>
+<td>Mutations that can be rolled back cheaply</td>
+</tr>
+<tr>
+<td><strong>Basic</strong></td>
+<td>On exception: no leaks, all invariants preserved, but state may have changed.</td>
+<td>Default for all functions</td>
+</tr>
+</tbody>
+</table>
+<p>RAII is the primary mechanism for achieving exception safety — destructors clean up resources regardless of how a scope is exited.</p>
+<hr />
+<h3 id="315-constexpr-and-compile-time-computation">3.15 <code>constexpr</code> and Compile-Time Computation<a class="headerlink" href="#315-constexpr-and-compile-time-computation" title="Permanent link">&para;</a></h3>
+<p>Prefer <code>constexpr</code> over runtime computation wherever feasible:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1">// ❌</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="cp">#define MAX_RETRIES 5</span>
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">kMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="c1">// ✅</span>
+<a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="kr">inline</span><span class="w"> </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">kMaxRetries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">computeBufferSize</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">height</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">;</span>
+</code></pre></div>
+<hr />
+<h3 id="316-concurrency-and-threading">3.16 Concurrency and Threading<a class="headerlink" href="#316-concurrency-and-threading" title="Permanent link">&para;</a></h3>
+<p>For multithreaded code, follow the C++ Core Guidelines CP section.</p>
+<h4 id="thread-management">Thread Management<a class="headerlink" href="#thread-management" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1">// ❌ std::thread — must manually join or detach, easy to leak</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="w"> </span><span class="nf">t</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span><span class="w">   </span><span class="c1">// forgetting this is UB</span>
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="c1">// ✅ std::jthread — automatic join on destruction, cooperative cancellation</span>
+<a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="n">std</span><span class="o">::</span><span class="n">jthread</span><span class="w"> </span><span class="nf">t</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+<a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="c1">// automatically joined when t goes out of scope</span>
+<a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>
+<a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="c1">// ✅ Cooperative cancellation via stop_token</span>
+<a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="n">std</span><span class="o">::</span><span class="n">jthread</span><span class="w"> </span><span class="nf">worker</span><span class="p">([](</span><span class="n">std</span><span class="o">::</span><span class="n">stop_token</span><span class="w"> </span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a><span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">st</span><span class="p">.</span><span class="n">stop_requested</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a><span class="w">        </span><span class="n">process_next_item</span><span class="p">();</span>
+<a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a><span class="p">});</span>
+<a id="__codelineno-30-15" name="__codelineno-30-15" href="#__codelineno-30-15"></a><span class="n">worker</span><span class="p">.</span><span class="n">request_stop</span><span class="p">();</span><span class="w">   </span><span class="c1">// cooperative shutdown</span>
+</code></pre></div>
+<h4 id="shared-state-protection">Shared State Protection<a class="headerlink" href="#shared-state-protection" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1">// ✅ std::scoped_lock for multiple mutexes (deadlock-free)</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="n">std</span><span class="o">::</span><span class="n">scoped_lock</span><span class="w"> </span><span class="nf">lock</span><span class="p">(</span><span class="n">mutex_a</span><span class="p">,</span><span class="w"> </span><span class="n">mutex_b</span><span class="p">);</span>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="c1">// ✅ std::shared_mutex for reader-heavy workloads</span>
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="k">mutable</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">shared_mutex</span><span class="w"> </span><span class="n">mutex_</span><span class="p">;</span>
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="k">auto</span><span class="w"> </span><span class="n">read</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">shared_lock</span><span class="w"> </span><span class="nf">lock</span><span class="p">(</span><span class="n">mutex_</span><span class="p">);</span><span class="w">   </span><span class="c1">// multiple readers OK</span>
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">data_</span><span class="p">;</span>
+<a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="p">}</span>
+<a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="k">auto</span><span class="w"> </span><span class="n">write</span><span class="p">(</span><span class="n">Data</span><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="w"> </span><span class="nf">lock</span><span class="p">(</span><span class="n">mutex_</span><span class="p">);</span><span class="w">   </span><span class="c1">// exclusive writer</span>
+<a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a><span class="w">    </span><span class="n">data_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">d</span><span class="p">);</span>
+<a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a><span class="p">}</span>
+<a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a>
+<a id="__codelineno-31-15" name="__codelineno-31-15" href="#__codelineno-31-15"></a><span class="c1">// ✅ std::atomic for lock-free counters and flags</span>
+<a id="__codelineno-31-16" name="__codelineno-31-16" href="#__codelineno-31-16"></a><span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">active_requests_</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+<a id="__codelineno-31-17" name="__codelineno-31-17" href="#__codelineno-31-17"></a><span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">shutting_down_</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+</code></pre></div>
+<p><strong>Rules:</strong>
+- Never use <code>volatile</code> for synchronization (C++ Core Guidelines CP.200)
+- Prefer <code>std::atomic</code> for simple counters and flags
+- Prefer <code>std::scoped_lock</code> over <code>std::lock_guard</code> (handles multiple mutexes)
+- Hold locks for the minimum duration necessary
+- Document thread-safety guarantees in class and function documentation</p>
+<hr />
+<h3 id="317-documentation">3.17 Documentation<a class="headerlink" href="#317-documentation" title="Permanent link">&para;</a></h3>
+<p>Use <code>///</code> Doxygen comments on all public API functions and classes. Inline comments should explain "why", not "what".</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1">/// Load an image from the filesystem.</span>
+<a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="c1">///</span>
+<a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="c1">/// @param path     Absolute path to the image file.</span>
+<a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1">/// @param page     Zero-based page index for multi-page formats (TIFF, PDF).</span>
+<a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="c1">/// @return         The decoded image, or an error if the file cannot be read.</span>
+<a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="c1">/// @throws SipiError  If the file format is unsupported.</span>
+<a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="c1">/// @note Thread-safe. May allocate up to width*height*channels bytes.</span>
+<a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a><span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">loadImage</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a><span class="w">    </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">SipiImage</span><span class="p">,</span><span class="w"> </span><span class="n">SipiError</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>Document:
+- Preconditions and postconditions
+- Thread-safety guarantees
+- Exception specifications (what can throw and when)
+- Non-obvious performance characteristics (allocations, I/O)</p>
+<p>For testing conventions, see <a href="../testing-strategy/"><code>testing-strategy.md</code></a>.</p>
+<hr />
+<h2 id="4-c-library-boundary-safety">4. C Library Boundary Safety<a class="headerlink" href="#4-c-library-boundary-safety" title="Permanent link">&para;</a></h2>
+<p>Vitrinli wraps several C libraries (libtiff, libpng, libjpeg, Kakadu, lcms2, Lua). These boundaries are where the type system cannot help — mismatched types compile silently and cause undefined behavior at runtime. Follow these rules for all code that calls C library APIs.</p>
+<h3 id="41-type-width-at-variadic-c-apis">4.1 Type Width at Variadic C APIs<a class="headerlink" href="#41-type-width-at-variadic-c-apis" title="Permanent link">&para;</a></h3>
+<p>Variadic C functions (<code>TIFFSetField</code>, <code>TIFFGetField</code>, <code>printf</code>-family) perform <strong>zero type checking</strong> on arguments. The caller must match the exact type the API expects.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="c1">// ❌ Silent heap-buffer-overflow — ExtraSamples is uint8_t, libtiff reads uint16_t</span>
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="n">TIFFSetField</span><span class="p">(</span><span class="n">tif</span><span class="p">,</span><span class="w"> </span><span class="n">TIFFTAG_EXTRASAMPLES</span><span class="p">,</span><span class="w"> </span><span class="n">es</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="w"> </span><span class="n">es</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>
+<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="c1">// ✅ Convert to the type the C API expects</span>
+<a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">uint16_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">es_u16</span><span class="p">(</span><span class="n">es</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">es</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+<a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a><span class="n">TIFFSetField</span><span class="p">(</span><span class="n">tif</span><span class="p">,</span><span class="w"> </span><span class="n">TIFFTAG_EXTRASAMPLES</span><span class="p">,</span>
+<a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a><span class="w">             </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">uint16_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">es_u16</span><span class="p">.</span><span class="n">size</span><span class="p">()),</span><span class="w"> </span><span class="n">es_u16</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</code></pre></div>
+<p><strong>Rule:</strong> When passing enum values or typed arrays to variadic C functions, always cast to the exact documented type. Add a comment citing the C library documentation.</p>
+<h3 id="42-ownership-of-returned-raw-pointers">4.2 Ownership of Returned Raw Pointers<a class="headerlink" href="#42-ownership-of-returned-raw-pointers" title="Permanent link">&para;</a></h3>
+<p>When a C++ function returns a raw pointer from <code>new</code>/<code>new[]</code>, wrap it in RAII immediately at the call site. Do not pass it through multiple function calls before freeing.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="c1">// ❌ Leak — caller forgets to delete[], or an exception skips cleanup</span>
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="n">kdu_byte</span><span class="w"> </span><span class="o">*</span><span class="n">icc_bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">kdu_byte</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">icc</span><span class="o">-&gt;</span><span class="n">iccBytes</span><span class="p">(</span><span class="n">icc_len</span><span class="p">);</span>
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="n">jp2_colour</span><span class="p">.</span><span class="n">init</span><span class="p">(</span><span class="n">icc_bytes</span><span class="p">);</span>
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="c1">// icc_bytes leaked</span>
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a>
+<a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a><span class="c1">// ✅ RAII — freed automatically regardless of control flow</span>
+<a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="k">auto</span><span class="w"> </span><span class="n">icc_buf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">[]</span><span class="o">&gt;</span><span class="p">(</span><span class="n">icc</span><span class="o">-&gt;</span><span class="n">iccBytes</span><span class="p">(</span><span class="n">icc_len</span><span class="p">));</span>
+<a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a><span class="n">jp2_colour</span><span class="p">.</span><span class="n">init</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">kdu_byte</span><span class="w"> </span><span class="o">*&gt;</span><span class="p">(</span><span class="n">icc_buf</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span>
+</code></pre></div>
+<p><strong>Rule:</strong> Every raw pointer returned from <code>new</code>/<code>new[]</code> must be wrapped in <code>std::unique_ptr</code> within the same statement or the next line. If a C API takes ownership (frees the pointer itself), document this with <code>// ownership transferred to &lt;api&gt;</code>.</p>
+<h3 id="43-raii-wrappers-for-c-resource-handles">4.3 RAII Wrappers for C Resource Handles<a class="headerlink" href="#43-raii-wrappers-for-c-resource-handles" title="Permanent link">&para;</a></h3>
+<p>C resource handles (<code>DIR*</code>, <code>FILE*</code>, <code>TIFF*</code>, <code>cmsHPROFILE</code>, <code>png_structp</code>) must use RAII so cleanup happens on all exit paths — including exceptions and early returns.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="c1">// ❌ Leak on early return or exception — closedir never reached</span>
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="kt">DIR</span><span class="w"> </span><span class="o">*</span><span class="n">dirp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">opendir</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">dp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readdir</span><span class="p">(</span><span class="n">dirp</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="c1">// closedir(dirp);  ← easy to forget</span>
+<a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a>
+<a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a><span class="c1">// ✅ RAII — closes on any exit path</span>
+<a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a><span class="k">auto</span><span class="w"> </span><span class="n">dirp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="kt">DIR</span><span class="p">,</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="o">&amp;</span><span class="n">closedir</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span>
+<a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a><span class="w">    </span><span class="n">opendir</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">c_str</span><span class="p">()),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">closedir</span><span class="p">);</span>
+<a id="__codelineno-35-9" name="__codelineno-35-9" href="#__codelineno-35-9"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">dirp</span><span class="p">)</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">Error</span><span class="p">(</span><span class="s">&quot;...&quot;</span><span class="p">);</span>
+<a id="__codelineno-35-10" name="__codelineno-35-10" href="#__codelineno-35-10"></a><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">dp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readdir</span><span class="p">(</span><span class="n">dirp</span><span class="p">.</span><span class="n">get</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-35-11" name="__codelineno-35-11" href="#__codelineno-35-11"></a><span class="c1">// closedir called automatically</span>
+</code></pre></div>
+<p>For handles where the deleter is complex or used repeatedly, define a named RAII wrapper:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">TiffDeleter</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">operator</span><span class="p">()(</span><span class="n">TIFF</span><span class="w"> </span><span class="o">*</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="n">TIFFClose</span><span class="p">(</span><span class="n">t</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="k">using</span><span class="w"> </span><span class="n">TiffHandle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">TIFF</span><span class="p">,</span><span class="w"> </span><span class="n">TiffDeleter</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>
+<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a><span class="n">TiffHandle</span><span class="w"> </span><span class="n">tif</span><span class="p">(</span><span class="n">TIFFOpen</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;r&quot;</span><span class="p">));</span>
+</code></pre></div>
+<h3 id="44-multi-buffer-dimension-consistency">4.4 Multi-Buffer Dimension Consistency<a class="headerlink" href="#44-multi-buffer-dimension-consistency" title="Permanent link">&para;</a></h3>
+<p>When operating on two image buffers simultaneously (e.g., watermark blending, image subtraction, compositing), every indexing expression must use dimensions from the <strong>buffer being indexed</strong>, not from the other buffer.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="c1">// ❌ OOB — k iterates image channels, but indexes into watermark with fewer channels</span>
+<a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nc</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                    </span><span class="c1">// nc = image channels (3)</span>
+<a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a><span class="w">    </span><span class="n">wm_color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bilinn</span><span class="p">(</span><span class="n">wmbuf</span><span class="p">,</span><span class="w"> </span><span class="n">wm_nx</span><span class="p">,</span><span class="w"> </span><span class="n">wm_ny</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">wm_nc</span><span class="p">);</span><span class="w">  </span><span class="c1">// wm_nc = 1 → OOB when k≥1</span>
+<a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="p">}</span>
+<a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a>
+<a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a><span class="c1">// ✅ Clamp channel index to the target buffer&#39;s channel count</span>
+<a id="__codelineno-37-7" name="__codelineno-37-7" href="#__codelineno-37-7"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nc</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-37-8" name="__codelineno-37-8" href="#__codelineno-37-8"></a><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">wm_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">wm_nc</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<a id="__codelineno-37-9" name="__codelineno-37-9" href="#__codelineno-37-9"></a><span class="w">    </span><span class="n">wm_color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bilinn</span><span class="p">(</span><span class="n">wmbuf</span><span class="p">,</span><span class="w"> </span><span class="n">wm_nx</span><span class="p">,</span><span class="w"> </span><span class="n">wm_ny</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">wm_k</span><span class="p">,</span><span class="w"> </span><span class="n">wm_nc</span><span class="p">);</span>
+<a id="__codelineno-37-10" name="__codelineno-37-10" href="#__codelineno-37-10"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Rule:</strong> At every buffer indexing expression, verify that:
+1. The spatial coordinates (<code>x</code>, <code>y</code>) are bounded by the buffer's width/height
+2. The channel index (<code>c</code>) satisfies <code>c &lt; n</code> where <code>n</code> is the buffer's channel count
+3. The <code>POSITION(x, y, c, n)</code> macro arguments come from the same buffer</p>
+<hr />
+<h2 id="5-legacy-code-modernization">5. Legacy Code Modernization<a class="headerlink" href="#5-legacy-code-modernization" title="Permanent link">&para;</a></h2>
+<p>Apply in priority order. Many are automatable with clang-tidy <code>--fix</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Old Pattern</th>
+<th>Modern Replacement</th>
+<th>Auto-fixable</th>
+<th>clang-tidy Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NULL</code> / <code>0</code> as pointer</td>
+<td><code>nullptr</code></td>
+<td>Yes</td>
+<td><code>modernize-use-nullptr</code></td>
+</tr>
+<tr>
+<td><code>typedef</code></td>
+<td><code>using</code></td>
+<td>Yes</td>
+<td><code>modernize-use-using</code></td>
+</tr>
+<tr>
+<td>C-style casts <code>(T)x</code></td>
+<td><code>static_cast&lt;T&gt;(x)</code></td>
+<td>Yes</td>
+<td><code>cppcoreguidelines-pro-type-cstyle-cast</code></td>
+</tr>
+<tr>
+<td><code>new</code> / <code>delete</code></td>
+<td><code>make_unique</code> / <code>make_shared</code></td>
+<td>Yes</td>
+<td><code>modernize-make-unique</code>, <code>modernize-make-shared</code></td>
+</tr>
+<tr>
+<td>Index-based <code>for</code> loops</td>
+<td>Range-based <code>for</code></td>
+<td>Yes</td>
+<td><code>modernize-loop-convert</code></td>
+</tr>
+<tr>
+<td><code>printf</code> / <code>fprintf</code></td>
+<td><code>std::print</code> / <code>std::println</code></td>
+<td>Yes</td>
+<td><code>modernize-use-std-print</code></td>
+</tr>
+<tr>
+<td>Missing <code>override</code></td>
+<td><code>override</code> keyword</td>
+<td>Yes</td>
+<td><code>modernize-use-override</code></td>
+</tr>
+<tr>
+<td>Iterator algorithms</td>
+<td><code>std::ranges::</code> equivalents</td>
+<td>Yes</td>
+<td><code>modernize-use-ranges</code> (LLVM 18+)</td>
+</tr>
+<tr>
+<td>Aggregate init without field names</td>
+<td>Designated initializers</td>
+<td>Yes</td>
+<td><code>modernize-use-designated-initializers</code> (LLVM 18+)</td>
+</tr>
+<tr>
+<td><code>.find() == 0</code></td>
+<td><code>.starts_with()</code></td>
+<td>Yes</td>
+<td><code>modernize-use-starts-ends-with</code> (LLVM 18+)</td>
+</tr>
+<tr>
+<td><code>std::bind</code></td>
+<td>Lambdas</td>
+<td>Manual</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Raw arrays <code>T[]</code></td>
+<td><code>std::array&lt;T,N&gt;</code> / <code>std::vector&lt;T&gt;</code></td>
+<td>Manual</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>throw</code> for expected errors</td>
+<td><code>std::expected&lt;T,E&gt;</code></td>
+<td>Manual</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>#define</code> constants</td>
+<td><code>inline constexpr</code></td>
+<td>Manual</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>enum</code></td>
+<td><code>enum class</code></td>
+<td>Manual</td>
+<td><code>modernize-use-scoped-enum</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Migration strategy:</strong> Run clang-tidy with <code>--fix</code> on automatable checks first. Review all auto-fixes before committing — they are generally correct but occasionally need adjustment near macros or third-party headers.</p>
+<hr />
+<h2 id="6-tooling-configuration">6. Tooling Configuration<a class="headerlink" href="#6-tooling-configuration" title="Permanent link">&para;</a></h2>
+<h3 id="clang-format"><code>.clang-format</code><a class="headerlink" href="#clang-format" title="Permanent link">&para;</a></h3>
+<p>Place in repository root.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="nn">---</span>
+<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="nt">Language</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Cpp</span>
+<a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="nt">BasedOnStyle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LLVM</span>
+<a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a><span class="nt">Standard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Latest</span>
+<a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a><span class="nt">IndentWidth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a><span class="nt">ColumnLimit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
+<a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a><span class="nt">PointerAlignment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Left</span>
+<a id="__codelineno-38-8" name="__codelineno-38-8" href="#__codelineno-38-8"></a><span class="nt">ReferenceAlignment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Left</span>
+<a id="__codelineno-38-9" name="__codelineno-38-9" href="#__codelineno-38-9"></a><span class="nt">AllowShortFunctionsOnASingleLine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Inline</span>
+<a id="__codelineno-38-10" name="__codelineno-38-10" href="#__codelineno-38-10"></a><span class="nt">AllowShortIfStatementsOnASingleLine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Never</span>
+<a id="__codelineno-38-11" name="__codelineno-38-11" href="#__codelineno-38-11"></a><span class="nt">AllowShortLambdasOnASingleLine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Inline</span>
+<a id="__codelineno-38-12" name="__codelineno-38-12" href="#__codelineno-38-12"></a><span class="nt">BraceWrapping</span><span class="p">:</span>
+<a id="__codelineno-38-13" name="__codelineno-38-13" href="#__codelineno-38-13"></a><span class="w">  </span><span class="nt">AfterFunction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-38-14" name="__codelineno-38-14" href="#__codelineno-38-14"></a><span class="w">  </span><span class="nt">AfterClass</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-38-15" name="__codelineno-38-15" href="#__codelineno-38-15"></a><span class="w">  </span><span class="nt">AfterControlStatement</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Never</span>
+<a id="__codelineno-38-16" name="__codelineno-38-16" href="#__codelineno-38-16"></a><span class="nt">SortIncludes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CaseSensitive</span>
+<a id="__codelineno-38-17" name="__codelineno-38-17" href="#__codelineno-38-17"></a><span class="nt">IncludeBlocks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Regroup</span>
+<a id="__codelineno-38-18" name="__codelineno-38-18" href="#__codelineno-38-18"></a><span class="nt">SpacesInAngles</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Never</span>
+</code></pre></div>
+<p>Run format check locally:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>find<span class="w"> </span>src<span class="w"> </span>include<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>clang-format<span class="w"> </span>--dry-run<span class="w"> </span>--Werror
+</code></pre></div>
+<p>Apply formatting:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>find<span class="w"> </span>src<span class="w"> </span>include<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.cpp&#39;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.h&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>clang-format<span class="w"> </span>-i
+</code></pre></div>
+<hr />
+<h3 id="clang-tidy"><code>.clang-tidy</code><a class="headerlink" href="#clang-tidy" title="Permanent link">&para;</a></h3>
+<p>Place in repository root. Requires LLVM 19+ for full C++23 check coverage.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="nn">---</span>
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a><span class="nt">Checks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a><span class="w">  </span><span class="no">-*,</span>
+<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a><span class="w">  </span><span class="no">bugprone-*,</span>
+<a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a><span class="w">  </span><span class="no">cppcoreguidelines-*,</span>
+<a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a><span class="w">  </span><span class="no">misc-*,</span>
+<a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a><span class="w">  </span><span class="no">modernize-*,</span>
+<a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a><span class="w">  </span><span class="no">performance-*,</span>
+<a id="__codelineno-41-9" name="__codelineno-41-9" href="#__codelineno-41-9"></a><span class="w">  </span><span class="no">readability-*,</span>
+<a id="__codelineno-41-10" name="__codelineno-41-10" href="#__codelineno-41-10"></a><span class="w">  </span><span class="no">portability-*,</span>
+<a id="__codelineno-41-11" name="__codelineno-41-11" href="#__codelineno-41-11"></a><span class="w">  </span><span class="no">-modernize-use-trailing-return-type,</span>
+<a id="__codelineno-41-12" name="__codelineno-41-12" href="#__codelineno-41-12"></a><span class="w">  </span><span class="no">-cppcoreguidelines-avoid-magic-numbers,</span>
+<a id="__codelineno-41-13" name="__codelineno-41-13" href="#__codelineno-41-13"></a><span class="w">  </span><span class="no">-readability-magic-numbers,</span>
+<a id="__codelineno-41-14" name="__codelineno-41-14" href="#__codelineno-41-14"></a><span class="w">  </span><span class="no">-cppcoreguidelines-pro-bounds-array-to-pointer-decay</span>
+<a id="__codelineno-41-15" name="__codelineno-41-15" href="#__codelineno-41-15"></a>
+<a id="__codelineno-41-16" name="__codelineno-41-16" href="#__codelineno-41-16"></a><span class="nt">WarningsAsErrors</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<a id="__codelineno-41-17" name="__codelineno-41-17" href="#__codelineno-41-17"></a><span class="w">  </span><span class="no">bugprone-*,</span>
+<a id="__codelineno-41-18" name="__codelineno-41-18" href="#__codelineno-41-18"></a><span class="w">  </span><span class="no">cppcoreguidelines-pro-type-*,</span>
+<a id="__codelineno-41-19" name="__codelineno-41-19" href="#__codelineno-41-19"></a><span class="w">  </span><span class="no">performance-*</span>
+<a id="__codelineno-41-20" name="__codelineno-41-20" href="#__codelineno-41-20"></a>
+<a id="__codelineno-41-21" name="__codelineno-41-21" href="#__codelineno-41-21"></a><span class="nt">CheckOptions</span><span class="p">:</span>
+<a id="__codelineno-41-22" name="__codelineno-41-22" href="#__codelineno-41-22"></a><span class="w">  </span><span class="c1"># Classes and types</span>
+<a id="__codelineno-41-23" name="__codelineno-41-23" href="#__codelineno-41-23"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.ClassCase</span>
+<a id="__codelineno-41-24" name="__codelineno-41-24" href="#__codelineno-41-24"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CamelCase</span>
+<a id="__codelineno-41-25" name="__codelineno-41-25" href="#__codelineno-41-25"></a><span class="w">  </span><span class="c1"># Functions</span>
+<a id="__codelineno-41-26" name="__codelineno-41-26" href="#__codelineno-41-26"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.FunctionCase</span>
+<a id="__codelineno-41-27" name="__codelineno-41-27" href="#__codelineno-41-27"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">camelBack</span>
+<a id="__codelineno-41-28" name="__codelineno-41-28" href="#__codelineno-41-28"></a><span class="w">  </span><span class="c1"># Variables</span>
+<a id="__codelineno-41-29" name="__codelineno-41-29" href="#__codelineno-41-29"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.VariableCase</span>
+<a id="__codelineno-41-30" name="__codelineno-41-30" href="#__codelineno-41-30"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lower_case</span>
+<a id="__codelineno-41-31" name="__codelineno-41-31" href="#__codelineno-41-31"></a><span class="w">  </span><span class="c1"># Constants</span>
+<a id="__codelineno-41-32" name="__codelineno-41-32" href="#__codelineno-41-32"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.ConstantCase</span>
+<a id="__codelineno-41-33" name="__codelineno-41-33" href="#__codelineno-41-33"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CamelCase</span>
+<a id="__codelineno-41-34" name="__codelineno-41-34" href="#__codelineno-41-34"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.ConstantPrefix</span>
+<a id="__codelineno-41-35" name="__codelineno-41-35" href="#__codelineno-41-35"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;k&quot;</span>
+<a id="__codelineno-41-36" name="__codelineno-41-36" href="#__codelineno-41-36"></a><span class="w">  </span><span class="c1"># Constexpr variables</span>
+<a id="__codelineno-41-37" name="__codelineno-41-37" href="#__codelineno-41-37"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.ConstexprVariableCase</span>
+<a id="__codelineno-41-38" name="__codelineno-41-38" href="#__codelineno-41-38"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CamelCase</span>
+<a id="__codelineno-41-39" name="__codelineno-41-39" href="#__codelineno-41-39"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.ConstexprVariablePrefix</span>
+<a id="__codelineno-41-40" name="__codelineno-41-40" href="#__codelineno-41-40"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;k&quot;</span>
+<a id="__codelineno-41-41" name="__codelineno-41-41" href="#__codelineno-41-41"></a><span class="w">  </span><span class="c1"># Private members</span>
+<a id="__codelineno-41-42" name="__codelineno-41-42" href="#__codelineno-41-42"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.PrivateMemberSuffix</span>
+<a id="__codelineno-41-43" name="__codelineno-41-43" href="#__codelineno-41-43"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;_&quot;</span>
+<a id="__codelineno-41-44" name="__codelineno-41-44" href="#__codelineno-41-44"></a><span class="w">  </span><span class="c1"># Namespaces</span>
+<a id="__codelineno-41-45" name="__codelineno-41-45" href="#__codelineno-41-45"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.NamespaceCase</span>
+<a id="__codelineno-41-46" name="__codelineno-41-46" href="#__codelineno-41-46"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lower_case</span>
+<a id="__codelineno-41-47" name="__codelineno-41-47" href="#__codelineno-41-47"></a><span class="w">  </span><span class="c1"># Enum constants</span>
+<a id="__codelineno-41-48" name="__codelineno-41-48" href="#__codelineno-41-48"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.EnumConstantCase</span>
+<a id="__codelineno-41-49" name="__codelineno-41-49" href="#__codelineno-41-49"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CamelCase</span>
+<a id="__codelineno-41-50" name="__codelineno-41-50" href="#__codelineno-41-50"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.EnumConstantPrefix</span>
+<a id="__codelineno-41-51" name="__codelineno-41-51" href="#__codelineno-41-51"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;k&quot;</span>
+<a id="__codelineno-41-52" name="__codelineno-41-52" href="#__codelineno-41-52"></a><span class="w">  </span><span class="c1"># Template parameters</span>
+<a id="__codelineno-41-53" name="__codelineno-41-53" href="#__codelineno-41-53"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readability-identifier-naming.TemplateParameterCase</span>
+<a id="__codelineno-41-54" name="__codelineno-41-54" href="#__codelineno-41-54"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CamelCase</span>
+<a id="__codelineno-41-55" name="__codelineno-41-55" href="#__codelineno-41-55"></a><span class="w">  </span><span class="c1"># std::print modernization</span>
+<a id="__codelineno-41-56" name="__codelineno-41-56" href="#__codelineno-41-56"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">modernize-use-std-print.ReplacementPrintFunction</span>
+<a id="__codelineno-41-57" name="__codelineno-41-57" href="#__codelineno-41-57"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;std::print&quot;</span>
+<a id="__codelineno-41-58" name="__codelineno-41-58" href="#__codelineno-41-58"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">modernize-use-std-print.ReplacementPrintlnFunction</span>
+<a id="__codelineno-41-59" name="__codelineno-41-59" href="#__codelineno-41-59"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;std::println&quot;</span>
+<a id="__codelineno-41-60" name="__codelineno-41-60" href="#__codelineno-41-60"></a>
+<a id="__codelineno-41-61" name="__codelineno-41-61" href="#__codelineno-41-61"></a><span class="nt">HeaderFilterRegex</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.*&#39;</span>
+</code></pre></div>
+<h4 id="notable-checks-llvm-19">Notable Checks (LLVM 19+)<a class="headerlink" href="#notable-checks-llvm-19" title="Permanent link">&para;</a></h4>
+<p>These checks are included via the wildcards above but worth calling out:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bugprone-unchecked-optional-access</code></td>
+<td>Catch <code>.value()</code> without <code>.has_value()</code> check</td>
+</tr>
+<tr>
+<td><code>modernize-use-ranges</code></td>
+<td>Convert iterator algorithms to ranges</td>
+</tr>
+<tr>
+<td><code>modernize-use-designated-initializers</code></td>
+<td>Enforce designated initializers for aggregates</td>
+</tr>
+<tr>
+<td><code>modernize-use-starts-ends-with</code></td>
+<td>Convert <code>.find() == 0</code> to <code>.starts_with()</code></td>
+</tr>
+<tr>
+<td><code>misc-use-internal-linkage</code></td>
+<td>Suggest <code>static</code> for internal symbols</td>
+</tr>
+<tr>
+<td><code>cppcoreguidelines-avoid-const-or-ref-data-members</code></td>
+<td>Flag const/ref members that break assignability</td>
+</tr>
+<tr>
+<td><code>performance-enum-size</code></td>
+<td>Suggest smaller underlying type for enums</td>
+</tr>
+</tbody>
+</table>
+<p>Run on the whole codebase (requires <code>compile_commands.json</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="c1"># Generate compile commands first (writes ./compile_commands.json)</span>
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>just<span class="w"> </span>compile-commands
+<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>
+<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="c1"># Run linter</span>
+<a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a>run-clang-tidy<span class="w"> </span>-p<span class="w"> </span>.<span class="w"> </span>-header-filter<span class="o">=</span><span class="s1">&#39;.*&#39;</span>
+<a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>
+<a id="__codelineno-42-7" name="__codelineno-42-7" href="#__codelineno-42-7"></a><span class="c1"># Run with auto-fix (review carefully before committing)</span>
+<a id="__codelineno-42-8" name="__codelineno-42-8" href="#__codelineno-42-8"></a>run-clang-tidy<span class="w"> </span>-p<span class="w"> </span>.<span class="w"> </span>-header-filter<span class="o">=</span><span class="s1">&#39;.*&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-42-9" name="__codelineno-42-9" href="#__codelineno-42-9"></a><span class="w">  </span>-checks<span class="o">=</span><span class="s1">&#39;-*,modernize-use-nullptr,modernize-use-using,modernize-make-unique&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-42-10" name="__codelineno-42-10" href="#__codelineno-42-10"></a><span class="w">  </span>-fix
+</code></pre></div>
+<blockquote>
+<p><strong>Prerequisite:</strong> <code>compile_commands.json</code> must exist in the workspace root.
+<code>just compile-commands</code> writes it (git-ignored) from Bazel's compile actions.
+Re-run it after adding or moving a C++ file or changing a target's deps.
+The nix shell's clang-tidy is LLVM 19 against the hermetic LLVM 22 compile
+commands; errors inside the toolchain's builtin headers are version skew.</p>
+</blockquote>
+<hr />
+<h3 id="build-acceleration">Build Acceleration<a class="headerlink" href="#build-acceleration" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>include-what-you-use (IWYU):</strong> Complementary to clang-tidy; enforces the "self-contained headers" rule and removes unused includes</li>
+<li><strong>compile_commands.json:</strong> Generated on demand by <code>just compile-commands</code>; see <a href="../developing/#clangd">Developing Vitrinli</a></li>
+</ul>
+<hr />
+<h2 id="7-ci-enforcement">7. CI Enforcement<a class="headerlink" href="#7-ci-enforcement" title="Permanent link">&para;</a></h2>
+<h3 id="github-actions">GitHub Actions<a class="headerlink" href="#github-actions" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Code Quality</span>
+<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>
+<a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">push</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">pull_request</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>
+<a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a><span class="w">  </span><span class="nt">format</span><span class="p">:</span>
+<a id="__codelineno-43-7" name="__codelineno-43-7" href="#__codelineno-43-7"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Format Check</span>
+<a id="__codelineno-43-8" name="__codelineno-43-8" href="#__codelineno-43-8"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-24.04</span>
+<a id="__codelineno-43-9" name="__codelineno-43-9" href="#__codelineno-43-9"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-43-10" name="__codelineno-43-10" href="#__codelineno-43-10"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+<a id="__codelineno-43-11" name="__codelineno-43-11" href="#__codelineno-43-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install clang-format</span>
+<a id="__codelineno-43-12" name="__codelineno-43-12" href="#__codelineno-43-12"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sudo apt-get install -y clang-format-19</span>
+<a id="__codelineno-43-13" name="__codelineno-43-13" href="#__codelineno-43-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Check formatting</span>
+<a id="__codelineno-43-14" name="__codelineno-43-14" href="#__codelineno-43-14"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-43-15" name="__codelineno-43-15" href="#__codelineno-43-15"></a><span class="w">          </span><span class="no">find src include -name &#39;*.cpp&#39; -o -name &#39;*.h&#39; | \</span>
+<a id="__codelineno-43-16" name="__codelineno-43-16" href="#__codelineno-43-16"></a><span class="w">          </span><span class="no">xargs clang-format-19 --dry-run --Werror</span>
+<a id="__codelineno-43-17" name="__codelineno-43-17" href="#__codelineno-43-17"></a>
+<a id="__codelineno-43-18" name="__codelineno-43-18" href="#__codelineno-43-18"></a><span class="w">  </span><span class="nt">lint</span><span class="p">:</span>
+<a id="__codelineno-43-19" name="__codelineno-43-19" href="#__codelineno-43-19"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clang-tidy</span>
+<a id="__codelineno-43-20" name="__codelineno-43-20" href="#__codelineno-43-20"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-24.04</span>
+<a id="__codelineno-43-21" name="__codelineno-43-21" href="#__codelineno-43-21"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-43-22" name="__codelineno-43-22" href="#__codelineno-43-22"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+<a id="__codelineno-43-23" name="__codelineno-43-23" href="#__codelineno-43-23"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install tools</span>
+<a id="__codelineno-43-24" name="__codelineno-43-24" href="#__codelineno-43-24"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sudo apt-get install -y clang-tidy-19</span>
+<a id="__codelineno-43-25" name="__codelineno-43-25" href="#__codelineno-43-25"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Generate compile commands</span>
+<a id="__codelineno-43-26" name="__codelineno-43-26" href="#__codelineno-43-26"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">just compile-commands</span>
+<a id="__codelineno-43-27" name="__codelineno-43-27" href="#__codelineno-43-27"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Lint</span>
+<a id="__codelineno-43-28" name="__codelineno-43-28" href="#__codelineno-43-28"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-43-29" name="__codelineno-43-29" href="#__codelineno-43-29"></a><span class="w">          </span><span class="no">run-clang-tidy-19 -p . -header-filter=&#39;.*&#39; \</span>
+<a id="__codelineno-43-30" name="__codelineno-43-30" href="#__codelineno-43-30"></a><span class="w">            </span><span class="no">-checks=&#39;-*,bugprone-*,modernize-*,performance-*,cppcoreguidelines-*&#39;</span>
+</code></pre></div>
+<h3 id="rollout-strategy">Rollout Strategy<a class="headerlink" href="#rollout-strategy" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Format gate (Day 1):</strong> Enforce <code>clang-format</code> as a hard PR gate. Zero discussion needed — it's mechanical.</li>
+<li><strong>Linter warnings (Week 1-2):</strong> Run clang-tidy in warning-only mode. Fix automatable issues in bulk using <code>--fix</code>.</li>
+<li><strong>Linter gate (Ongoing):</strong> Promote check groups to <code>WarningsAsErrors</code> one category at a time, starting with <code>bugprone-*</code> and <code>performance-*</code>.</li>
+<li><strong>Modernization PRs:</strong> Address manual migration items (error handling, ownership) as dedicated refactoring PRs — not mixed into feature work.</li>
+</ol>
+<hr />
+<h2 id="8-reference-anchors">8. Reference Anchors<a class="headerlink" href="#8-reference-anchors" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines">C++ Core Guidelines</a></td>
+<td>Primary authority for C++23 style</td>
+</tr>
+<tr>
+<td><a href="https://en.cppreference.com/w/cpp/23">cppreference C++23</a></td>
+<td>Feature support matrix by compiler</td>
+</tr>
+<tr>
+<td><a href="https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++-features.md">Chromium Modern C++ tracker</a></td>
+<td>Real-world signal on safe feature adoption</td>
+</tr>
+<tr>
+<td><a href="https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html">OpenSSF Compiler Hardening Guide</a></td>
+<td>Compiler flags for security hardening</td>
+</tr>
+<tr>
+<td><a href="https://clang.llvm.org/extra/clang-tidy/checks/list.html">clang-tidy checks</a></td>
+<td>Full check reference</td>
+</tr>
+<tr>
+<td><a href="https://clang.llvm.org/docs/ClangFormatStyleOptions.html">clang-format options</a></td>
+<td>Full formatting options reference</td>
+</tr>
+<tr>
+<td><a href="https://leanpub.com/cpp23_best_practices">Jason Turner — C++ Best Practices</a></td>
+<td>Practical C++23 guide</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: March 2026</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

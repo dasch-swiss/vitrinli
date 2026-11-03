@@ -1,0 +1,1718 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/guide/sipi/">
+      
+      
+        <link rel="prev" href="../introduction/">
+      
+      
+        <link rel="next" href="../json-output/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Reference - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#basic-information-and-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-vitrinli-executable-sipi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Vitrinli executable (sipi)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Vitrinli executable (sipi)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-vitrinli-as-command-line-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Vitrinli as Command Line Tool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using Vitrinli as Command Line Tool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#format-conversions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Format Conversions:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#print-information-about-file-and-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Print Information about File and Metadata:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-two-images-pixelwise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare two Images pixelwise
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-options-for-the-command-line-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General Options for the Command Line Use
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jpeg2000-specific-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JPEG2000 Specific Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-vitrinli-as-iiif-media-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Vitrinli as IIIF Media Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using Vitrinli as IIIF Media Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vitrinli-specific-extensions-to-iiif" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vitrinli specific extensions to IIIF
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vitrinli specific extensions to IIIF">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#access-to-a-raw-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access to a raw files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup-of-vitrinli-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup of Vitrinli Directories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vitrinli-configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vitrinli Configuration Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cache-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-of-the-http-file-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration of the HTTP File Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-of-administrator-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration of Administrator Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#routing-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="basic-information-and-reference">Basic Information and Reference<a class="headerlink" href="#basic-information-and-reference" title="Permanent link">&para;</a></h1>
+<p>This section provides the basic information to use Vitrinli as a high performance, versatile media server implementing the
+<a href="https://iiif.io">IIIF</a> standards that can be used in many different settings, from a small standalone server providing
+basic metadata to the deployment in a complex environment. For more information about the IIIF standard see
+<a href="https://iiif.io">https://iiif.io</a>. The basic idea is that an image or rectangular region of an image can be downloaded
+(e.g. to the browser) with a given width and height, rotation, image quality and format. All parameters are provided
+with the IIIF conformant URL that has the following form:</p>
+<p><code>http(s)://{server}/{prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}</code></p>
+<p>The parts do have the following meaning:</p>
+<ul>
+<li><code>{server}</code>: The DNS name of the server, eg. <code>iiif.dasch.swiss</code>. The server may include a portnumber,
+  eg. <code>iiif2.dasch.swiss:8080</code>.</li>
+<li><code>{prefix}</code>: A path (that may include <code>/</code>'s) to organize the assets. Usually the prefix reflect the internal
+  directory or folder hierarchy. However this can be overridden using special features of Vitrinli (see pre-flight-script
+  and sipi configuration file).</li>
+<li><code>{identifier}</code>: The identifier of the requested image. By default, it is the filename and its extension.</li>
+<li><code>{region}</code>: a region of interest that should be displayed. <code>full</code> indicates that the whole image is being requested.
+  For more details see <a href="https://iiif.io/api/image/3.0/#41-region">IIIF regions</a></li>
+<li><code>{size}</code>: The size of the displayed image (part). <code>max</code> indicates the the "natural" maximal resolution should be used.
+  For more details see <a href="https://iiif.io/api/image/3.0/#42-size">IIIF size</a></li>
+<li><code>{rotations}</code>: The image can be rotated and mirrored before being transmitted to the client. Vitrinli allows for
+  arbitrary rotations. The rotation is a non-negative decimal — digits and <code>.</code> only — per
+  <a href="https://iiif.io/api/image/3.0/#511-rotation">IIIF Image API 3.0 §5.1.1</a>. The value <code>0</code> indicates no rotation.
+  Prefix with <code>!</code> to mirror first, then rotate. See <a href="https://iiif.io/api/image/3.0/#43-rotation">IIIF rotation</a>.</li>
+<li><code>{quality}</code>: The quality parameter determines whether the image is delivered in color, grayscale or black and white.
+  Valid values are:</li>
+<li><code>default</code>: the "natural" quality of the original image</li>
+<li><code>color</code>: A color representation</li>
+<li><code>gray</code>: A gray value representation</li>
+<li><code>bitonal</code>: A bitonal representation</li>
+</ul>
+<p>All quality values are supported by Vitrinli
+- <code>{format}</code>: The file format that should be delivered. The IIIF endpoint supports the following formats,
+  independent of the image's storage format:
+  - <code>jpg</code>: JPEG. The IIIF spec does not allow per-request selection of the JPEG compression ratio; a server-wide
+    rate is set in the configuration file.
+  - <code>tif</code>: TIFF.
+  - <code>png</code>: PNG.
+  - <code>jp2</code> (also <code>jpx</code>): JPEG 2000.</p>
+<p><code>info.json</code> advertises <code>extraFormats: ["tif", "jp2"]</code>; JPEG and PNG are the IIIF default set.</p>
+<h2 id="the-vitrinli-executable-sipi">The Vitrinli executable (<code>sipi</code>)<a class="headerlink" href="#the-vitrinli-executable-sipi" title="Permanent link">&para;</a></h2>
+<p>The Vitrinli executable is a statically linked program that can be started as
+- <em>command line tool</em> to perform image operations, mainly format conversions
+- <em>as server deamon</em> that provides IIIF conforming media server</p>
+<h3 id="using-vitrinli-as-command-line-tool">Using Vitrinli as Command Line Tool<a class="headerlink" href="#using-vitrinli-as-command-line-tool" title="Permanent link">&para;</a></h3>
+<p>The Vitrinli command line mode can be used for the following tasks:</p>
+<h4 id="format-conversions">Format Conversions:<a class="headerlink" href="#format-conversions" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/path/to/sipi<span class="w"> </span>convert<span class="w"> </span>infile<span class="w"> </span>outfile<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</code></pre></div>
+<p>For DSP preservation-pipeline workflows, use the pipeline-stage forms:
+<code>sipi convert access-file ...</code>, <code>sipi convert service-file ...</code>,
+or <code>sipi convert preservation-file ...</code> (the last is a stub awaiting
+ADR-0012).</p>
+<h4 id="print-information-about-file-and-metadata">Print Information about File and Metadata:<a class="headerlink" href="#print-information-about-file-and-metadata" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>/path/to/sipi<span class="w"> </span>query<span class="w"> </span>infile
+</code></pre></div>
+<h4 id="compare-two-images-pixelwise">Compare two Images pixelwise<a class="headerlink" href="#compare-two-images-pixelwise" title="Permanent link">&para;</a></h4>
+<p>The images may have different formats: if the have exactely the same pixels, they are considered identical). Metadata
+is ignored for comparison:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>/path/to/sipi<span class="w"> </span>compare<span class="w"> </span>file1<span class="w"> </span>file2
+</code></pre></div>
+<h4 id="health-check">Health Check<a class="headerlink" href="#health-check" title="Permanent link">&para;</a></h4>
+<p>Probe a running Vitrinli server's <code>/health</code> endpoint and exit <code>0</code> (healthy) or <code>1</code>
+(unhealthy). Used as the container/orchestrator liveness command:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>/path/to/sipi<span class="w"> </span>health<span class="w"> </span><span class="o">[</span>--port<span class="w"> </span>&lt;n&gt;<span class="o">]</span><span class="w">   </span><span class="c1"># default port 1024</span>
+</code></pre></div>
+<p>See <a href="../running/">Running Vitrinli</a> and <a href="../../operation/health-endpoint/">Health Endpoint</a>
+for details.</p>
+<h4 id="general-options-for-the-command-line-use">General Options for the Command Line Use<a class="headerlink" href="#general-options-for-the-command-line-use" title="Permanent link">&para;</a></h4>
+<p>In command line mode, Vitrinli supports the following options:</p>
+<ul>
+<li><code>-h</code>, <code>--help</code>: Display a short help with all options available</li>
+<li><code>-F &lt;fmt&gt;</code>, <code>--format &lt;fmt&gt;</code>: The format of the output file. Valid are <code>jpx</code>, <code>jp2</code>, <code>jpg</code>, <code>png</code>, <code>tif</code>, <code>webp</code>, and <code>gif</code>.</li>
+<li><code>-I &lt;profile&gt;</code>, <code>--icc &lt;profile&gt;</code>: Convert the outfile to the given ICC color profile. Supported profiles are <code>sRGB</code>,
+  <code>AdobeRGB</code> and <code>GRAY</code>.</li>
+<li><code>-q &lt;num&gt;</code>, <code>--quality &lt;num&gt;</code>: Only used for the JPEG format. Ignored for all other formats. Its a number between 1 and
+  100, where 1 is equivalent to the highest compression ratio and lowest quality, 100 to the lowest compression ration
+  and highest quality of the output image.</li>
+<li><code>-n &lt;num&gt;</code>, <code>--pagenum &lt;num&gt;</code>: Only for input files in multi-page PDF format: sets the page that should be converted.
+  Ignored for all other input file formats.</li>
+<li><code>-r &lt;x&gt; &lt;y&gt; &lt;nx&gt; &lt;ny&gt;</code>, <code>--region &lt;x&gt; &lt;y&gt; &lt;nx&gt; &lt;ny&gt;</code>: Selects a region of interest that should be converted. Needs
+  4 integer values: <code>left_upper_corner_X</code>, <code>left_upper_corner_Y</code>, <code>width</code>, <code>height</code>.</li>
+<li><code>-s &lt;iiif-size&gt;</code>, <code>--size &lt;iif-size&gt;</code>: The size of the resulting image. The option requires a string parameter
+  formatted according to the size-syntax of IIIF <a href="https://iiif.io/api/image/3.0/#42-size">see IIIF-Size</a>. Not giving
+  this parameters results in having the maximalsize (as the value <code>"max"</code>would give).</li>
+<li><code>-s &lt;num&gt;</code>, <code>--scale &lt;num&gt;</code>: Scaling the image size by the given number (interpreted as percentage). Percentage must
+  be given as integer value. It may be bigger than 100 to upscale an image.</li>
+<li><code>-R &lt;num&gt;</code>, <code>--reduce &lt;num&gt;</code>: Reduce the size of the image by the given factor. Thus <code>-R 2</code>would resize the image to
+  half of the original size. Using <code>--reduce</code> is usually much faster than using <code>--scale</code>, e.g. <code>--reduce 2</code> is faster
+  than <code>--scale 50</code>.</li>
+<li><code>-m &lt;val&gt;</code>, <code>--mirror &lt;val&gt;</code>: Takes either <code>horizontal</code> or <code>vertical</code>as parameter to mirror the image appropriately.</li>
+<li><code>-o &lt;angle&gt;</code>, <code>--rotate &lt;angle&gt;</code>: Rotates the image by the given angle. The angle must be a floating point (or
+  integer) value between <code>0.0</code>and <code>w60.0</code>.</li>
+<li><code>-k</code>, <code>--skipmeta</code>: Strip all metadata from inputfile.</li>
+<li><code>-w &lt;filepath&gt;</code>, <code>--watermark &lt;filepath&gt;</code>: Overlays a watermark to the output image. <filepath> must be a single
+  channel, gray valued TIFF. That is, the TIFF file must have the following tag values: SAMPLESPERPIXEL = 1,
+  BITSPERSAMPLE = 8, PHOTOMETRIC = PHOTOMETRIC_MINISBLACK.</li>
+<li><code>--json</code>: Emit a single structured JSON document to stdout instead of human-readable output. The document mirrors
+  the internal <code>ImageContext</code> that is otherwise sent to Sentry and includes the input/output paths, the decoded image
+  properties, and — on failure — a <code>phase</code> (<code>cli_args</code> | <code>read</code> | <code>convert</code> | <code>write</code>) with the <code>error_message</code>.
+  Useful for programmatic consumers and for debugging when no Sentry DSN is configured. Stderr carries any log output
+  so stdout stays reserved for the single JSON document. Attached only to the <code>query</code>, <code>compare</code>, and <code>verify</code>
+  subcommands per the D5 option-availability matrix; convert flows do not expose <code>--json</code>.
+  See <a href="../json-output/"><code>json-output.md</code></a> for the full schema and worked examples. Example:
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sipi<span class="w"> </span>query<span class="w"> </span>--json<span class="w"> </span>input.jpg<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.image.bps&#39;</span>
+</code></pre></div></li>
+</ul>
+<h4 id="jpeg2000-specific-options">JPEG2000 Specific Options<a class="headerlink" href="#jpeg2000-specific-options" title="Permanent link">&para;</a></h4>
+<p>Usually, the Vitrinli command line tool is used to create JPEG2000 images suitable for a IIIF repository. Vitrinli supports
+the following JPEG2000 specific options. For a in detail description of these options consult the kakadu documentation!</p>
+<ul>
+<li><code>--Sprofile &lt;profile&gt;</code>: The following JPEG2000 profiles are supported: <code>PROFILE0</code>, <code>PROFILE1</code>, <code>PROFILE2</code>, <code>PART2</code>,
+  <code>CINEMA2K</code>, <code>CINEMA4K</code>, <code>BROADCAST</code>, <code>CINEMA2S</code>, <code>CINEMA4S</code>, <code>CINEMASS</code>, <code>IMF</code>. Default: <code>PART2</code>.</li>
+<li><code>--rates &lt;string&gt;</code>: One or more bit-rates (see kdu_compress help!). A value "-1" may be used in place of the first
+  bit-rate in the list to indicate that the final quality layer should include all compressed bits.</li>
+<li><code>--Clayers &lt;num&gt;</code>:Number of quality layers. Default: 8.</li>
+<li><code>--Clevels &lt;num&gt;</code>: Number of wavelet decomposition levels, or stages. Default: 8.</li>
+<li><code>--Corder &lt;val&gt;</code>: Progression order. The four character identifiers have the following interpretation:
+  L=layer; R=resolution; C=component; P=position. The first character in the identifier refers to the index which
+  progresses most slowly, while the last refers to the index which progresses most quickly.
+  Thus must be one of <code>LRCP</code>, <code>RLCP</code>, <code>RPCL</code>, <code>PCRL</code>, <code>CPRL</code>, Default: <code>RPCL</code>.</li>
+<li><code>--Stiles &lt;string&gt;</code>: Tiles dimensions <code>"{tx,ty}"</code>. Default: <code>"{256,256}"</code>.</li>
+<li><code>--Cprecincts &lt;string&gt;</code>: Precinct dimensions <code>"{px,py}"</code> (must be powers of 2). Default: <code>"{256,256}"</code>.</li>
+<li><code>--Cblk &lt;string&gt;</code>: Nominal code-block dimensions <code>"{dx,dy}"</code>(must be powers of 2, no less than 4 and no greater than 1024,
+  whose product may not exceed 4096). Default: <code>"{64,64}"</code>.</li>
+<li><code>--Cuse_sop &lt;val&gt;</code>: Include SOP markers (i.e., resync markers). Default: yes.</li>
+</ul>
+<h3 id="using-vitrinli-as-iiif-media-server">Using Vitrinli as IIIF Media Server<a class="headerlink" href="#using-vitrinli-as-iiif-media-server" title="Permanent link">&para;</a></h3>
+<p>In order to use Vitrinli as IIIF media server, some setup work has to be done. The <em>configuration</em> of Vitrinli can be done
+using a configuration file (written in Lua or, equivalently, in TOML — see
+<a href="../running/#configuration-file-format-lua-or-toml">Configuration file format</a>) and/or using environment variables,
+and/or command line options.</p>
+<p>The priority is as follows: <em><code>configuration file parameters</code> are overwritten by <code>environment variables</code> are overwritten
+by <code>command line options</code></em>.</p>
+<p>The Vitrinli server requires a few directories to be setup and listed in the configuration file. Then the Vitrinli server is
+launched as follows:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>/path/to/sipi<span class="w"> </span>server<span class="w"> </span>--config<span class="w"> </span>/path/to/config-file.lua
+</code></pre></div>
+<h4 id="vitrinli-specific-extensions-to-iiif">Vitrinli specific extensions to IIIF<a class="headerlink" href="#vitrinli-specific-extensions-to-iiif" title="Permanent link">&para;</a></h4>
+<p>Vitrinli implements some backwards compatible, non-standard extensions to the IIIF Image API:</p>
+<h5 id="access-to-a-raw-files">Access to a raw files<a class="headerlink" href="#access-to-a-raw-files" title="Permanent link">&para;</a></h5>
+<p>Sometimes it may be usefull to store non-image files such as XML-sidecars, manifests as JSON or complete PDF's, etc. in
+the same environment as the images. For this reason Vitrinli supports an extension of the IIIF API:</p>
+<div class="highlight"><pre><span></span><code>http(s)://{server}/{prefix}/{identifier}/file
+</code></pre></div>
+<p>The <code>/file</code>-path at the end of the URL makes Vitrinli to send the file as it is. Thus, for example a manifest file could
+be accessed by</p>
+<div class="highlight"><pre><span></span><code>https://iiif.my.server/images/myimage.json/file
+</code></pre></div>
+<p>This works also for PDF's. The URL</p>
+<div class="highlight"><pre><span></span><code>https://iiif.my.server/images/mydocument.pdf/file
+</code></pre></div>
+<p>will download the PDF in toto to be opened by an external viewer or the webapplication.</p>
+<p>It is possible to use the IIIF-<code>info.json</code> syntax also on non-image files. In this case the <code>info.json</code> has the
+following format:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">   </span><span class="nt">&quot;@context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://sipi.io/api/file/3/context.json&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">   </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:1024/images/test.csv&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">   </span><span class="nt">&quot;mimeType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text/comma-separated-values&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">   </span><span class="nt">&quot;fileSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">327</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="setup-of-vitrinli-directories">Setup of Vitrinli Directories<a class="headerlink" href="#setup-of-vitrinli-directories" title="Permanent link">&para;</a></h4>
+<p>Vitrinli needs the following directories and files setup and accessible (the real names of the directories must be indicated in the
+configuration file). The following configuration parameters are in the <code>sipi</code>-table of the configuration script:</p>
+<ul>
+<li>
+<p><a name="imgroot"></a><code>imgroot=path</code>: This is the top-directory of the media file repository. Vitrinli should at least have read access to it. If
+  Vitrinli is used to upload and convert files, it must also have write access. The path may be given as absolute path or
+  as relative path.<br />
+<em>Cmdline option: <code>--imgroot</code></em><br />
+<em>Environment variable: <code>SIPI_IMGROOT</code></em><br />
+<em>Default: <code>./images</code></em></p>
+</li>
+<li>
+<p><a name="scriptinit"></a><code>initscript=path/to/init.lua</code>: Vitrinli needs a minmal set of LUA functions that can be adapted to the local installation.
+  These mandatory functions are definied in a init-script (usually it can be found in the config directory where also
+  the configuration file is located).<br />
+<em>Cmdline option: <code>--initscript</code></em><br />
+<em>Environment variable: <code>SIPI_INITSCRIPT</code></em><br />
+<em>Default: <code>./config/sipi.init.lua</code></em></p>
+</li>
+<li>
+<p><a name="tmpdir"></a><code>tmpdir=path</code>: For the support of multipart POST Vitrinli requires read/write access to a directory to save temporary
+  files.<br />
+<em>Cmdline option: <code>--tmpdir</code></em><br />
+<em>Environment variable: <code>SIPI_IMGROOT</code></em><br />
+<em>Default: <code>./tmp</code></em></p>
+</li>
+<li>
+<p><a name="scriptdir"></a><code>scriptdir=path</code>: Path to the directory where the LUA-scripts for the routes (e.g. RESTful services) can be found.<br />
+<em>Cmdline option: <code>--scriptdir</code></em><br />
+<em>Environment variable: <code>SIPI_SCRIPTDIR</code></em><br />
+<em>Default: <code>./scripts</code></em></p>
+</li>
+<li>
+<p><a name="cachedir"></a><code>cachedir=path</code>: Vitrinli may optionally use a cache directory to store converted image in order to avoid computationally
+  intensive conversions if a specific variant is requested several times. Vitrinli starts with a warning if the cache
+  directory is defined but not existing.<br />
+<em>Cmdline option: <code>--cachedir</code></em><br />
+<em>Environment variable: <code>SIPI_CACHEDIR</code></em><br />
+<em>Default: <code>./cache</code></em></p>
+</li>
+</ul>
+<p>In addition, Vitrinli can act as a webserver that offers image upload and conversion as web service. In order to use this
+feature, a server directory has to be defined. This definition ist in the <code>fileserver</code>-table of the configuration file:</p>
+<ul>
+<li><a name="docroot"></a><code>docroot=path</code>: Path to the document root of the Vitrinli web server.<br />
+<em>Cmdline option: <code>--docroot</code></em><br />
+<em>Environment variable: <code>SIPI_DOCROOT</code></em><br />
+<em>Default: <code>./server</code></em></li>
+</ul>
+<h4 id="vitrinli-configuration-parameters">Vitrinli Configuration Parameters<a class="headerlink" href="#vitrinli-configuration-parameters" title="Permanent link">&para;</a></h4>
+<p>The following configuration parameters are used by the Vitrinli server:</p>
+<ul>
+<li>
+<p><a name="portnum"></a><code>port=portnum</code>: Portnumber Vitrinli should listen on for incoming HTTP requests.<br />
+<em>Cmdline option: <code>--serverport</code></em><br />
+<em>Environment variable: <code>SIPI_SERVERPORT</code></em><br />
+<em>Default: <code>80</code></em></p>
+</li>
+<li>
+<p><a name="sslport"></a><code>ssl_port=portnum</code>: Portnumber Vitrinli should listen on for incoming SHTTP requests (using SSL).<br />
+<em>Cmdline option: <code>--sslport</code></em><br />
+<em>Environment variable: <code>SIPI_SSLPORT</code></em><br />
+<em>Default: <code>443</code></em></p>
+</li>
+<li>
+<p><a name="prefixaspath"></a><code>prefix_as_path=bool</code>: If <code>true</code>, the prefix is used as path within the image root directory. If false, the prefix
+  is ignored and it is assumed that all images are directly located in the image root.<br />
+<em>Cmdline option: <code>--pathprefix</code></em><br />
+<em>Environment variable: <code>SIPI_PATHPREFIX</code></em><br />
+<em>Default: <code>false</code></em></p>
+</li>
+<li>
+<p><a name="jwt-secret"></a><code>jwt_secret=string</code>: Shared secret to encode web tokens. Required for
+  any Lua-configured deployment, at least 32 bytes; there is no default, and
+  the server refuses to start without one.<br />
+<em>Cmdline option: <code>--jwtkey</code></em><br />
+<em>Environment variable: <code>SIPI_JWTKEY</code></em><br />
+<em>Default: none — must be supplied</em></p>
+</li>
+<li>
+<p><a name="maxpostsize"></a><code>max_post_size=amount</code>: Maximal size a file upload may have. The amount has the
+  form "<number><type>" where <code>number</code> is an integer value and <code>type</code>an "M" for Megabytes, "G" for Gigabytes
+  and "" (empty) for bytes.<br />
+<em>Cmdline option: <code>--maxpost</code></em><br />
+<em>Environment variable: <code>SIPI_MAXPOSTSIZE</code></em><br />
+<em>Default: <code>300M</code></em></p>
+</li>
+</ul>
+<p>Request queuing (how many requests may wait for a worker, and how long) is not a
+config-file key. It is controlled by the <code>--max-waiting</code> / <code>SIPI_MAX_WAITING</code> and
+<code>--queue-timeout</code> / <code>SIPI_QUEUE_TIMEOUT</code> CLI flags — see
+<a href="../running/#command-line-options">Running Vitrinli</a>.</p>
+<ul>
+<li>
+<p><a name="jpegquality"><code>jpeg_quality=num</code>: Compression parameter when producing JPEG output. Must be a number
+  between 1 and 100. Unfortunately, the IIIF Image API does not allow to give a JPEG quality (=compression) on the IIIF URL. Vitrinli
+  allows to configure the compression quality system wide with this parameter. Allowed values are in he range
+  [1..100] where 1 the worst quality (and highest compression factor = smallest file size) and 100 the highest
+  quality (with the lowest compression factor = biggest file size). Please note that Vitrinli is not able to provide
+  lossless compression for JPEG files.<br />
+<em>Cmdline option: <code>--quality</code></em><br />
+<em>Environment variable: <code>SIPI_JPEGQUALITY</code></em><br />
+<em>Default: <code>60</code></em></p>
+</li>
+<li>
+<p><a name="thumbsize"></a><code>thumb_size=string</code>: Default size for thumbnails. Parameter must be IIIF conformant size string. This configuration
+  parameter can be used to define a default value for creating thumbnails. It has no direct implications but can be
+  used in LUA scripts (e.g. the pre_flight-function).<br />
+<em>Cmdline option: <code>--thumbsize</code></em><br />
+<em>Environment variable: <code>SIPI_THUMBSIZE</code></em><br />
+<em>Default: <code>!128,128</code></em></p>
+</li>
+<li>
+<p><a name="maxtmpfileage"></a><code>max_temp_file_age=num</code>: The maximum allowed age of temporary files (in seconds) before they are deleted.<br />
+<em>Cmdline option: <code>--maxtmpage</code></em><br />
+<em>Environment variable: <code>SIPI_MAXTMPAGE</code></em><br />
+<em>Default: <code>86400</code></em> (one day)</p>
+</li>
+</ul>
+<h4 id="cache-configuration">Cache Configuration<a class="headerlink" href="#cache-configuration" title="Permanent link">&para;</a></h4>
+<p>Vitrinli uses a file-based LRU cache to store converted images, avoiding expensive re-conversions when the same
+variant is requested multiple times. The cache is keyed by the canonical IIIF URL and validated against
+the source file's modification time — stale entries are automatically replaced.</p>
+<p><strong>Eviction:</strong> When the cache reaches its size or file-count limit (high-water mark at 100%), LRU eviction
+removes the least-recently-used entries until usage drops to 80% (low-water mark). Both limits are enforced
+independently — whichever is reached first triggers eviction.</p>
+<p><strong>Special values for <code>cache_size</code>:</strong></p>
+<ul>
+<li><code>'-1'</code> — unlimited cache (no size eviction)</li>
+<li><code>'0'</code> — cache disabled entirely (no files are cached)</li>
+<li><code>'200M'</code>, <code>'1G'</code> — enforced limit with LRU eviction</li>
+</ul>
+<p><strong>Monitoring:</strong> Vitrinli exports its metrics over OTLP, to the endpoint in
+<code>OTEL_EXPORTER_OTLP_ENDPOINT</code>; there is no <code>GET /metrics</code> scrape endpoint. The names below are what
+the standard OTLP-to-Prometheus normalization produces at the collector. Cache counters
+(<code>sipi_cache_hits_total</code>, <code>sipi_cache_misses_total</code>, <code>sipi_cache_evictions_total</code>, <code>sipi_cache_skips_total</code>)
+and gauges (<code>sipi_cache_size_bytes</code>, <code>sipi_cache_files</code>, <code>sipi_cache_size_limit_bytes</code>, <code>sipi_cache_files_limit</code>)
+report cache health. For server load and throttling, use the admission metrics
+(<code>sipi_admission_permits_in_use</code> and <code>sipi_admission_permits_total</code> for saturation,
+<code>sipi_admission_tile_waiting</code>/<code>sipi_admission_full_waiting</code> for per-partition queue depth,
+<code>sipi_admission_tile_shed_total</code>/<code>sipi_admission_full_shed_total</code> for per-partition sheds).
+Request latency is the semantic-convention histogram <code>http_server_request_duration_seconds</code>, labelled by
+<code>http_route</code>, <code>http_request_method</code>, and <code>http_response_status_code</code>.
+<code>sipi_tiff_pyramid_reduced_decodes_total</code> counts TIFF decodes served from a reduced pyramid level (a
+zoomed-out or thumbnail request that read a smaller stored resolution instead of the full-resolution image).</p>
+<p>The following configuration parameters determine the behaviour of the cache:</p>
+<ul>
+<li>
+<p><a name="cache_dir"></a><code>cache_dir=path</code>: Path to the cache directory. Created automatically if missing.
+  <em>Cmdline option: <code>--cachedir</code></em>
+  <em>Environment variable: <code>SIPI_CACHEDIR</code></em>
+  <em>Default: <code>./cache</code></em></p>
+</li>
+<li>
+<p><a name="cache_size"></a><code>cache_size=amount</code>: Maximum cache size. Use <code>'-1'</code> for unlimited, <code>'0'</code> to disable,
+  or a size string like <code>'200M'</code> or <code>'1G'</code>. Eviction triggers at 100% and purges down to 80%.
+  <em>Cmdline option: <code>--cachesize</code></em>
+  <em>Environment variable: <code>SIPI_CACHESIZE</code></em>
+  <em>Default: <code>200M</code></em></p>
+</li>
+<li>
+<p><a name="cache_nfiles"></a><code>cache_nfiles=num</code>: Maximum number of cached files. Set to <code>0</code> for no file-count limit.
+  Eviction triggers when either size or file-count limit is reached.
+  <em>Cmdline option: <code>--cachenfiles</code></em>
+  <em>Environment variable: <code>SIPI_CACHENFILES</code></em>
+  <em>Default: <code>200</code></em></p>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Deprecated keys</p>
+<p>The old configuration keys <code>cachedir</code>, <code>cachesize</code>, and <code>cache_hysteresis</code> are still accepted
+with a deprecation warning. The <code>cache_hysteresis</code> parameter has been removed — eviction now
+always uses a fixed 80% low-water mark. See <code>DEPRECATIONS.md</code> for details.</p>
+</div>
+<h4 id="configuration-of-the-http-file-server">Configuration of the HTTP File Server<a class="headerlink" href="#configuration-of-the-http-file-server" title="Permanent link">&para;</a></h4>
+<p>Vitrinli offers  HTTP file server for HTML and other files. Files with the ending <code>.elua</code> are HTTP-files with embeded
+LUA code. Everything between the <lua>...</lua> tags is interpreted as LUA code and the output embedded in the
+data stream for the client.</p>
+<p>All configurations for the HTTP server are in the <code>fileserver</code> table:</p>
+<ul>
+<li>
+<p><code>docroot=path</code>: Path to the document root of the file server.<br />
+<em>Cmdline option: <code>--docroot</code></em><br />
+<em>Environment variable: <code>SSIPI_DOCROOT</code></em><br />
+<em>Default: <code>./server</code></em></p>
+</li>
+<li>
+<p><code>wwwroute=string</code>: Route for the file server should respond to requests.That is, a file with the name "dada.html"
+  is accessed with <code>http://dnsname/server/dada.html</code>, if the <code>wwwroute</code>is set to <code>/server</code>.<br />
+<em>Cmdline option: <code>--wwwroute</code></em><br />
+<em>Environment variable: <code>SIPI_WWWROUTE</code></em><br />
+<em>Default: <code>/server</code></em></p>
+</li>
+</ul>
+<h4 id="configuration-of-administrator-access">Configuration of Administrator Access<a class="headerlink" href="#configuration-of-administrator-access" title="Permanent link">&para;</a></h4>
+<p>Vitrinli allows special administrator access for some tasks. In order to allow for this, an administrator has to be defined
+as follows:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">admin</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="c1">--</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="c1">-- username of admin user</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="c1">--</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">user</span> <span class="o">=</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="c1">--</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="c1">-- Administration password</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="c1">--</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">password</span> <span class="o">=</span> <span class="s1">&#39;Sipi-Admin&#39;</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">}</span>
+</code></pre></div>
+If You're using the administrator user, please make sure that the config file is not exposed!</p>
+<h4 id="routing-table">Routing Table<a class="headerlink" href="#routing-table" title="Permanent link">&para;</a></h4>
+<p>Vitrinli allows to implement RESTful interfaces or other services based on LUA-scripts which are located in the scripts
+directory. In order to use these LUA-scripts as endpoints, the appropriate routes have to be defined in the
+<code>routes</code> table. An entry has the following form:
+- <code>method</code>: the HTTP request. Supported are <code>GET</code>, <code>POST</code>, <code>PUT</code> and <code>DELETE</code>.
+- <code>route</code>: A URL path that may contain <code>/</code>'s.
+- <code>script</code>: Name of the LUA script in the script directory.</p>
+<p>Thus, the routing section of a Vitrinli configuration file may look as follows:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">routes</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>        <span class="n">route</span> <span class="o">=</span> <span class="s1">&#39;/api/upload&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>        <span class="n">script</span> <span class="o">=</span> <span class="s1">&#39;upload.lua&#39;</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="p">},</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="p">{</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;GET&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        <span class="n">route</span> <span class="o">=</span> <span class="s1">&#39;/test/orientation&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="n">script</span> <span class="o">=</span> <span class="s1">&#39;orientation.lua&#39;</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="p">}</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="p">}</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

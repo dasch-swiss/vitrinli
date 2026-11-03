@@ -1,0 +1,1510 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/operation/memory-budget/">
+      
+      
+        <link rel="prev" href="../admission-control/">
+      
+      
+        <link rel="next" href="../health-endpoint/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Memory Budget - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#memory-budget" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Memory Budget
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-full-lane-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The full-lane budget
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto-Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-behaviour-503-vs-413" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced behaviour: 503 vs 413
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observing-before-enforcing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observing Before Enforcing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#traffic-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Traffic Patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="memory-budget">Memory Budget<a class="headerlink" href="#memory-budget" title="Permanent link">&para;</a></h1>
+<p>The full-lane decode memory budget prevents OOM from concurrent large image
+decodes by capping the aggregate memory in-flight full-lane decodes may hold. It
+is the memory half of Vitrinli's two-lane admission control: expensive full-image
+decodes are hard-capped in decode bytes, while cheap tile decodes bypass the
+budget entirely and are never charged.</p>
+<h2 id="why">Why<a class="headerlink" href="#why" title="Permanent link">&para;</a></h2>
+<p>The thread pool controls CPU concurrency but has no awareness of memory. Multiple
+concurrent full-resolution JP2 decodes (e.g., 20000x30000 pixels) can each consume
+hundreds of MB to GBs, exhausting the RAM envelope. The per-request pixel limit
+caps individual requests, but it does not prevent aggregate memory exhaustion from
+multiple concurrent large decodes.</p>
+<h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>Precise estimation from IIIF parameters:</strong> Before each decode, the actual
+   decode buffer size is computed from IIIF region/size parameters. For JP2, this
+   accounts for DWT reduce levels and ROI restrictions — a tile request on a
+   20000x30000 source estimates ~4MB, not 4.8GB. A JP2 with subsampled
+   components also holds one buffer per component while it decodes, together at
+   most the size of the decode buffer (half of it for 4:2:0). The estimate does
+   not charge them: the shape probe it is computed from does not report
+   subsampling. A size-restricted request is estimated as the decode of the
+   whole image at the restricted dimensions (RW, RH), whatever its region, since
+   every restricted output is cut from that one rendering.</p>
+</li>
+<li>
+<p><strong>Pipeline-aware peak estimation:</strong> Walks the processing stages (decode → scale
+   → rotate → ICC convert) and returns the maximum concurrent allocation at any
+   point, accounting for 2-stage downscale intermediates and rotation expansion.</p>
+</li>
+<li>
+<p><strong>Lane classification:</strong> A decode whose estimated peak memory reaches
+   <code>large_decode_threshold_bytes</code> (default 32 MiB) is a <strong>full-lane</strong> decode and is
+   charged against the budget; below it is a <strong>tile</strong> decode that bypasses the
+   budget. The threshold is defined once in the shell config and passed to the
+   engine over the FFI seam, so the shell (thread lanes) and the engine (memory
+   budget) classify against the same value.</p>
+</li>
+<li>
+<p><strong>Lock-free accounting:</strong> Uses <code>std::atomic&lt;size_t&gt;</code> with compare-exchange for
+   zero-contention acquire/release. The budget check adds nanoseconds vs.
+   millisecond decode times.</p>
+</li>
+<li>
+<p><strong>RAII release:</strong> <code>MemoryBudgetGuard</code> releases the budget on all exit paths
+   including exceptions and mid-decode client disconnect. No manual cleanup needed.</p>
+</li>
+</ol>
+<h2 id="the-full-lane-budget">The full-lane budget<a class="headerlink" href="#the-full-lane-budget" title="Permanent link">&para;</a></h2>
+<p>The budget is derived from two knobs — the RAM envelope and the tile reserve:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>full_mem = memory_limit × (1 − tiles_memory_ratio)
+</code></pre></div>
+<p><code>memory_limit</code> is the total RAM envelope; <code>0</code> auto-detects available RAM. The
+reserve <code>memory_limit × tiles_memory_ratio</code> (25% by default) is never charged to
+the full lane — it houses tile decode usage plus the non-decode floor (base heap,
+allocator retention, HTTP/encode buffers, cache). The invariant to verify while
+observing in <code>basic</code> before returning to the enforcing <code>advanced</code> default is
+<code>reserve ≥ observed floor</code>.</p>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default (binary)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory_limit</code></td>
+<td><code>"0"</code> (auto)</td>
+<td>Total RAM envelope. <code>0</code> = auto-detect available RAM. Accepts <code>M</code>/<code>G</code> suffixes: <code>"8G"</code>, <code>"500M"</code></td>
+</tr>
+<tr>
+<td><code>tiles_memory_ratio</code></td>
+<td><code>0.25</code></td>
+<td>Fraction of the envelope reserved for tiles + non-decode floor (range 0..1); the full lane gets the rest</td>
+</tr>
+<tr>
+<td><code>admission_mode</code></td>
+<td><code>"advanced"</code></td>
+<td><code>"basic"</code> (advanced tier shadow-counts only) or <code>"advanced"</code> (reject over budget). There is no <code>"off"</code> — the budget is always accounted</td>
+</tr>
+<tr>
+<td><code>large_decode_threshold_bytes</code></td>
+<td><code>33554432</code> (32 MiB)</td>
+<td>Estimated peak-memory at/above which a decode is charged to the full lane; below it bypasses as a tile</td>
+</tr>
+</tbody>
+</table>
+<p>Available via (see also <a href="../../guide/running/">Running Vitrinli</a>):</p>
+<ul>
+<li>CLI flags: <code>--memory-limit</code>, <code>--tiles-memory-ratio</code>, <code>--admission-mode</code>, <code>--large-decode-threshold-bytes</code></li>
+<li>Environment: <code>SIPI_MEMORY_LIMIT</code>, <code>SIPI_TILES_MEMORY_RATIO</code>, <code>SIPI_ADMISSION_MODE</code>, <code>SIPI_LARGE_DECODE_THRESHOLD_BYTES</code></li>
+<li>Rust TOML config file (shell-owned)</li>
+</ul>
+<p>These knobs are <strong>not</strong> read from the Lua config — they are set via the CLI/env/TOML
+surface above and applied over the seam at init.</p>
+<p>The DEFAULT (an unset <code>admission_mode</code>) is <code>"advanced"</code>. An UNRECOGNIZED value
+(e.g. a stale <code>"off"</code> from an old template, or a legacy <code>"monitor"</code>/<code>"enforce"</code>)
+is a different case — it is not a startup error, Vitrinli silently falls back to
+<code>"basic"</code>.</p>
+<h3 id="auto-detection">Auto-Detection<a class="headerlink" href="#auto-detection" title="Permanent link">&para;</a></h3>
+<p>When <code>memory_limit = "0"</code> (default), the envelope is the detected available RAM:</p>
+<ol>
+<li><strong>cgroups v2:</strong> <code>/sys/fs/cgroup/memory.max</code></li>
+<li><strong>cgroups v1:</strong> <code>/sys/fs/cgroup/memory/memory.limit_in_bytes</code></li>
+<li><strong>Linux fallback:</strong> <code>/proc/meminfo</code> MemTotal</li>
+<li><strong>macOS:</strong> <code>sysctl hw.memsize</code></li>
+<li><strong>Fallback:</strong> 1 GB if detection fails</li>
+</ol>
+<p>The full lane then gets <code>envelope × (1 − tiles_memory_ratio)</code>; the reserve is the
+headroom for tiles and the non-decode floor.</p>
+<blockquote>
+<p>On <code>vre-prod-01</code> Vitrinli is not cgroup-capped, so <code>memory_limit = "0"</code> would size
+the envelope to the whole VM RAM. Set <code>memory_limit</code> explicitly (ops-deploy
+renders <code>DSP_IIIF_MEMORY_LIMIT</code> into it) to hold Vitrinli to the intended cap.</p>
+</blockquote>
+<h2 id="advanced-behaviour-503-vs-413">Advanced behaviour: 503 vs 413<a class="headerlink" href="#advanced-behaviour-503-vs-413" title="Permanent link">&para;</a></h2>
+<p>In <code>advanced</code> mode a full-lane decode that cannot be admitted is rejected two ways:</p>
+<ul>
+<li><strong>503 Service Unavailable + <code>Retry-After</code></strong> — the budget is <em>currently</em>
+  exhausted by concurrent decodes. The request fits on its own and may succeed on
+  retry.</li>
+<li><strong>413 Payload Too Large</strong> (no <code>Retry-After</code>) — the request's estimate <em>alone</em>
+  exceeds the whole full-lane budget. It can never succeed, so retrying is
+  pointless.</li>
+</ul>
+<p>Tile decodes are never rejected for full-lane memory pressure — they bypass the
+budget.</p>
+<h2 id="observing-before-enforcing">Observing Before Enforcing<a class="headerlink" href="#observing-before-enforcing" title="Permanent link">&para;</a></h2>
+<p>Generic deployments run <code>advanced</code> (enforcing) by default. To observe the
+shadow counters before enforcing — e.g. before tuning <code>memory_limit</code>/
+<code>tiles_memory_ratio</code> on a new deployment — override to <code>basic</code> explicitly:</p>
+<ol>
+<li><strong>Set <code>SIPI_ADMISSION_MODE=basic</code></strong> (or <code>DSP_IIIF_ADMISSION_MODE=basic</code> in
+   ops-deploy) and redeploy:</li>
+<li>The budget is tracked and logged but requests are never rejected.</li>
+<li>
+<p><code>sipi_decode_memory_shadow_rejected_total</code> shows what <em>would</em> be 503'd;
+     <code>sipi_decode_memory_shadow_too_large_total</code> what <em>would</em> be 413'd.</p>
+</li>
+<li>
+<p><strong>Observe metrics</strong> (1-2 weeks):</p>
+</li>
+<li>Budget utilization: <code>sipi_decode_memory_used_bytes / sipi_decode_memory_budget_bytes</code> — should be &lt; 0.8 normally.</li>
+<li>Shadow rejection rate: <code>rate(sipi_decode_memory_shadow_rejected_total[5m])</code>.</li>
+<li>Request size distribution: <code>histogram_quantile(0.99, rate(sipi_decode_memory_estimate_bytes_bucket[5m]))</code>.</li>
+<li>
+<p>Verify the reserve holds the floor: <code>(sipi_memory_limit_bytes − sipi_decode_memory_budget_bytes) ≥</code> the observed non-decode working set.</p>
+</li>
+<li>
+<p><strong>Tune</strong> if needed:</p>
+</li>
+<li>If shadow rejections fire on normal full traffic, raise <code>memory_limit</code> or lower <code>tiles_memory_ratio</code>.</li>
+<li>
+<p>Use the histogram to understand the size distribution being served.</p>
+</li>
+<li>
+<p><strong>Remove the <code>basic</code> override</strong> (unset <code>SIPI_ADMISSION_MODE</code> /
+   <code>DSP_IIIF_ADMISSION_MODE</code>) to return to the enforcing <code>advanced</code> default.</p>
+</li>
+</ol>
+<h2 id="prometheus-metrics">Prometheus Metrics<a class="headerlink" href="#prometheus-metrics" title="Permanent link">&para;</a></h2>
+<p>Vitrinli exports over OTLP, so these are the names the collector renders after
+normalization, not the output of a scrape endpoint.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Type</th>
+<th>Labels</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sipi_decode_memory_budget_bytes</code></td>
+<td>Gauge</td>
+<td>—</td>
+<td>Full-lane byte cap (<code>memory_limit × (1 − tiles_memory_ratio)</code>; set at startup)</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_used_bytes</code></td>
+<td>Gauge</td>
+<td>—</td>
+<td>Currently allocated to in-flight full-lane decodes</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_acquired_total</code></td>
+<td>Counter</td>
+<td>—</td>
+<td>Admitted full-lane decodes</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_rejected_total</code></td>
+<td>Counter</td>
+<td>—</td>
+<td>Full-lane decodes refused with 503 in <code>advanced</code> mode (transient)</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_too_large_total</code></td>
+<td>Counter</td>
+<td>—</td>
+<td>Requests refused with 413 in <code>advanced</code> mode (estimate alone exceeds the budget — permanently unservable)</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_shadow_rejected_total</code></td>
+<td>Counter</td>
+<td>—</td>
+<td>Decodes that <em>would</em> be 503'd in <code>basic</code> mode</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_shadow_too_large_total</code></td>
+<td>Counter</td>
+<td>—</td>
+<td>Requests that <em>would</em> be 413'd in <code>basic</code> mode</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_near_limit_total</code></td>
+<td>Counter</td>
+<td>—</td>
+<td>Acquisitions where usage &gt; 80% of budget</td>
+</tr>
+<tr>
+<td><code>sipi_decode_memory_estimate_bytes</code></td>
+<td>Histogram</td>
+<td>—</td>
+<td>Per-request peak memory estimates</td>
+</tr>
+</tbody>
+</table>
+<h2 id="traffic-patterns">Traffic Patterns<a class="headerlink" href="#traffic-patterns" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Request Type</th>
+<th>Typical Estimate</th>
+<th>Lane</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tile (256x256)</td>
+<td>&lt; 1 MB</td>
+<td>Tile — bypasses the budget</td>
+</tr>
+<tr>
+<td>Thumbnail (/full/,128/)</td>
+<td>&lt; 100 KB</td>
+<td>Tile — bypasses the budget</td>
+</tr>
+<tr>
+<td>Medium (/full/,2000/)</td>
+<td>50-120 MB</td>
+<td>Full — charged against the budget</td>
+</tr>
+<tr>
+<td>Full resolution (/full/max/)</td>
+<td>1-5 GB</td>
+<td>Full — budget limits concurrency</td>
+</tr>
+<tr>
+<td>Full + rotation (/full/max/90/)</td>
+<td>2-10 GB</td>
+<td>Full — often exceeds the budget alone (413)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>Full-lane 503s on legitimate traffic:</strong>
+- Check <code>histogram_quantile(0.5, rate(sipi_decode_memory_estimate_bytes_bucket[5m]))</code> — the median for viewer traffic should be well below the threshold.
+- If large requests dominate, raise <code>memory_limit</code> or lower <code>tiles_memory_ratio</code>.</p>
+<p><strong>413s appearing:</strong>
+- A single request's estimate exceeds the full-lane budget. Either the source is enormous and the client requested <code>/full/max/</code>, or <code>memory_limit</code>/<code>tiles_memory_ratio</code> leave the full lane too small.</p>
+<p><strong>OOM despite the budget enabled:</strong>
+- Check mode is <code>advanced</code>, not <code>basic</code>.
+- Check <code>sipi_decode_memory_budget_bytes</code> matches the expected <code>memory_limit × (1 − tiles_memory_ratio)</code>.
+- Memory outside the full-lane decode pipeline (tiles, cache, Lua, HTTP buffers) lives in the reserve, not the budget — size the reserve with <code>tiles_memory_ratio</code>.
+- <code>sipi_malloc_arena_bytes</code> reports the process resident set (true RSS, from <code>mi_process_info</code>) — compare it against the envelope and <code>container_memory_working_set_bytes</code> to see how close the whole process runs to the cap. <code>sipi_malloc_retained_bytes</code> (RSS not currently handed out) rising with a flat <code>in_use</code> is allocator retention, not a leak.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1460 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/rbe-write-pressure/">
+      
+      
+        <link rel="prev" href="../ci/">
+      
+      
+        <link rel="next" href="../developing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>RBE Write Pressure - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rbe-write-pressure" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RBE Write Pressure
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bottom-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bottom line
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-numbers-measured-2026-07-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The numbers (measured 2026-07-24)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-amplification-happens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the amplification happens
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-side-levers-what-ci-can-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client-side levers (what CI can change)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Client-side levers (what CI can change)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-drop-stamp-from-the-test-path-highest-impact-zero-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Drop --stamp from the test path (highest impact, zero risk)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-do-not-build-heavyweight-non-test-targets-on-the-test-legs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Do not build heavyweight non-test targets on the test legs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-deduplicate-the-concurrent-sanitizer-builds-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Deduplicate the concurrent sanitizer builds — DONE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-raise-the-cache-hit-rate-generally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Raise the cache-hit rate generally
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What NOT to do
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-reproduce-the-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to reproduce the analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How to reproduce the analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pull-the-build-event-protocol-bep-json-from-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pull the Build Event Protocol (BEP) JSON from CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-read-the-write-relevant-bep-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Read the write-relevant BEP fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-confirm-against-the-host-from-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Confirm against the host from Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#honest-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Honest limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="rbe-write-pressure">RBE Write Pressure<a class="headerlink" href="#rbe-write-pressure" title="Permanent link">&para;</a></h1>
+<p>This page is the durable record of how Vitrinli's CI writes to the Remote Build
+Execution (RBE) backend, so the "why is the RBE disk writing so much?" question
+does not get re-investigated from scratch. It covers the mechanism, the numbers
+as measured, the client-side levers that actually move the needle, and how to
+reproduce the analysis.</p>
+<p>See <a href="../rbe/">Remote Build Execution</a> for the backend topology and cross-compile
+setup. The store lives on the DaSCH-hosted VM <code>dasch-remotebuild-prod-01</code>
+(NativeLink config in <a href="https://github.com/dasch-swiss/infra"><code>infra</code></a>
+<code>OS/ansible/roles/dasch.nativelink</code>).</p>
+<h2 id="bottom-line">Bottom line<a class="headerlink" href="#bottom-line" title="Permanent link">&para;</a></h2>
+<p><strong>Write pressure on the RBE host is worker-side action materialization, not
+client uploads to CAS.</strong> The Bazel client uploads a few hundred MB per full CI
+run; the store disk absorbs terabytes per busy hour. Do not reason about RBE
+write pressure from the client's <code>bytesSent</code> — it is five orders of magnitude
+too small to be the signal.</p>
+<p>The CAS store is <strong>bounded with multi-TB headroom</strong>, so store <em>growth</em> /
+eviction is out of scope. This page is only about the <em>rate of writes</em> to the
+store disk and what the client can do to reduce it.</p>
+<h2 id="the-numbers-measured-2026-07-24">The numbers (measured 2026-07-24)<a class="headerlink" href="#the-numbers-measured-2026-07-24" title="Permanent link">&para;</a></h2>
+<p>Reconciliation over 24h on <code>dasch-remotebuild-prod-01</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bytes written to <code>vdb</code> (the NativeLink store disk)</td>
+<td><strong>~22.6 TB / day</strong></td>
+</tr>
+<tr>
+<td>Bytes written to <code>vda</code> (OS disk)</td>
+<td>17 GB / day</td>
+</tr>
+<tr>
+<td>CAS net growth (new persisted content)</td>
+<td><strong>272 GB / day</strong></td>
+</tr>
+<tr>
+<td>Bazel client → server upload, per full 5-leg CI run</td>
+<td>~200 MB (27+22+8+17+129 MB across the legs)</td>
+</tr>
+<tr>
+<td>Peak store-disk write in a single busy hour</td>
+<td>1.6–3.2 TB/h (≈ 0.9 GB/s avg, bursts to ~2.5 GB/s)</td>
+</tr>
+</tbody>
+</table>
+<p>The store disk writes <strong>~22.6 TB to persist 272 GB of new content — roughly 83×
+write amplification.</strong> The ~22.3 TB difference is transient: worker input/output
+materialization and bounded worker-cache churn, written and overwritten, never
+persisted.</p>
+<p>The store disk (<code>vdb</code>) holds every NativeLink directory: <code>cas</code> (~567 GB),
+<code>ac</code>, <code>bazel-remote</code>, <code>directory_cache-1..4</code> (~40 GB each), <code>worker-1..4</code>
+(~45–51 GB each), and the ephemeral <code>work-1..8</code> exec sandboxes.</p>
+<h2 id="why-the-amplification-happens">Why the amplification happens<a class="headerlink" href="#why-the-amplification-happens" title="Permanent link">&para;</a></h2>
+<p>For every action that is <strong>remotely executed</strong> (not a cache hit), the worker:</p>
+<ol>
+<li>Materializes the action's <strong>entire input closure</strong> onto its local filesystem
+   (<code>work-N</code> sandbox + <code>directory_cache-N</code>) before the action runs. For
+   large-fan-in actions this is huge:</li>
+<li><code>CppLink</code> of <code>sipi</code> pulls the whole object + archive closure (multi-GB).</li>
+<li>The OCI image <code>Tar</code> / <code>CopyToDirectory</code> materializes the full rootfs.</li>
+<li><code>TestRunner</code> / <code>RunfilesTree</code> materialize the test's whole runfiles tree.</li>
+<li>Writes the action's outputs to disk, then into CAS.</li>
+</ol>
+<p>So store-disk write volume scales with <strong>(number of remotely-executed actions) ×
+(their materialized closure size)</strong> — not with the count of unique blobs that
+end up persisted. A cache <em>hit</em> writes nothing on the worker; a cache <em>miss</em> on a
+big-fan-in action writes its entire closure.</p>
+<p>Two amplifiers on top of that, both server-side (noted for completeness, not
+client-tunable): the <code>directory_cache-N</code> worker caches are bounded (~40 GB each),
+so a working set larger than the bound thrashes (evict + rewrite); and a
+filesystem-backed CAS of millions of small blob files carries heavy metadata /
+journal write overhead.</p>
+<h2 id="client-side-levers-what-ci-can-change">Client-side levers (what CI can change)<a class="headerlink" href="#client-side-levers-what-ci-can-change" title="Permanent link">&para;</a></h2>
+<p>Ranked by expected impact on worker materialization. The goal is fewer /
+smaller remotely-executed actions.</p>
+<h3 id="1-drop-stamp-from-the-test-path-highest-impact-zero-risk">1. Drop <code>--stamp</code> from the test path (highest impact, zero risk)<a class="headerlink" href="#1-drop-stamp-from-the-test-path-highest-impact-zero-risk" title="Permanent link">&para;</a></h3>
+<p><code>just bazel-test</code> and <code>just bazel-coverage</code> pass <code>--stamp</code>. Stamping injects the
+git commit into <code>SipiVersion.h</code>, which makes the final <code>CppLink</code> of <code>sipi</code> <strong>and</strong>
+the OCI image (via <code>STABLE_IMAGE_CREATED</code>) unique <strong>every commit</strong>. Unique inputs
+never cache-hit, so on every commit the worker re-executes the full link and
+image build and materializes their entire multi-GB closures.</p>
+<p>Unstamped, those outputs are deterministic and cache across commits whose engine
+code is unchanged (the common PR case) — the worker stops materializing the link
+and image closures on every run.</p>
+<p>The test suite is already written to tolerate the unstamped
+<code>0.0.0-unstamped</code> fallback: <code>test/e2e/tests/cli.rs::cli_version_flag</code> asserts
+<em>either</em> the stamped or unstamped string, and <code>health.rs</code> / <code>docker_smoke.rs</code>
+only assert the <code>version</code> field is a string.
+Keep <code>--stamp</code> on <code>bazel-build</code>, the Docker build, and release recipes (they need
+the real version); drop it only from <code>bazel-test</code> / <code>bazel-coverage</code>.</p>
+<h3 id="2-do-not-build-heavyweight-non-test-targets-on-the-test-legs">2. Do not build heavyweight non-test targets on the test legs<a class="headerlink" href="#2-do-not-build-heavyweight-non-test-targets-on-the-test-legs" title="Permanent link">&para;</a></h3>
+<p><code>bazel test //src/... //test/...</code> builds every non-test target under <code>//src</code>,
+including <code>//src:sipi_image</code> (the OCI image — a full-rootfs <code>Tar</code>). The image is
+already exercised by its own <code>bazel-test-smoke</code> job, so building it on all three
+test legs makes the worker materialize the rootfs closure three extra times per
+run for no test coverage. Scope the test pattern (or use
+<code>--build_tag_filters</code>) so the image and other non-test artifacts are not pulled
+into the test graph.</p>
+<h3 id="3-deduplicate-the-concurrent-sanitizer-builds-done">3. Deduplicate the concurrent sanitizer builds — DONE<a class="headerlink" href="#3-deduplicate-the-concurrent-sanitizer-builds-done" title="Permanent link">&para;</a></h3>
+<p>Previously <code>sanitizer-unit</code> and <code>sanitizer-e2e</code> each remotely compiled the full
+<code>--config=asan --config=ubsan</code> tree (~5500 <code>CppCompile</code> each) and ran
+concurrently, so the worker materialized two near-identical instrumented
+closures. They are now merged into a single <code>sanitizer</code> job that runs both test
+sets in one <code>bazel test</code> invocation (<code>just bazel-test-sanitized</code>), so the shared
+instrumented tree compiles exactly once.</p>
+<h3 id="4-raise-the-cache-hit-rate-generally">4. Raise the cache-hit rate generally<a class="headerlink" href="#4-raise-the-cache-hit-rate-generally" title="Permanent link">&para;</a></h3>
+<p>Every avoided remote execution avoids one input-closure materialization. The
+<code>linux-arm64</code> and <code>darwin-arm64</code> legs run with a <strong>cold local action cache</strong>
+(zero local hits — every action round-trips to the remote cache), while
+<code>linux-amd64</code> has a warm on-runner cache (~5600 local hits). Persisting the
+per-runner action cache (or output base) on the arm64/darwin runners cuts
+redundant remote work. This is primarily read relief, but fewer executions also
+means less materialization.</p>
+<h3 id="what-not-to-do">What NOT to do<a class="headerlink" href="#what-not-to-do" title="Permanent link">&para;</a></h3>
+<p>Do <strong>not</strong> disable <code>--remote_upload_local_results</code>. It is what populates the
+cache that gives the arm64/darwin legs their ~67% remote-cache-hit rate. Turning
+it off trades a negligible one-time upload cut (uploads are ~200 MB/run — not the
+problem) for permanently worse hit rates, i.e. <em>more</em> remote execution and
+<em>more</em> materialization over time.</p>
+<h2 id="how-to-reproduce-the-analysis">How to reproduce the analysis<a class="headerlink" href="#how-to-reproduce-the-analysis" title="Permanent link">&para;</a></h2>
+<h3 id="1-pull-the-build-event-protocol-bep-json-from-ci">1. Pull the Build Event Protocol (BEP) JSON from CI<a class="headerlink" href="#1-pull-the-build-event-protocol-bep-json-from-ci" title="Permanent link">&para;</a></h3>
+<p>Every <code>ci.yml</code> test leg writes its Bazel invocation's BEP JSON via
+<code>--build_event_json_file</code> and uploads it as an artifact (<code>bep-&lt;platform&gt;</code>,
+<code>bep-sanitizer</code>; 30-day retention). See the upload
+steps in <code>.github/workflows/ci.yml</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># find a completed run that carries the artifacts</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--workflow<span class="o">=</span>ci.yml<span class="w"> </span>--limit<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--json<span class="w"> </span>databaseId,headBranch,conclusion,createdAt
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">&quot;repos/dasch-swiss/vitrinli/actions/runs/&lt;run-id&gt;/artifacts&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span>--jq<span class="w"> </span><span class="s1">&#39;.artifacts[].name&#39;</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>gh<span class="w"> </span>run<span class="w"> </span>download<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span>-R<span class="w"> </span>dasch-swiss/vitrinli<span class="w"> </span>-D<span class="w"> </span>./bep
+</code></pre></div>
+<h3 id="2-read-the-write-relevant-bep-fields">2. Read the write-relevant BEP fields<a class="headerlink" href="#2-read-the-write-relevant-bep-fields" title="Permanent link">&para;</a></h3>
+<p>The single <code>buildMetrics</code> event carries the signal:</p>
+<ul>
+<li><code>actionSummary.runnerCount[]</code> — the disposition breakdown:
+  <code>total</code> / <code>remote cache hit</code> / <code>remote</code> (executed remotely) / <code>local</code>
+  (executed locally, uploaded) / <code>internal</code> (orchestration, not uploaded).
+  <strong>Writes to CAS come from <code>remote</code> + <code>local</code>; cache hits and <code>internal</code> do
+  not write.</strong></li>
+<li><code>actionSummary.actionData[]</code> — per-mnemonic <code>actionsExecuted</code>. Note: on a leg
+  with a cold local cache this <em>includes remote cache hits</em> (reads), so a large
+  <code>CppCompile</code> count is not proof of recompilation — cross-check against
+  <code>runnerCount</code>.</li>
+<li><code>actionSummary.actionCacheStatistics</code> — the <em>local</em> action cache (<code>hits</code> /
+  <code>misses</code>). Zero hits ⇒ cold local cache ⇒ everything round-trips remotely.</li>
+<li><code>artifactMetrics</code> — <code>sourceArtifactsRead</code>, <code>outputArtifactsSeen</code>,
+  <code>topLevelArtifacts</code> sizes: the scale of data movement.</li>
+<li><code>networkMetrics.systemNetworkStats.bytesSent</code> / <code>bytesRecv</code> — the client's
+  upload / download. <strong><code>bytesSent</code> is NOT the host write signal.</strong></li>
+</ul>
+<p>A useful tell: if <code>actionsExecuted</code> per mnemonic is <em>identical across different
+branches</em>, the executing set is a fixed must-run tail (stamped links, tests,
+non-cacheable actions), not churn driven by the code change.</p>
+<h3 id="3-confirm-against-the-host-from-grafana">3. Confirm against the host from Grafana<a class="headerlink" href="#3-confirm-against-the-host-from-grafana" title="Permanent link">&para;</a></h3>
+<p>Datasource <code>grafanacloud-prom</code>, instance <code>dasch-remotebuild-prod-01</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Store-disk write total over 24h (GB) — the real write-pressure number</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kr">increase</span><span class="o">(</span><span class="nv">node_disk_written_bytes_total</span><span class="p">{</span><span class="nl">instance</span><span class="o">=</span><span class="p">&quot;</span><span class="s">dasch-remotebuild-prod-01</span><span class="p">&quot;,</span><span class="nl">device</span><span class="o">=</span><span class="p">&quot;</span><span class="s">vdb</span><span class="p">&quot;}[</span><span class="s">24h</span><span class="p">]</span><span class="o">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1</span><span class="nv">e9</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># CAS net growth over 24h (GB) — compare to the above to see amplification</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="o">(</span><span class="nv">nativelink_store_dir_bytes</span><span class="p">{</span><span class="nl">instance</span><span class="o">=</span><span class="p">&quot;</span><span class="s">dasch-remotebuild-prod-01</span><span class="p">&quot;,</span><span class="nl">dir</span><span class="o">=</span><span class="p">&quot;</span><span class="s">cas</span><span class="p">&quot;}</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">(</span><span class="nv">nativelink_store_dir_bytes</span><span class="p">{</span><span class="nl">instance</span><span class="o">=</span><span class="p">&quot;</span><span class="s">dasch-remotebuild-prod-01</span><span class="p">&quot;,</span><span class="nl">dir</span><span class="o">=</span><span class="p">&quot;</span><span class="s">cas</span><span class="p">&quot;}</span><span class="w"> </span><span class="k">offset</span><span class="w"> </span><span class="s">24h</span><span class="o">))</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1</span><span class="nv">e9</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># Per-directory store sizes (cas, ac, directory_cache-*, worker-*, work-*)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nv">nativelink_store_dir_bytes</span><span class="p">{</span><span class="nl">instance</span><span class="o">=</span><span class="p">&quot;</span><span class="s">dasch-remotebuild-prod-01</span><span class="p">&quot;}</span>
+</code></pre></div>
+<h2 id="honest-limitations">Honest limitations<a class="headerlink" href="#honest-limitations" title="Permanent link">&para;</a></h2>
+<p><code>node_exporter</code> reports writes <strong>per block device</strong>, not per directory, so the
+~22.6 TB/day cannot be split precisely between worker input materialization,
+<code>directory_cache</code> eviction churn, and CAS blob writes. The attribution to
+worker-side materialization is by elimination: CAS net growth (272 GB) and client
+uploads (~GB/day) together account for barely 1% of the disk writes, so the
+remaining ~22 TB must be transient worker-side write/rewrite. NativeLink does not
+currently export per-operation write counters that would let us confirm the split
+directly.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

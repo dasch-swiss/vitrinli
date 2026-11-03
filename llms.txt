@@ -1,0 +1,43 @@
+# Vitrinli Documentation
+
+Vitrinli is a multithreaded, high-performance IIIF-compatible media server written in C++. It provides image format conversions, metadata preservation, and a Lua scripting interface.
+
+
+## Overview
+
+- [Overview](https://sipi.io/guide/index.md): Project overview and features
+
+## User Guide
+
+- [Introduction](https://sipi.io/guide/introduction/index.md): IIIF concepts and Vitrinli use cases
+- [Running](https://sipi.io/guide/running/index.md): CLI usage, server mode, logging, error codes
+- [Reference](https://sipi.io/guide/sipi/index.md): IIIF URL syntax, configuration reference
+- [JSON Output](https://sipi.io/guide/json-output/index.md): Structured JSON CLI output schema (--json)
+
+## Lua Scripting
+
+- [Lua Integration](https://sipi.io/lua/index.md): Lua integration and server API
+- [Lua Image Functions](https://sipi.io/lua/lua-image/index.md): Lua image manipulation functions
+- [SQLite Integration](https://sipi.io/lua/sqlite/index.md): SQLite integration from Lua
+
+## Development
+
+- [Building](https://sipi.io/development/building/index.md): Build instructions overview
+- [Building with Bazel](https://sipi.io/development/bazel/index.md): Bazel build system: MODULE.bazel, BUILD.bazel, common commands, --config flags, query
+- [Nix dev shell](https://sipi.io/development/nix/index.md): Nix dev shell: setup, what's on PATH, direnv
+- [CI and Release](https://sipi.io/development/ci/index.md): CI and release pipeline guide
+- [Developing](https://sipi.io/development/developing/index.md): Development guide
+- [Error Model](https://sipi.io/development/error-model/index.md): Error model: SipiValueError, the ErrorCode/policy table, and the three seam mappings
+- [Downstream Dependencies](https://sipi.io/development/downstream-dependencies/index.md): Runtime packages and downstream consumers
+- [Fuzz Testing](https://sipi.io/development/fuzzing/index.md): Fuzz testing with libFuzzer
+- [Benchmarking](https://sipi.io/development/benchmarking/index.md): Microbenchmarks with Google Benchmark: just bench, bench-compare, the regression decision rule
+- [Allocator Replay](https://sipi.io/development/allocator-replay/index.md): Allocator replay harness: RSS-floor measurement of the JP2 decode path, leak-vs-retention method, allocator baselines
+- [Profiling](https://sipi.io/development/profiling/index.md): Profiling with Tracy: just bazel-build-tracy, when to use Tracy vs Prometheus/Grafana vs bench, adding zones
+- [Testing Strategy](https://sipi.io/development/testing-strategy/index.md): Testing strategy, coverage matrices, and feature inventory
+- [Commit and PR Conventions](https://sipi.io/development/commit-conventions/index.md): Commit organization and PR description conventions
+- [Reviewer Guidelines](https://sipi.io/development/reviewer-guidelines/index.md): Code review checklist for human and AI reviewers
+
+## Release Notes
+
+- [Release Notes](https://sipi.io/release-notes/index.md)
+

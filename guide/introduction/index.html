@@ -1,0 +1,1493 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/guide/introduction/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../sipi/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Introduction - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vitrinli-introduction" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Introduction
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-vitrinli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is Vitrinli?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is Vitrinli?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-a-iiif-image-api-v3-level-2-conformant-image-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. A IIIF Image API V3 level 2 conformant image server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. A IIIF Image API V3 level 2 conformant image server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iiif-image-api-30-conformance-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IIIF Image API 3.0 conformance matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-an-ordinary-http-webserver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. An ordinary HTTP webserver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-an-image-format-conversion-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. An image format conversion tool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. An image format conversion tool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generic-format-conversions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generic format conversions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preservation-metadata-vitrinli-specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preservation metadata (Vitrinli specific)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-integrated-sqlite3-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Integrated sqlite3 Database
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-is-behind-vitrinli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who is behind Vitrinli?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-get-vitrinli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to get Vitrinli?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vitrinli-as-iiif-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vitrinli as IIIF-Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vitrinli as IIIF-Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extensions-to-the-iiif-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extensions to the IIIF-Standard
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Extensions to the IIIF-Standard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preflight-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preflight script
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-to-non-image-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access to non-image files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="vitrinli-introduction">Vitrinli – Introduction<a class="headerlink" href="#vitrinli-introduction" title="Permanent link">&para;</a></h1>
+<p>Vitrinli (formerly SIPI) is an IIIF media server.</p>
+<h2 id="what-is-vitrinli">What is Vitrinli?<a class="headerlink" href="#what-is-vitrinli" title="Permanent link">&para;</a></h2>
+<h3 id="1-a-iiif-image-api-v3-level-2-conformant-image-server">1. A IIIF Image API V3 level 2 conformant image server<a class="headerlink" href="#1-a-iiif-image-api-v3-level-2-conformant-image-server" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Vitrinli is a full multithreaded, high performance, level2 compliant <a href="https://iiif.io/api/image/3.0">IIIF Image API 3.0</a> written in C++. For the
+  JPEG2000 implementation, it relies on the commercial <a href="https://kakadusoftware.com">kakadu-library</a>, but otherwise it is
+  completely open source on <a href="https://github.com/dasch-swiss/vitrinli">GitHub</a>. It offers special support for multipage PDFs
+  (through Vitrinli-specific extensions to the IIIF Image API).</li>
+</ul>
+<h4 id="iiif-image-api-30-conformance-matrix">IIIF Image API 3.0 conformance matrix<a class="headerlink" href="#iiif-image-api-30-conformance-matrix" title="Permanent link">&para;</a></h4>
+<p>The following URL forms are accepted by the IIIF endpoint and have a working
+implementation behind them. The list mirrors what <code>info.json</code> advertises in
+its <code>extraFeatures</code> and <code>extraFormats</code> arrays:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Supported forms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Region</td>
+<td><code>full</code>, <code>square</code>, <code>x,y,w,h</code> (pixel), <code>pct:x,y,w,h</code> (percent)</td>
+</tr>
+<tr>
+<td>Size (no upscale)</td>
+<td><code>max</code>, <code>pct:n</code>, <code>w,</code>, <code>,h</code>, <code>w,h</code>, <code>!w,h</code></td>
+</tr>
+<tr>
+<td>Size (upscale, <code>^</code>-prefixed)</td>
+<td><code>^max</code>, <code>^pct:n</code>, <code>^w,</code>, <code>^,h</code>, <code>^w,h</code>, <code>^!w,h</code></td>
+</tr>
+<tr>
+<td>Rotation</td>
+<td>non-negative decimal <code>n</code>; <code>!n</code> (mirror then rotate). Leading <code>+</code> / <code>-</code> rejected.</td>
+</tr>
+<tr>
+<td>Quality</td>
+<td><code>default</code>, <code>color</code>, <code>gray</code>, <code>bitonal</code></td>
+</tr>
+<tr>
+<td>Format</td>
+<td><code>jpg</code>, <code>tif</code>, <code>png</code>, <code>jp2</code> (also reachable as <code>jpx</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Vitrinli-specific extensions on the same URL surface:</p>
+<table>
+<thead>
+<tr>
+<th>URL form</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{prefix}/{id}/info.json</code></td>
+<td>IIIF Image Information document</td>
+</tr>
+<tr>
+<td><code>{prefix}/{id}/knora.json</code></td>
+<td>DSP-specific information document (legacy)</td>
+</tr>
+<tr>
+<td><code>{prefix}/{id}/file</code></td>
+<td>Bypass IIIF processing and stream the file as-is</td>
+</tr>
+<tr>
+<td><code>{prefix}/{id}</code></td>
+<td>303 redirect to <code>info.json</code> (<code>baseUriRedirect</code>)</td>
+</tr>
+<tr>
+<td>- Vitrinli has been designed for the long term preservation of images, intended for the needs of the cultural heritage field. Thus it offers</td>
+<td></td>
+</tr>
+<tr>
+<td>some unique features for this purpose:</td>
+<td></td>
+</tr>
+<tr>
+<td>- all file format conversions try to preserve all metadata (EXIF, XMP, IPTC etc.). These functionality is based</td>
+<td></td>
+</tr>
+<tr>
+<td>on the open source <a href="https://www.exiv2.org">exiv2 library</a>.</td>
+<td></td>
+</tr>
+<tr>
+<td>- Vitrinli can deal with and convert ICC color profiles based on the <a href="http://www.littlecms.com">littlecms library</a>.</td>
+<td></td>
+</tr>
+<tr>
+<td>- Vitrinli can embed important preservation data such as the checksum of the pixel values, original filename etc. in the file</td>
+<td></td>
+</tr>
+<tr>
+<td>headers.</td>
+<td></td>
+</tr>
+<tr>
+<td>- it supports SSL (https://…)</td>
+<td></td>
+</tr>
+<tr>
+<td>- Vitrinli embeds the scripting language <a href="https://www.lua.org">LUA</a> that allows a very flexible, highly customizable</td>
+<td></td>
+</tr>
+<tr>
+<td>deployment that can be adapted to the enviroment Vitrinli is being used in. Before serving any request, a configurable</td>
+<td></td>
+</tr>
+<tr>
+<td>LUA script ("pre flight script") is being executed that can check access rights, restrictions or other stuff. Vitrinli LUA</td>
+<td></td>
+</tr>
+<tr>
+<td>has been extended with many Vitrinli-specific functions (including image conversion, HTTP-client etc.)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-an-ordinary-http-webserver">2. An ordinary HTTP webserver<a class="headerlink" href="#2-an-ordinary-http-webserver" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Vitrinli is also a normal webserver that is able to deliver arbitrary files. It also implements LUA embedded into HTML
+  pages.</li>
+<li>Using Vitrinli LUA scripts and routing, RESTful interfaces may be implemented. E.g. image upload and conversions may
+  by supported.</li>
+</ul>
+<h3 id="3-an-image-format-conversion-tool">3. An image format conversion tool<a class="headerlink" href="#3-an-image-format-conversion-tool" title="Permanent link">&para;</a></h3>
+<h4 id="generic-format-conversions">Generic format conversions<a class="headerlink" href="#generic-format-conversions" title="Permanent link">&para;</a></h4>
+<ul>
+<li>image format conversion are supported between TIFF, JPEG2000, JPG and PNG. Vitrinli can
+  be used either as standalone command line tool or in server mode using <a href="https://www.lua.org">LUA</a> scripting.</li>
+<li>Vitrinli preserves most embedded metadata (EXIF, IPTC, TIFF, XMP) and is preserving and/or converting ICC color profiles.
+  Malformed embedded metadata makes the read or conversion fail rather than being silently dropped.</li>
+</ul>
+<h4 id="preservation-metadata-vitrinli-specific">Preservation metadata (Vitrinli specific)<a class="headerlink" href="#preservation-metadata-vitrinli-specific" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Vitrinli is able to add Vitrinli specific metadata to most file formats. These metadata are relevant for long-term
+  preservation and include the following information:<ul>
+<li><code>original filename</code>: The original file name before conversion</li>
+<li><code>original mimetype</code>: The mimetype of the original image before conversion</li>
+<li><code>pixel checksum</code>: A checksum (e.g. SHA-256) of the original pixel values. This checksum can be used to verify that
+  a format conversion didn't alter the image content.</li>
+<li><code>icc profile</code>: (optional) The raw ICC profile as binary string. This field is added if the destination file 
+    format has no standard way to embed ICC color profiles (e.g. JPEG).</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-integrated-sqlite3-database">4. Integrated sqlite3 Database<a class="headerlink" href="#4-integrated-sqlite3-database" title="Permanent link">&para;</a></h3>
+<p>Vitrinli has an integrated sqlite3 database that can be used with special LUA extensions. Thus, Vitrinli can be used as a
+standalone media server with extended functionality. The sqlite3 database may be used to store metadata about
+images, user data etc.</p>
+<h2 id="who-is-behind-vitrinli">Who is behind Vitrinli?<a class="headerlink" href="#who-is-behind-vitrinli" title="Permanent link">&para;</a></h2>
+<p>Vitrinli is developed and maintained by Lukas Rosenthaler, professor for Digital Humanities at the University of Basel, in
+collaboration with the "Data and Service Center for the Humanities" (<a href="https://dasch.swiss">DaSCH</a>.</p>
+<h2 id="how-to-get-vitrinli">How to get Vitrinli?<a class="headerlink" href="#how-to-get-vitrinli" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The easiest way is to use the docker image provided on dockerhup <a href="https://hub.docker.com/r/daschswiss/sipi">daschswiss/sipi</a>.
+  The dockerized version has the binary kakadu library compiled in.</li>
+<li>You can compile Vitrinli from the sources on <a href="https://github.com/dasch-swiss/vitrinli">github</a>. Since Vitrinli uses many
+  third-party open source libraries, compiling Yourself is tedious and my be frustrating (but possible). <em>You have to
+  provide the licensed source of kakadu by Yourself</em>. See <a href="https://kakadusoftware.com">kakadu software</a> on how to get a
+  licensed version of the kakadu code. Vitrinli should compile on Linux (Ubuntu) and Apple OS X.</li>
+</ul>
+<h2 id="vitrinli-as-iiif-server">Vitrinli as IIIF-Server<a class="headerlink" href="#vitrinli-as-iiif-server" title="Permanent link">&para;</a></h2>
+<h3 id="extensions-to-the-iiif-standard">Extensions to the IIIF-Standard<a class="headerlink" href="#extensions-to-the-iiif-standard" title="Permanent link">&para;</a></h3>
+<h4 id="preflight-script">Preflight script<a class="headerlink" href="#preflight-script" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Before executing a IIIF request, a freely configurable LUA-script is being called. This script must return the
+  permission to access the resource ("allow", "restrict" "deny") and the final path to the resource. This allows
+  to handle access rights etc. Within the LUA-script, permission databases etc. may be accessed through RESTful
+  services or using the internal SQLite database. In addition, the path to the resource may be redirected or other
+  limitations imposed (size, watermark etc.).</li>
+<li>The preflight script has access to the full HTTP(s) header including cookies and Authorization information. There are
+  also utility functions to decode JSON Web Tokens (<a href="https://jwt.io">JWT</a>).</li>
+</ul>
+<h4 id="access-to-non-image-files">Access to non-image files<a class="headerlink" href="#access-to-non-image-files" title="Permanent link">&para;</a></h4>
+<p>Sometimes it would be helpful to deliver non-image files such as XML, CSV etc. from the same directory tree as the
+IIIF-conformant images:
+- The url to download a file must have the form <code>http(s)://{server}/{prefix}/{fileid}/file</code>. The clause
+  <em>/file</em> at the end indicates that the file should bypass any IIIF URl processing and just be served as file.
+- Also in this case, a <em>preflight script</em> may be configured to control access to such file resources.
+- if the url has the form <code>http(s)://{server}/{prefix}/{fileid}/info.json</code>, Vitrinli returns a JSON containing
+  information about the file. The JSON has the from:
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;@context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://sipi.io/api/file/3/context.json&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://localhost:1025/images/csv_test.csv&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;internalMimeType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text/csv&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;fileSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+</code></pre></div>
+  Please note that Vitrinli determines the mimetype using the magic number. Due to the limitations thereof the mimetype
+- may not be determined exactly.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1565 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/developing/">
+      
+      
+        <link rel="prev" href="../rbe-write-pressure/">
+      
+      
+        <link rel="next" href="../error-model/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Developing - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#developing-vitrinli" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Developing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-an-ide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using an IDE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using an IDE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clangd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clangd
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running locally
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running locally">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#start-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start the server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#try-some-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Try some requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-configs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available configs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Writing tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rust-end-to-end-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rust end-to-end tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smoke-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smoke tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approval-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approval tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fuzzing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fuzzing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#microbenchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Microbenchmarks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#managing-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Managing dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-and-pr-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit and PR conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="developing-vitrinli">Developing Vitrinli<a class="headerlink" href="#developing-vitrinli" title="Permanent link">&para;</a></h1>
+<h2 id="using-an-ide">Using an IDE<a class="headerlink" href="#using-an-ide" title="Permanent link">&para;</a></h2>
+<h3 id="clion">CLion<a class="headerlink" href="#clion" title="Permanent link">&para;</a></h3>
+<p>If you are using <a href="https://www.jetbrains.com/clion/">CLion</a>, open the
+project root and let CLion's Bazel support index the workspace via
+the <a href="https://plugins.jetbrains.com/plugin/8609-bazel">Bazel for IntelliJ</a>
+plugin (project from <code>MODULE.bazel</code>). Launch CLion from inside the
+Nix dev shell so it inherits the build environment:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>nix<span class="w"> </span>develop
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>clion<span class="w"> </span>.
+</code></pre></div>
+<p>A direnv setup (see <a href="../nix/#direnv">Nix dev shell</a>) gives the IDE
+the same PATH/env without launching it from a terminal.</p>
+<h3 id="clangd">clangd<a class="headerlink" href="#clangd" title="Permanent link">&para;</a></h3>
+<p>clangd and clang-tidy read <code>compile_commands.json</code> at the workspace
+root. Generate it (it is git-ignored) with:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>just<span class="w"> </span>compile-commands
+</code></pre></div>
+<p>Re-run it after adding or moving a C++ file or changing a target's
+deps or copts. Build once first (<code>just bazel-build</code>) so generated
+headers exist under <code>bazel-out/</code>.</p>
+<p>The compile commands name the hermetic clang as driver, so start
+clangd with <code>--query-driver='**'</code> to let it query that driver for its
+system include paths. In Zed, set it in <code>settings.json</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;lsp&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">&quot;clangd&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">&quot;binary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;--query-driver=**&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
+</code></pre></div>
+<p>The repo-root <code>.clangd</code> strips flags clangd cannot parse. A clangd
+older than the hermetic LLVM (22) may report errors inside the
+toolchain's own builtin headers (e.g. <code>unknown type name '__mfp8'</code>
+on aarch64). The toolchain ships a matching clangd;
+<code>just compile-commands</code> prints its path. Point the editor's clangd
+binary at it to avoid the version skew.</p>
+<h2 id="running-locally">Running locally<a class="headerlink" href="#running-locally" title="Permanent link">&para;</a></h2>
+<p>A dedicated local development config is provided at
+<code>config/sipi.localdev-config.lua</code>. It points <code>imgroot</code> at the
+bundled test images and uses small cache limits (1 MB, 10 files)
+so IIIF requests work out of the box and cache eviction is easy
+to observe.</p>
+<h3 id="start-the-server">Start the server<a class="headerlink" href="#start-the-server" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>nix<span class="w"> </span>develop
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>just<span class="w"> </span>run<span class="w">                                  </span><span class="c1"># bazel build + run sipi server --config localdev</span>
+</code></pre></div>
+<p>The server starts on <code>http://localhost:1024</code>.</p>
+<p><code>just run</code> depends on <code>just bazel-build</code> so the binary at
+<code>bazel-bin/src/cli/sipi</code> is always rebuilt before the run. After the
+first cold build (the native <code>cc_library</code> deps kakadu/libtiff/exiv2/etc
+compile from source), incremental rebuilds re-run only the affected compile + link
+through Bazel's per-action cache — typically sub-second through
+link.</p>
+<h3 id="try-some-requests">Try some requests<a class="headerlink" href="#try-some-requests" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Fetch an IIIF image with a transformation (creates a cache entry)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># Note: requests that need no processing (same format, full size, no rotation)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># are served directly from the original file and bypass the cache.</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>curl<span class="w"> </span>http://localhost:1024/unit/gradient-stars.tif/full/max/0/default.jpg<span class="w"> </span>-o<span class="w"> </span>/tmp/test.jpg
+</code></pre></div>
+<p>The server exports metrics over OTLP, not a scrape endpoint. Cache
+behaviour is observable directly from the on-disk cache directory
+(<code>./cache</code> under the localdev config).</p>
+<p>Make several different image requests to fill the cache past its
+1 MB / 10 file limits and watch entries evict from <code>./cache</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Format conversions (TIF → JPG) trigger caching — all well under 2 MB</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>curl<span class="w"> </span>http://localhost:1024/unit/gradient-stars.tif/full/max/0/default.jpg<span class="w"> </span>-o<span class="w"> </span>/dev/null
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>curl<span class="w"> </span>http://localhost:1024/unit/lena512.tif/full/max/0/default.jpg<span class="w"> </span>-o<span class="w"> </span>/dev/null
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>curl<span class="w"> </span>http://localhost:1024/unit/cielab.tif/full/max/0/default.jpg<span class="w"> </span>-o<span class="w"> </span>/dev/null
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Resized requests also trigger caching</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>curl<span class="w"> </span>http://localhost:1024/unit/MaoriFigure.jpg/full/200,/0/default.jpg<span class="w"> </span>-o<span class="w"> </span>/dev/null
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>curl<span class="w"> </span>http://localhost:1024/unit/MaoriFigureWatermark.jpg/full/200,/0/default.jpg<span class="w"> </span>-o<span class="w"> </span>/dev/null
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>ls<span class="w"> </span>./cache
+</code></pre></div>
+<h3 id="available-configs">Available configs<a class="headerlink" href="#available-configs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Config file</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config/sipi.config.lua</code></td>
+<td>Production-like defaults (<code>./images</code> imgroot, 20 MB cache)</td>
+</tr>
+<tr>
+<td><code>config/sipi.localdev-config.lua</code></td>
+<td>Local development (test images, tiny cache, DEBUG logging)</td>
+</tr>
+<tr>
+<td><code>config/sipi.test-config.lua</code></td>
+<td>Automated test suite</td>
+</tr>
+</tbody>
+</table>
+<h2 id="writing-tests">Writing tests<a class="headerlink" href="#writing-tests" title="Permanent link">&para;</a></h2>
+<p>For the authoritative testing strategy (pyramid, layer definitions,
+decision tree, IIIF coverage matrix, feature inventory), see
+<a href="../testing-strategy/">Testing strategy</a>.</p>
+<p>Unit + approval tests use <a href="https://github.com/google/googletest">GoogleTest</a>
+(approval tests additionally use <a href="https://github.com/approvals/ApprovalTests.cpp">ApprovalTests.cpp</a>).
+End-to-end and HTTP-contract tests are written in Rust and live under
+<code>test/e2e/</code>.</p>
+<p>All tests build under Bazel:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>just<span class="w"> </span>bazel-test-unit<span class="w">             </span><span class="c1"># bazel test //src/... //test/unit/...</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>just<span class="w"> </span>bazel-test-approval<span class="w">         </span><span class="c1"># bazel test //test/approval:approvaltests</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>just<span class="w"> </span>bazel-test-e2e<span class="w">              </span><span class="c1"># all rust_test e2e targets</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>just<span class="w"> </span>bazel-test-smoke<span class="w">            </span><span class="c1"># Docker smoke test</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//src/iiifparser/fuzz:parse_request_fuzz<span class="w">   </span><span class="c1"># fuzz-corpus replay (also inside the //src/... sweeps)</span>
+</code></pre></div>
+<p>CI runs the full pyramid through <code>just bazel-coverage</code> (unit +
+approval + e2e under instrumentation, lcov for Codecov).</p>
+<h3 id="unit-tests">Unit tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h3>
+<p>Unit tests use GoogleTest with ApprovalTests. <code>test/unit/fixtures/</code> holds
+shared fixture generators (test images, EXIF payloads) consumed by tests
+across packages, not a test suite itself.</p>
+<p>Per-module Bazel packages co-locate their unit tests alongside the sources
+(per ADR-0003). Co-located tests today:</p>
+<ul>
+<li><code>//src/observability:metrics_registry_test</code> — metrics-registry seam tripwire: pins every metric field against how it reaches production OTLP via the <code>SipiMetricsSnapshot</code> bridge</li>
+<li><code>//src/metadata:icc_normalize_test</code>, <code>//src/metadata:essentials_test</code>, <code>//src/metadata:exif_rational_test</code> — ICC normalization, the Essentials packet, and EXIF rational-array decode</li>
+<li><code>//src/util:util_test</code> — util: Hash, Parsing, PathRedact, filename hashing, urldecode</li>
+<li><code>//src/iiifparser/cpp/value_objects:iiifparser_test</code> — IIIF value-object parsers + seam round-trip + decode dims</li>
+<li><code>//src/iiifparser/cpp/classifier:iiif_handler_test</code> — the <code>parse_iiif_uri</code> classifier + its regression corpus</li>
+<li><code>//src/iiifparser/rust:iiif_parser_test</code> — the production Rust IIIF URL parser (domain, parse, request modules)</li>
+<li><code>//src/iiifparser/rust:corpus_regression_test</code> — the Rust parser swept over the shared corpus</li>
+<li><code>//src/image:image_test</code> — <code>SipiImage</code> construction, mutation, pixel accessors, and the Essentials-packet service-file prefix invariant</li>
+<li><code>//src/image_processing:image_processing_test</code> — scale/rotate/crop, channel-count and equality/pixel-delta regressions, and the engine-direct IIIF transform matrix</li>
+<li><code>//src/format_handlers:formats_test</code>, <code>//src/format_handlers:output_sink_test</code> — per-format read/write/read_shape regression suites (TIFF, JPEG, PNG, J2K) + the write sink</li>
+<li><code>//src/format_handlers:tiff_codecs_test</code> — libtiff ingest-codec coverage proof (JPEG/LZMA/ZSTD/WebP/JBIG compiled in)</li>
+<li><code>//src/cache:cache_test</code> — LRU cache: indexing, crash recovery, persistence, add/check/remove, dual-limit eviction, blocked-file handling</li>
+<li><code>//src/logging:logger_test</code> — logger</li>
+<li><code>//src/throttling/cpp:memory_budget_test</code> — decode memory budget: CAS accounting, RAII guard, peak-memory estimator</li>
+</ul>
+<p>Run one component:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//src/iiifparser/cpp/value_objects:iiifparser_test<span class="w"> </span>--test_output<span class="o">=</span>streamed
+</code></pre></div>
+<p>When adding a new unit test, declare a <code>cc_test</code> target in the module's own
+<code>BUILD.bazel</code>, co-located with the sources it exercises (per ADR-0003) —
+follow the pattern of the co-located tests listed above rather than adding a
+<code>test/unit/&lt;mod&gt;/</code> directory. CI runs <code>just bazel-coverage</code> — which exercises
+every <code>cc_test</code> under <code>//src/...</code> (co-located unit tests) plus
+<code>//test/unit/...</code>, <code>//test/approval/...</code>, and <code>//test/e2e/...</code> in a single
+pass — so a missing <code>cc_test</code> target, or one not reachable from <code>//src/...</code>,
+means no CI coverage.</p>
+<h3 id="rust-end-to-end-tests">Rust end-to-end tests<a class="headerlink" href="#rust-end-to-end-tests" title="Permanent link">&para;</a></h3>
+<p>Rust e2e tests live in <code>test/e2e/</code> and use <code>reqwest</code> for HTTP,
+<code>serde_json</code> for JSON validation, and <code>insta</code> for golden snapshots.
+They cover IIIF compliance, server behaviour, and upload
+functionality.</p>
+<p>Run via Bazel — <code>rules_rust</code> produces one <code>rust_test</code> target per
+<code>tests/&lt;name&gt;.rs</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>just<span class="w"> </span>bazel-test-e2e<span class="w">                                  </span><span class="c1"># full suite (CI canonical)</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//test/e2e:server<span class="w">                    </span><span class="c1"># single target, inner-loop</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//test/e2e:server<span class="w"> </span>--test_output<span class="o">=</span>streamed<span class="w">   </span><span class="c1"># see live output</span>
+</code></pre></div>
+<p>The full suite resolves the sipi binary via <code>$SIPI_BIN</code>, defaulting
+to <code>bazel-bin/src/cli/rust/sipi</code>. Override <code>SIPI_BIN</code> to point at a
+sanitized build (<code>bazel build --config=asan</code>) when investigating
+ASan findings.</p>
+<div class="admonition note">
+<p class="admonition-title">Sequential execution</p>
+<p>Each test starts its own Vitrinli server on a unique port. The
+<code>sipi_e2e_test</code> Bazel macro sets <code>--test-threads=1</code> so this
+works out of the box.</p>
+</div>
+<h3 id="smoke-tests">Smoke tests<a class="headerlink" href="#smoke-tests" title="Permanent link">&para;</a></h3>
+<p>Smoke tests live in <code>test/e2e/tests/docker_smoke.rs</code> and run
+against a built Docker image. They verify basic server functionality
+after a Docker build:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>just<span class="w"> </span>bazel-test-smoke<span class="w">            </span><span class="c1"># builds //src:sipi_image, loads tarball, probes</span>
+</code></pre></div>
+<h3 id="approval-tests">Approval tests<a class="headerlink" href="#approval-tests" title="Permanent link">&para;</a></h3>
+<p>Approval tests live in <code>test/approval/</code> and use snapshot-based
+testing for regression detection. They run as part of every
+<code>just bazel-test</code>, <code>just bazel-coverage</code>, or focused
+<code>just bazel-test-approval</code> invocation.</p>
+<p><code>SOURCE_DATE_EPOCH=946684800</code> and <code>SIPI_WORKSPACE_ROOT="."</code> are
+injected by <code>test/approval/BUILD.bazel</code>'s <code>env = {}</code> block, so the
+wall-clock-stamped ICC creation date that lcms2 stamps into JPEG /
+PNG / JP2 (and ICC-carrying TIFF) outputs is overwritten with a
+fixed value. Without these env vars, the seconds field drifts by
+one byte across consecutive runs.</p>
+<p>When running the binary directly outside of <code>bazel test</code>, export
+the same value first:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nv">SOURCE_DATE_EPOCH</span><span class="o">=</span><span class="m">946684800</span><span class="w"> </span><span class="nv">SIPI_WORKSPACE_ROOT</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>./bazel-bin/test/approval/approvaltests<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--gtest_filter<span class="o">=</span><span class="s1">&#39;ImageEncodeBaseline.*&#39;</span>
+</code></pre></div>
+<p>Without it, expect <code>.received.*</code> files for every ICC-touching
+test — that's a deliberate test-infrastructure side-effect, not a
+regression. See
+<a href="../../../test/approval/CHANGELOG.approval.md"><code>test/approval/CHANGELOG.approval.md</code></a>
+for the full list and the re-approval procedure, and <code>docs/adr/0002-icc-profile-determinism-test-only.md</code>
+in the project root for the design rationale.</p>
+<h3 id="fuzzing">Fuzzing<a class="headerlink" href="#fuzzing" title="Permanent link">&para;</a></h3>
+<p>Coverage-guided libFuzzer fuzzing of the production Rust IIIF parser lives in
+<code>src/iiifparser/fuzz/</code>. <code>bazel test //src/iiifparser/fuzz:parse_request_fuzz</code> is
+a corpus replay that runs on every platform; <code>just fuzz</code> and the nightly
+<code>fuzz.yml</code> run the mutation loop on Linux. The canonical how-to — the C++→Rust
+shim seam, the two modes, the corpus policy, and crash triage — is
+<a href="../fuzzing/">Fuzzing</a>.</p>
+<h3 id="microbenchmarks">Microbenchmarks<a class="headerlink" href="#microbenchmarks" title="Permanent link">&para;</a></h3>
+<p>Performance work uses the Google Benchmark suite: <code>just bench &lt;tier&gt;</code> and
+<code>just bench-compare &lt;before&gt; &lt;after&gt;</code>. The canonical how-to — tiers,
+fixtures, the before/after workflow, and the regression decision rule
+("no benchmark, no hot-path change") — is <a href="../benchmarking/">Benchmarking</a>.</p>
+<h2 id="managing-dependencies">Managing dependencies<a class="headerlink" href="#managing-dependencies" title="Permanent link">&para;</a></h2>
+<p>Every C/C++ dependency is one of two shapes (there is no
+<code>rules_foreign_cc</code> — see
+<a href="../../adr/0015-native-cc_library-over-foreign_cc.md">ADR-0015</a>):</p>
+<ul>
+<li><strong>BCR <code>bazel_dep</code></strong> — a one-line pin in <code>MODULE.bazel</code> for libs whose
+  Bazel Central Registry module is a true drop-in (zlib, libpng,
+  libjpeg_turbo, libwebp, curl, openssl, …).</li>
+<li><strong>Native <code>cc_library</code></strong> — for libs with no BCR module or where stock
+  BCR would compromise capability (libtiff, exiv2, lcms2, jansson,
+  sentry, jbigkit, kakadu). The source is fetched by an <code>http_archive</code>
+  in <code>MODULE.bazel</code>; the build rule is a hand-written <code>cc_library</code> in
+  <code>bazel/&lt;lib&gt;.BUILD.bazel</code> (referenced as the archive's <code>build_file</code>),
+  compiled by the hermetic LLVM toolchain like first-party code.
+  Config headers are reproduced via the <code>cmake_configure_file</code> module.</li>
+</ul>
+<p>To bump a <strong>BCR <code>bazel_dep</code></strong>: change the <code>version</code> string and run
+<code>bazel build //src/cli:sipi</code> + <code>just bazel-test</code>; commit <code>MODULE.bazel</code>
+and <code>MODULE.bazel.lock</code>.</p>
+<p>To bump a <strong>native <code>cc_library</code></strong> dep:</p>
+<ol>
+<li>Edit the relevant <code>http_archive(...)</code> in <code>MODULE.bazel</code> — update
+   <code>url</code> and clear <code>sha256</code>.</li>
+<li>Run <code>bazel build //src/cli:sipi</code> once; Bazel reports the actual
+   sha256 in the failure output. Paste it into the block.</li>
+<li>Re-diff any <code>*.cmake.in</code> config templates the <code>bazel/&lt;lib&gt;.BUILD.bazel</code>
+   reproduces — upstream may have added a <code>#cmakedefine</code>/<code>@VAR@</code> token
+   that <code>cmake_configure_file</code> now needs declared.</li>
+<li>Run <code>bazel build //src/cli:sipi</code> and <code>just bazel-test</code> to confirm.</li>
+<li>Commit <code>MODULE.bazel</code>, <code>MODULE.bazel.lock</code>, and any <code>bazel/&lt;lib&gt;.BUILD.bazel</code>
+   change.</li>
+</ol>
+<p>Adding a brand-new dependency: prefer a BCR <code>bazel_dep</code> if the module is
+a true drop-in. Otherwise add an <code>http_archive(...)</code> + a native
+<code>cc_library</code> in <code>bazel/&lt;lib&gt;.BUILD.bazel</code> (use a sibling lib as the
+template) and wire it into the consumers (<code>//src:sipi_lib</code>,
+<code>//src/util:util</code>, …) via <code>@&lt;lib&gt;//:&lt;target&gt;</code>.</p>
+<p>Kakadu is special: it is fetched via a custom <code>gh_release_archive</code>
+repository_rule (<code>bazel/gh_release.bzl</code>) that shells out to
+<code>gh release download</code>. See <a href="../kakadu/">Kakadu setup</a>.</p>
+<h2 id="commit-and-pr-conventions">Commit and PR conventions<a class="headerlink" href="#commit-and-pr-conventions" title="Permanent link">&para;</a></h2>
+<p>The commit message schema (Conventional Commit types, the scope
+vocabulary, and what <code>fix:</code> means), the rebase/one-commit-per-PR git
+workflow, and the PR description format all live in a single source:
+<a href="../commit-conventions/"><code>commit-conventions.md</code></a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
