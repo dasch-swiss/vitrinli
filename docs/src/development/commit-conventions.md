@@ -26,6 +26,25 @@ should be a deliberate, self-contained unit of change. Working commits
   trial-and-error into the commit they belong to, reword messages, and
   reorder as needed.
 
+### Stacked PRs
+
+When a PR depends on another open PR, stack them with
+[`gh stack`](https://gh.io/stacks) (`gh extension install github/gh-stack`),
+not by retargeting PR bases by hand. GitHub then knows the PRs form a stack, and
+the tool keeps the branches rebased on each other.
+
+- A stack is one chain, bottom to top. Do not base two PRs on the same PR: only
+  stack work that really depends on the PR below it. Independent work gets its
+  own PR from `main`.
+- Start with `gh stack init <branch>` and add layers with `gh stack add <branch>`.
+  `gh stack init <bottom> <top>` adopts existing branches.
+- `gh stack submit` pushes the branches, opens or updates the PRs and links them.
+  `gh stack rebase` cascades a rebase through the stack, and `gh stack sync` also
+  fetches and pushes.
+- Merge with `gh stack merge --rebase`. The repository allows rebase merges only.
+- The commit rules above apply to every layer: each PR is curated before merge,
+  and its commits land on `main` verbatim.
+
 ## Commit message schema
 
 We use [Conventional Commits](https://www.conventionalcommits.org/).
