@@ -95,9 +95,12 @@ hand-written native `cc_library` over an `http_archive`/release fetch
 (`bazel/<lib>.BUILD.bazel`) — never `rules_foreign_cc` (see
 [`docs/adr/0015-native-cc_library-over-foreign_cc.md`](docs/adr/0015-native-cc_library-over-foreign_cc.md)).
 BCR drop-ins: libpng, libjpeg_turbo, libwebp, libdeflate, zlib, bzip2, xz, zstd,
-sqlite3, libexpat, libmagic, Lua, curl, OpenSSL,
+sqlite3, libmagic, Lua, curl, OpenSSL,
 protobuf. Native `cc_library`: libtiff (codecs re-enabled + JBIG via jbigkit),
-exiv2, lcms2, jansson, jbigkit, and Kakadu (requires license).
+exiv2, lcms2, jansson, jbigkit, libexpat, and Kakadu (requires license).
+Every BCR module, `http_archive`, `git_override` and custom repository rule is
+classified once in `tools/advisories/components.toml`; `just advisories-inventory`
+fails on one that is not.
 
 **System Dependencies:** Threads (pthread), iconv (macOS only).
 
