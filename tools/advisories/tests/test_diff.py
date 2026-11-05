@@ -236,14 +236,14 @@ class DiffMainTest(Trees):
         self.out = self.dir / "out"
         self.out.mkdir()
         # Stale outputs of an earlier run, which a failing run must not leave behind.
-        for name in ("inv.cdx.json", "diff.json"):
+        for name in ("inv.cdx.json", "diff.json", "sbom.cdx.json"):
             (self.out / name).write_text("stale")
         self.addCleanup(lambda: self.assertEqual(len(self.worktrees()), 1, "the base worktree is removed"))
 
-    def run_main(self, vulns, todays=(TODAY,), fail_call=None):
+    def run_main(self, vulns, todays=(TODAY,), fail_call=None, extra=()):
         self.db = AdvisoryDb(vulns, fail_call)
         stdout, stderr = io.StringIO(), io.StringIO()
-        argv = ["--config", str(self.config), "--root", str(self.repo), "--base", "HEAD", "--inventory", str(self.out / "inv.cdx.json"), "--output", str(self.out / "diff.json")]
+        argv = ["--config", str(self.config), "--root", str(self.repo), "--base", "HEAD", "--inventory", str(self.out / "inv.cdx.json"), "--output", str(self.out / "diff.json"), *extra]
         with mock.patch.object(diff.scan, "run_process", self.db), mock.patch.object(diff.scan, "utc_today", mock.Mock(side_effect=todays)):
             with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
                 code = diff.main(argv)
@@ -265,6 +265,30 @@ class DiffMainTest(Trees):
         code, _, err = self.run_main({("curl", "8.21.0"): [("CVE-2026-0001", ())]})
         self.assertEqual(code, 0, err)
 
+    def test_sbom_leaves_out_the_ci_components(self):
+        code, _, err = self.run_main({}, extra=("--sbom", str(self.out / "sbom.cdx.json")))
+        self.assertEqual(code, 0, err)
+
+        def scopes(name):
+            components = json.loads((self.out / name).read_text())["components"]
+            return [next((p["value"] for p in c.get("properties", []) if p["name"] == "advisories:scope"), None) for c in components]
+
+        self.assertIn("ci", scopes("inv.cdx.json"))
+        sbom = scopes("sbom.cdx.json")
+        self.assertNotIn("ci", sbom)
+        self.assertEqual(len(sbom), scopes("inv.cdx.json").count(None))
+
+    def test_mixed_up_modes_are_usage_errors(self):
+        for argv in (
+            ["--base", "HEAD", "--output", "o"],
+            ["--base", "HEAD", "--inventory", "i"],
+            ["--release-baseline", "v1.0.0", "--sbom", "s"],
+            ["--release-baseline", "v1.0.0", "--base", "HEAD", "--inventory", "i", "--output", "o"],
+        ):
+            with self.subTest(argv=argv), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as e:
+                diff.main(["--config", str(self.config), *argv])
+            self.assertEqual(e.exception.code, 2)
+
     def test_today_is_taken_once_for_both_scans(self):
         # A second date for the base scan would make the head's Debian 12 EOL finding (2026-07-12) head-only.
         code, _, err = self.run_main({}, todays=(datetime.date(2026, 7, 12), datetime.date(2026, 7, 11)))
@@ -272,25 +296,129 @@ class DiffMainTest(Trees):
 
     def test_head_drift_exits_1(self):
         self.edit(self.repo, "deps/module.lock.json", '"https://bcr.bazel.build/bazel_registry.json"', '"https://bcr.bazel.build/modules/newdep/1.0/source.json": "0000",\n    "https://bcr.bazel.build/bazel_registry.json"')
-        code, _, err = self.run_main({})
+        code, _, err = self.run_main({}, extra=("--sbom", str(self.out / "sbom.cdx.json")))
         self.assertEqual(code, 1)
         self.assertIn("diff: drift: unclassified bcr 'newdep'", err)
-        self.assertFalse((self.out / "diff.json").exists())
-        self.assertFalse((self.out / "inv.cdx.json").exists())
+        for name in ("diff.json", "inv.cdx.json", "sbom.cdx.json"):
+            self.assertFalse((self.out / name).exists(), name)
 
     def test_scanner_error_exits_3(self):
         for call in (0, 4):
             with self.subTest(call=call):
-                code, _, err = self.run_main({}, fail_call=call)
+                code, _, err = self.run_main({}, fail_call=call, extra=("--sbom", str(self.out / "sbom.cdx.json")))
                 self.assertEqual(code, 3)
                 self.assertIn("diff: error:", err)
                 self.assertFalse((self.out / "diff.json").exists())
+                self.assertFalse((self.out / "sbom.cdx.json").exists())
 
     def test_unknown_base_ref_exits_3(self):
         argv = ["--config", str(self.config), "--root", str(self.repo), "--base", "no-such-ref", "--inventory", str(self.out / "i"), "--output", str(self.out / "o")]
         with contextlib.redirect_stderr(io.StringIO()) as err:
             self.assertEqual(diff.main(argv), 3)
         self.assertIn("git worktree add no-such-ref", err.getvalue())
+
+
+class ReleaseBaselineTest(unittest.TestCase):
+    TAGS = ["v10.0.1", "v10.0.0", "v9.1.1", "v9.1.0"]
+
+    def test_the_next_older_published_tag(self):
+        self.assertEqual(diff.release_baseline("v10.0.1", self.TAGS, lambda t: True), "v10.0.0")
+
+    def test_a_tag_whose_image_never_reached_docker_hub_is_skipped(self):
+        # v10.0.0 failed its gate; diffing against it would wave its findings through.
+        self.assertEqual(diff.release_baseline("v10.0.1", self.TAGS, lambda t: t != "v10.0.0"), "v9.1.1")
+
+    def test_a_hotfix_on_an_older_line_diffs_against_that_line(self):
+        tags = ["v10.0.1", "v10.0.0", "v9.1.2", "v9.1.1"]
+        self.assertEqual(diff.release_baseline("v9.1.2", tags, lambda t: True), "v9.1.1")
+
+    def test_newer_tags_are_never_the_baseline(self):
+        published = []
+        diff.release_baseline("v10.0.0", self.TAGS, lambda t: published.append(t) or True)
+        self.assertEqual(published, ["v9.1.1"])
+
+    def test_no_published_older_tag_raises(self):
+        with self.assertRaisesRegex(diff.ToolError, "no tag older than v9.1.0"):
+            diff.release_baseline("v9.1.0", self.TAGS, lambda t: True)
+        with self.assertRaisesRegex(diff.ToolError, "no tag older than v10.0.1"):
+            diff.release_baseline("v10.0.1", self.TAGS, lambda t: False)
+
+    def test_an_unknown_tag_raises(self):
+        with self.assertRaisesRegex(diff.ToolError, "v11.0.0 is not among"):
+            diff.release_baseline("v11.0.0", self.TAGS, lambda t: True)
+
+
+class VersionTagsTest(unittest.TestCase):
+    def test_v_tags_newest_first_by_version(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git = ["git", "-C", tmp, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
+            subprocess.run(git + ["init", "-q"], check=True)
+            subprocess.run(git + ["commit", "-q", "--allow-empty", "-m", "c"], check=True)
+            for tag in ("v1.9.0", "v1.10.0", "v2.0.0", "other"):
+                subprocess.run(git + ["tag", tag], check=True)
+            self.assertEqual(diff.version_tags(Path(tmp)), ["v2.0.0", "v1.10.0", "v1.9.0"])
+
+
+class DockerHubTest(unittest.TestCase):
+    def urlopen(self, *responses):
+        def answer(url, timeout):
+            self.urls.append(url)
+            r = responses[len(self.urls) - 1]
+            if isinstance(r, Exception):
+                raise r
+            return contextlib.nullcontext()
+
+        self.urls = []
+        return mock.patch.object(diff.urllib.request, "urlopen", answer)
+
+    def http_error(self, code):
+        return diff.urllib.error.HTTPError("u", code, "m", {}, None)
+
+    def test_200_is_published(self):
+        with self.urlopen(None):
+            self.assertTrue(diff.docker_hub_has_tag("org/image", "v1.0.0"))
+        self.assertEqual(self.urls, ["https://hub.docker.com/v2/repositories/org/image/tags/v1.0.0"])
+
+    def test_404_is_not_published(self):
+        with self.urlopen(self.http_error(404)):
+            self.assertFalse(diff.docker_hub_has_tag("org/image", "v1.0.0"))
+
+    def test_other_errors_are_retried_then_raise(self):
+        with self.urlopen(self.http_error(500), diff.http.client.RemoteDisconnected("eof"), None), mock.patch.object(diff.time, "sleep"):
+            self.assertTrue(diff.docker_hub_has_tag("org/image", "v1.0.0"))
+        with self.urlopen(diff.urllib.error.URLError("down"), None), mock.patch.object(diff.time, "sleep"):
+            self.assertTrue(diff.docker_hub_has_tag("org/image", "v1.0.0"))
+        with self.urlopen(*[self.http_error(503)] * diff.HUB_ATTEMPTS), mock.patch.object(diff.time, "sleep"):
+            with self.assertRaisesRegex(diff.ToolError, "HTTP 503"):
+                diff.docker_hub_has_tag("org/image", "v1.0.0")
+
+
+class ReleaseBaselineMainTest(unittest.TestCase):
+    def run_main(self, config, published):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "advisories.toml"
+            path.write_text(config)
+            with mock.patch.object(diff, "version_tags", lambda root: ["v2.0.0", "v1.1.0", "v1.0.0"]), mock.patch.object(diff, "docker_hub_has_tag", published):
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    code = diff.main(["--config", str(path), "--release-baseline", "v2.0.0"])
+        return code, stdout.getvalue(), stderr.getvalue()
+
+    def test_prints_the_baseline_looked_up_in_the_configured_repository(self):
+        lookups = []
+        code, out, err = self.run_main('[release]\ndocker_hub_repository = "org/image"\n', lambda repo, tag: lookups.append((repo, tag)) or tag == "v1.0.0")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "v1.0.0\n")
+        self.assertEqual(lookups, [("org/image", "v1.1.0"), ("org/image", "v1.0.0")])
+
+    def test_no_baseline_exits_3_and_prints_nothing(self):
+        code, out, err = self.run_main('[release]\ndocker_hub_repository = "org/image"\n', lambda repo, tag: False)
+        self.assertEqual((code, out), (3, ""))
+        self.assertIn("diff: error:", err)
+
+    def test_a_config_without_the_repository_exits_3(self):
+        code, out, _ = self.run_main("", lambda repo, tag: True)
+        self.assertEqual((code, out), (3, ""))
 
 
 if __name__ == "__main__":

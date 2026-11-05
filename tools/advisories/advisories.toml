@@ -36,3 +36,8 @@ tracks = "gcr.io/distroless/base-debian12:latest"
 eol = 2026-09-10
 # Scanned once per platform: the index digest names both arches' images.
 platforms = ["linux/amd64", "linux/arm64"]
+
+[release]
+# A release diffs against the newest older `v*` tag whose image is on this
+# Docker Hub repository.
+docker_hub_repository = "daschswiss/sipi"

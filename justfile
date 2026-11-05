@@ -162,12 +162,18 @@ advisories-scan: advisories-inventory
 
 # This tree and a worktree of `base` (e.g. origin/main) are both scanned
 # without ignores, drift tolerated in the base only; this tree's ignores then
-# apply to the findings only it has. Writes advisories.cdx.json and
-# advisories-diff.json. Exit 1 on a new unignored finding or on drift here, 3
+# apply to the findings only it has. Writes advisories.cdx.json,
+# advisories-diff.json and advisories-sbom.cdx.json (the shipped components,
+# the release SBOM). Exit 1 on a new unignored finding or on drift here, 3
 # on a scanner error on either side.
-# Fail on an advisory this tree adds over `base` (the PR gate).
+# Fail on an advisory this tree adds over `base` (the PR and release gates).
 advisories-scan-diff base:
-    python3 tools/advisories/diff.py --config tools/advisories/advisories.toml --base "{{base}}" --inventory advisories.cdx.json --output advisories-diff.json
+    python3 tools/advisories/diff.py --config tools/advisories/advisories.toml --base "{{base}}" --inventory advisories.cdx.json --output advisories-diff.json --sbom advisories-sbom.cdx.json
+
+# Print the tag the release `tag` diffs against: the newest older `v*` tag
+# whose image reached Docker Hub (needs network). Exit 3 when there is none.
+advisories-release-baseline tag:
+    python3 tools/advisories/diff.py --config tools/advisories/advisories.toml --release-baseline "{{tag}}"
 
 # Run the advisory tools' offline tests.
 advisories-test:

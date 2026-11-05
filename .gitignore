@@ -108,3 +108,4 @@ terraform.rc
 /advisories.cdx.json
 /advisories-findings.json
 /advisories-diff.json
+/advisories-sbom.cdx.json
