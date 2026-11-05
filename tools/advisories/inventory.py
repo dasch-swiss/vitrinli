@@ -321,8 +321,11 @@ def actions(root: Path, globs: list[str], ls_remote) -> list[Component]:
 # ── Assembly ──────────────────────────────────────────────────────────────────
 
 
-def build(config_path: Path, root: Path) -> tuple[list[Component], list[str]]:
-    """The tree's components and its drift findings; a component a drift finding concerns is left out."""
+def build(config_path: Path, root: Path, ls_remote=None) -> tuple[list[Component], list[str]]:
+    """The tree's components and its drift findings; a component a drift finding concerns is left out.
+
+    `ls_remote` replaces `git_ls_remote`, so two trees scanned in one run can share each lookup.
+    """
     config = tomllib.loads(config_path.read_text())
     inputs = config["inputs"]
     entries, drift = load_map(config_path.parent / config["component_map"])
@@ -404,7 +407,7 @@ def build(config_path: Path, root: Path) -> tuple[list[Component], list[str]]:
             properties={"advisories:tracks": base["tracks"], **_eol(base)},
         )
     )
-    components += actions(root, inputs["workflows"], git_ls_remote)
+    components += actions(root, inputs["workflows"], ls_remote or git_ls_remote)
     return components, sorted(drift)
 
 

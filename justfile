@@ -186,6 +186,15 @@ advisories-inventory:
 advisories-scan: advisories-inventory
     python3 tools/advisories/scan.py --config tools/advisories/advisories.toml --inventory advisories.cdx.json --output advisories-findings.json
 
+# This tree and a worktree of `base` (e.g. origin/main) are both scanned
+# without ignores, drift tolerated in the base only; this tree's ignores then
+# apply to the findings only it has. Writes advisories.cdx.json and
+# advisories-diff.json. Exit 1 on a new unignored finding or on drift here, 3
+# on a scanner error on either side.
+# Fail on an advisory this tree adds over `base` (the PR gate).
+advisories-scan-diff base:
+    python3 tools/advisories/diff.py --config tools/advisories/advisories.toml --base "{{base}}" --inventory advisories.cdx.json --output advisories-diff.json
+
 # Run the advisory tools' offline tests.
 advisories-test:
     python3 -m unittest discover -s tools/advisories/tests -t tools/advisories

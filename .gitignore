@@ -104,6 +104,7 @@ terraform.rc
 /compile_commands.json
 /.cache/
 /external
-# Written by `just advisories-inventory` and `just advisories-scan`.
+# Written by `just advisories-inventory`, `advisories-scan` and `advisories-scan-diff`.
 /advisories.cdx.json
 /advisories-findings.json
+/advisories-diff.json

@@ -316,6 +316,19 @@ def report(result: Result) -> dict:
     }
 
 
+def print_open(result: Result, label: str) -> None:
+    """Each open finding to stdout, then the counts to stderr."""
+    counts: dict[str, int] = {}
+    for f in result.open:
+        counts[f.source] = counts.get(f.source, 0) + 1
+        aliases = f" ({', '.join(f.aliases)})" if f.aliases else ""
+        fixed = f", fixed in {f.fixed}" if f.fixed else ""
+        packages = f" [{', '.join(f.packages)}]" if f.packages else ""
+        print(f"{f.component} {f.version}: {f.id}{aliases}, {f.severity}{fixed}{packages}")
+    summary = ", ".join(f"{s} {n}" for s, n in sorted(counts.items())) or "none"
+    print(f"{label}{len(result.open)} open, {len(result.ignored)} ignored; open by source: {summary}", file=sys.stderr)
+
+
 def utc_today() -> datetime.date:
     return datetime.datetime.now(datetime.UTC).date()
 
@@ -333,15 +346,7 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:  # noqa: BLE001  (a crash must never read as findings or a clean scan)
         print(f"scan: error: {type(e).__name__}: {e}", file=sys.stderr)
         return EXIT_ERROR
-    counts: dict[str, int] = {}
-    for f in result.open:
-        counts[f.source] = counts.get(f.source, 0) + 1
-        aliases = f" ({', '.join(f.aliases)})" if f.aliases else ""
-        fixed = f", fixed in {f.fixed}" if f.fixed else ""
-        packages = f" [{', '.join(f.packages)}]" if f.packages else ""
-        print(f"{f.component} {f.version}: {f.id}{aliases}, {f.severity}{fixed}{packages}")
-    summary = ", ".join(f"{s} {n}" for s, n in sorted(counts.items())) or "none"
-    print(f"scan: {len(result.open)} open, {len(result.ignored)} ignored; open by source: {summary}", file=sys.stderr)
+    print_open(result, "scan: ")
     return EXIT_FINDINGS if result.open else EXIT_CLEAN
 
 
