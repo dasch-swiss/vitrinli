@@ -70,10 +70,6 @@ none of them wait on a separate lint gate. Every leg runs:
    `:docker_smoke` rust_test, the test loads the OCI tarball into
    the local Docker daemon, and runs the smoke suite against the
    loaded container.
-3. **Docker Scout** (linux-amd64 PRs only, one leg — a single PR
-   comment): `Docker Scout — compare to production`,
-   `Docker Scout — CVE report (SARIF)`, and
-   `Upload SARIF to GitHub Security`.
 
 The standalone `lint` job is gone. Its lint checks —
 `bazel-rustfmt-check` and `bazel-clippy-check` — now run as extra
@@ -220,6 +216,12 @@ In CI, the `advisories` job in `ci.yml` runs the diff against the PR's base
 branch. A PR that fixes a finding passes; an advisory published against `main`
 does not block unrelated PRs, and a PR adding a second vulnerable version of an
 already-flagged crate passes too. Both cases stay visible to the full scan.
+The `advisories-gate` job in `publish.yml` runs the same diff once per release,
+against the baseline `just advisories-release-baseline <tag>` prints: the
+newest older `v*` tag whose image reached Docker Hub (`[release]` in
+`advisories.toml`), skipping a tag whose release failed, since diffing against
+it would let its findings through. So a release never introduces a vulnerable
+pin, and a backlog finding never blocks a hotfix.
 Exit codes, for every tool: 0 clean, 1 findings or drift, 3 a tool or scanner
 error, which never reads as clean. The scanners are installed by
 `.github/actions/advisories-scanners`, pinned by version and sha256; bump them
@@ -293,8 +295,9 @@ reviews it. Dependabot alerts stay on, but they miss the SHA-pinned actions,
 which is every action here.
 
 Dependabot opens no version-update PRs; version updates are by hand: GitHub
-Actions, the Nix flake inputs and the BCR `bazel_dep`s. Docker Scout still
-scans the *image layers* in `ci.yml` (PR) and `publish.yml` (release).
+Actions, the Nix flake inputs and the BCR `bazel_dep`s. The image layers need
+no scan of their own: the Debian packages and the base digest are in the
+inventory.
 
 ### Quarterly native-pin review
 
@@ -353,17 +356,24 @@ Gate model:
    builds the Docker image via
    `just bazel-docker-build-${arch}` and runs
    `just bazel-test-smoke` against it.
-2. `release-gate` — fires on `validate-docker` success.
+   `advisories-gate` runs alongside: `just advisories-scan-diff` against
+   the release baseline (see "Dependency advisory scanning" above). It
+   uploads the release SBOM, `advisories-sbom.cdx.json` as the
+   `sbom-<tag>` artifact: one CycloneDX file per release covering both
+   arches, every shipped component and no GitHub Actions. The tag and its
+   `ignores.toml` are fixed, so re-running a failed gate clears only a
+   transient scanner or network error (exit 3); a release that fails on a
+   finding, or on a baseline missing one of the config's input files, ships
+   only through a new release carrying the fix or an ignore entry.
+2. `release-gate` — fires when `validate-docker` and `advisories-gate`
+   both succeed, so neither the image push nor the docs deploy happens
+   on a new advisory.
 3. Publish jobs run after the gate:
    - `publish-docker / {amd64, arm64}` — rebuilds the per-arch
      image, extracts the `.debug` file via
      `just bazel-docker-extract-debug ${arch}`, pushes via
-     `just bazel-docker-push-${arch}`, records the image with Docker
-     Scout, runs a Docker Scout CVE gate (`only-severities: critical`,
-     `exit-code: true` — fails the job on any Critical finding in the
-     image layers; see "Dependency advisory scanning" above for what
-     this does and doesn't cover), uploads SBOM, pushes debug
-     symbols to Sentry. It does not repeat the smoke test —
+     `just bazel-docker-push-${arch}`, pushes debug symbols to
+     Sentry. It does not repeat the smoke test —
      `validate-docker` already validated the same commit.
    - `manifest` — needs `publish-docker`; runs
      `just bazel-docker-publish-manifest` (`crane index append`) to

@@ -16,11 +16,12 @@ The scan wrapper `tools/advisories/scan.py` (`just advisories-scan`) applies
 one scanner-agnostic `tools/advisories/ignores.toml` with expiry. Scanners are
 called only through it, never directly from a workflow step. The `advisories`
 PR job (`.github/workflows/ci.yml`) runs `tools/advisories/diff.py`
-(`just advisories-scan-diff`) and fails on new findings only.
+(`just advisories-scan-diff`) and fails on new findings only. The
+`advisories-gate` job (`.github/workflows/publish.yml`) runs the same diff
+against the last release whose image reached Docker Hub, before the image
+push, and uploads the release SBOM.
 
-Not yet in code: the daily scan with its rolling issue, the release gate
-before the image push, and the fix PRs. Until the release gate lands, Docker
-Scout stays in place.
+Not yet in code: the daily scan with its rolling issue, and the fix PRs.
 
 ## Context
 
