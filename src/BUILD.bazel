@@ -524,8 +524,8 @@ tar(
 #      runtime dirs (cache, images/knora) and lays the 5 Lua / HTML
 #      files at /sipi/{config,scripts,server}.
 #
-# Runtime extras live in `@bookworm//:flat` (tini, curl, plus their
-# transitive deps — libc6, libcurl4, libssl3, libnghttp2-14, …) which
+# Runtime extras live in `@bookworm//:flat` (tini plus its transitive
+# deps, as pinned in `bazel/distroless/bookworm.lock.json`) which
 # `rules_distroless`'s `apt` extension resolves from `MODULE.bazel`'s
 # `apt.install(name = "bookworm", …)` against the snapshot.debian.org
 # pin in `bazel/distroless/bookworm.yaml`. The `flat` target is the
@@ -548,7 +548,7 @@ tar(
 # Sentry matches crash minidumps back to those symbols. cli/rust is the deployed
 # entrypoint; the C++ //src/cli:sipi binary provides the offline CLI verbs only
 # (convert/verify/query/compare/health), not a server. Kept at /sbin/sipi so the
-# entrypoint + `sipi health` HEALTHCHECK are unchanged. Linux-only (the binary is Linux
+# entrypoint + compose-level `sipi health` healthcheck are unchanged. Linux-only (the binary is Linux
 # ELF; on darwin :sipi is Mach-O and not consumed here).
 tar(
     name = "sipi_bin_layer",

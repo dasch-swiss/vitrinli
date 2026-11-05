@@ -12,7 +12,6 @@ The `daschswiss/sipi` Docker image (final stage) includes these packages:
 
 | Package | Required by | How it's used |
 |---------|------------|---------------|
-| `curl` | `knora-sipi` healthcheck | `healthcheck.sh`: `curl -sS --fail 'http://localhost:1024/...'` |
 | `openssl` | sipi binary | TLS for outbound HTTPS connections |
 | `ca-certificates` | sipi binary | TLS certificate trust store for HTTPS |
 | `LC_ALL=C.UTF-8` (env) | sipi binary | UTF-8 byte handling for exiv2 metadata, Lua string functions, `std::locale()`. Built into glibc — no separate `locales` package required. |
@@ -25,7 +24,7 @@ The `daschswiss/sipi` Docker image (final stage) includes these packages:
 
 | Consumer | Image | What it uses from sipi container |
 |----------|-------|----------------------------------|
-| `knora-sipi` (dsp-api `sipi/` subproject) | `daschswiss/knora-sipi` (base: `daschswiss/sipi`) | Lua scripts + sipi HTTP server. Needs `curl`, `sha256sum`, `libmagic1`, `LC_ALL=C.UTF-8`, `openssl`, `ca-certificates`. |
+| `knora-sipi` (dsp-api `sipi/` subproject) | `daschswiss/knora-sipi` (base: `daschswiss/sipi`) | Lua scripts + sipi HTTP server. Needs `sha256sum`, `libmagic1`, `LC_ALL=C.UTF-8`, `openssl`, `ca-certificates`. |
 | dsp-ingest (`SipiClientLive`) | `daschswiss/knora-sipi` (via `docker run` in local dev) | sipi CLI (`sipi query`, `sipi convert ... --format ... --topleft`). Migration to the verb-noun surface tracked in DEV-6541 (cross-repo paired release). |
 | dsp-ingest (`MovingImageService`) | `daschswiss/knora-sipi` (via `docker run --entrypoint ffprobe` in local dev) | `ffprobe` for video metadata extraction. Needs `ffmpeg` package. |
 | dsp-tools | `daschswiss/knora-sipi` (via Docker Compose) | HTTP API only (port 1024). No direct tool dependencies on container internals. |
