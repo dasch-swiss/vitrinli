@@ -5,7 +5,6 @@ import json
 import os
 import shutil
 import tempfile
-import tomllib
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -289,13 +288,6 @@ class RepoIgnoresTest(unittest.TestCase):
         ignores = scan.load_ignores(text)
         keys = [(i.component, i.id) for i in ignores]
         self.assertEqual(len(keys), len(set(keys)), "duplicate (component, id) entries")
-
-    def test_osv_scanner_toml_mirrors_the_repo_ignore_ids(self):
-        # osv-scanner.toml still feeds `just audit`; this test goes with that file.
-        root = Path(__file__).parents[3]
-        mirror = {v["id"] for v in tomllib.loads((root / "osv-scanner.toml").read_text())["IgnoredVulns"]}
-        owner = {i.id for i in scan.load_ignores((root / "tools/advisories/ignores.toml").read_text())}
-        self.assertEqual(mirror, owner, "edit tools/advisories/ignores.toml, then mirror its ids in osv-scanner.toml")
 
 
 if __name__ == "__main__":

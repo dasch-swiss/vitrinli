@@ -630,7 +630,7 @@ crate.spec(package = "webpki-roots", version = "1.0.10", default_features = Fals
 crate.spec(package = "webpki-root-certs", version = "1.0.10", default_features = False)
 
 # `cargo_lockfile` materializes a Cargo-format lock alongside the Bazel-native
-# resolution — cargo-audit/OSV-Scanner read Cargo.lock syntax, not
+# resolution — `just advisories-scan` inventories the crates from it, not from
 # MODULE.bazel.lock's JSON. Repin with:
 #   CARGO_BAZEL_REPIN=1 bazel build //src/server/rust:lib
 crate.from_specs(cargo_lockfile = "//:Cargo.Bazel.lock")
