@@ -265,8 +265,8 @@ bazel-test-sanitized *FLAGS='':
 # `bazel run //src:image_load` loads the image into the local daemon as
 # `daschswiss/sipi:latest` (its `oci_load` repo_tag) explicitly, BEFORE the
 # test — not as a side-effect of it. On a warm cache `:docker_smoke` is a cache
-# hit and never executes its own `docker load`, yet downstream CI steps (Docker
-# Scout) still need the image present in the daemon. `bazel run` also
+# hit and never executes its own `docker load`, so without this run the image
+# would be in the daemon only when the test ran. `bazel run` also
 # materialises the tarball under the `.bazelrc` default `--remote_download_minimal`,
 # which a cached test would leave absent.
 #
@@ -592,8 +592,7 @@ bazel-distroless-lock:
 # `--stamp` runs `tools/workspace_status.sh` so STABLE_SIPI_VERSION
 # (from version.txt) is baked into image labels and tag suffixes;
 # without it, tags resolve to `0.0.0-unstamped-${arch}` and `publish.yml`'s
-# version-based downstream steps (Sentry release naming, Scout
-# environment recording) silently break.
+# version-based downstream steps (Sentry release naming) silently break.
 #
 # `--config=release` is the production build: `-c opt` codegen (-O3 -DNDEBUG) +
 # `_FORTIFY_SOURCE=2` hardening (both inert at the default fastbuild `-O0`; see
