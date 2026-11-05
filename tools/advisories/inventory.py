@@ -194,8 +194,11 @@ def load_map(path: Path) -> tuple[list[dict], list[str]]:
         key = (e.get("source"), e.get("name"))
         if e.get("source") not in SOURCES or e.get("status") not in STATUSES or not e.get("name"):
             raise ToolError(f"component map entry {key}: needs a name, source in {SOURCES} and status in {STATUSES}")
-        if e["status"] == "shipped" and not e.get("cpe"):
-            raise ToolError(f"component map entry {key}: shipped without cpe")
+        cpes = e.get("cpe")
+        if isinstance(cpes, str):
+            e["cpe"] = cpes = [cpes]  # `build` reads `cpe` as a list
+        if e["status"] == "shipped" and not (isinstance(cpes, list) and cpes and all(isinstance(c, str) and c for c in cpes)):
+            raise ToolError(f"component map entry {key}: shipped needs a cpe string or a non-empty list of them")
         if e["status"] == "shipped" and e["source"] == "http_archive" and not e.get("version_re"):
             raise ToolError(f"component map entry {key}: shipped http_archive without version_re")
         if e["status"] != "shipped" and not e.get("reason"):
@@ -368,12 +371,12 @@ def build(config_path: Path, root: Path) -> tuple[list[Component], list[str]]:
         if version is None and e["status"] == "shipped":
             raise ToolError(f"component map entry {key}: shipped, but its source carries no version; add version_re")
         props = _eol(e)
-        cpe = None
+        cpes = []
         if e["status"] == "no_feed":
             props["advisories:no_feed"] = e["reason"]
         else:
-            cpe = f"{e['cpe']}:{version}:*:*:*:*:*:*:*"
-        components.append(Component(name=key[1], version=version, source=key[0], cpe=cpe, properties=props))
+            cpes = [f"{c}:{version}:*:*:*:*:*:*:*" for c in e["cpe"]]
+        components.append(Component(name=key[1], version=version, source=key[0], cpe=cpes[0] if cpes else None, extra_cpes=tuple(cpes[1:]), properties=props))
 
     for key in sorted(set(found) - classified):
         where = f" ({inputs['module_bazel']}:{found[key]['line']})" if "line" in found[key] else ""

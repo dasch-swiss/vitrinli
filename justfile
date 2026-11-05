@@ -180,6 +180,12 @@ audit:
 advisories-inventory:
     python3 tools/advisories/inventory.py --config tools/advisories/advisories.toml --output advisories.cdx.json
 
+# Scan the inventory for advisories and apply `tools/advisories/ignores.toml`
+# (needs network: the Grype database, the OSV API, the base image). Writes
+# advisories-findings.json; exit 1 on an unignored finding, 3 on a scanner error.
+advisories-scan: advisories-inventory
+    python3 tools/advisories/scan.py --config tools/advisories/advisories.toml --inventory advisories.cdx.json --output advisories-findings.json
+
 # Run the advisory tools' offline tests.
 advisories-test:
     python3 -m unittest discover -s tools/advisories/tests -t tools/advisories

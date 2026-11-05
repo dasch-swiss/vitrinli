@@ -2,7 +2,7 @@
 source = "bcr"
 name = "curl"
 status = "shipped"
-cpe = "cpe:2.3:a:haxx:curl"
+cpe = ["cpe:2.3:a:haxx:curl", "cpe:2.3:a:haxx:libcurl"]
 
 [[component]]
 source = "bcr"

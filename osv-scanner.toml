@@ -2,6 +2,10 @@
 # in the justfile). Entries here suppress advisories that have no upstream fix
 # and are provably unreachable in SIPI; each must carry a reason and be revisited
 # when a fix ships.
+#
+# A mirror of `tools/advisories/ignores.toml`, which owns these decisions: edit
+# that file first, then mirror the ids here (a test checks) until this file goes
+# with `just audit`.
 
 [[IgnoredVulns]]
 id = "RUSTSEC-2023-0071"

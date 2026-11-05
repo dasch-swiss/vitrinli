@@ -1,0 +1,36 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "CVE-2010-4756",
+        "namespace": "debian:distro:debian:12",
+        "severity": "Negligible",
+        "fix": {
+          "versions": [],
+          "state": "not-fixed"
+        }
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2010-4756"
+        }
+      ],
+      "artifact": {
+        "name": "libc6",
+        "version": "2.36-9+deb12u13",
+        "type": "deb",
+        "purl": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u13?arch=amd64&distro=debian-12.13&upstream=glibc"
+      }
+    }
+  ],
+  "descriptor": {
+    "name": "grype",
+    "version": "0.121.1",
+    "db": {
+      "status": {
+        "schemaVersion": "v6.1.10",
+        "built": "2026-11-05T06:21:06Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+ignores = "ignores.toml"
+
+[base_image]
+platforms = ["linux/amd64", "linux/arm64"]

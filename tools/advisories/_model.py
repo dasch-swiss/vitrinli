@@ -33,6 +33,8 @@ class Component:
     type: str = "library"
     purl: str | None = None
     cpe: str | None = None
+    # Further CPEs, emitted as repeated `syft:cpe23` properties, which Grype matches like `cpe`.
+    extra_cpes: tuple[str, ...] = ()
     properties: dict[str, str] = field(default_factory=dict)
 
     @property
@@ -47,9 +49,40 @@ class Component:
             out["purl"] = self.purl
         if self.cpe:
             out["cpe"] = self.cpe
-        props = {"advisories:source": self.source, **self.properties}
-        out["properties"] = [{"name": k, "value": props[k]} for k in sorted(props)]
+        props = [("advisories:source", self.source), *self.properties.items(), *(("syft:cpe23", c) for c in self.extra_cpes)]
+        out["properties"] = [{"name": k, "value": v} for k, v in sorted(props)]
         return out
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One advisory (or `EOL`) against one inventory component, keyed `(component, id)`."""
+
+    component: str
+    id: str
+    version: str | None = None
+    source: str = ""
+    aliases: tuple[str, ...] = ()
+    severity: str = "unknown"
+    fixed: str | None = None
+    # The image packages a base-image finding concerns; empty for every other component.
+    packages: tuple[str, ...] = ()
+
+    @property
+    def key(self) -> tuple[str, str]:
+        return (self.component, self.id)
+
+    def to_json(self) -> dict:
+        return {
+            "component": self.component,
+            "version": self.version,
+            "source": self.source,
+            "id": self.id,
+            "aliases": list(self.aliases),
+            "severity": self.severity,
+            "fixed": self.fixed,
+            "packages": list(self.packages),
+        }
 
 
 def cyclonedx(components: list[Component]) -> dict:

@@ -1,0 +1,129 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "bcr:curl@8.3.0",
+      "name": "curl",
+      "version": "8.3.0",
+      "cpe": "cpe:2.3:a:haxx:curl:8.3.0:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "bcr"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:haxx:libcurl:8.3.0:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "custom_rule:kakadu_extension@8.7",
+      "name": "kakadu_extension",
+      "version": "8.7",
+      "properties": [
+        {
+          "name": "advisories:no_feed",
+          "value": "proprietary"
+        },
+        {
+          "name": "advisories:source",
+          "value": "custom_rule"
+        }
+      ]
+    },
+    {
+      "type": "operating-system",
+      "bom-ref": "deb:debian@12",
+      "name": "debian",
+      "version": "12",
+      "properties": [
+        {
+          "name": "advisories:eol",
+          "value": "2026-07-12"
+        },
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/opentelemetry_sdk@0.31.0",
+      "name": "opentelemetry_sdk",
+      "version": "0.31.0",
+      "purl": "pkg:cargo/opentelemetry_sdk@0.31.0",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/rsa@0.9.10",
+      "name": "rsa",
+      "version": "0.9.10",
+      "purl": "pkg:cargo/rsa@0.9.10",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u1?arch=amd64&distro=debian-12&upstream=glibc",
+      "name": "libc6",
+      "version": "2.36-9+deb12u1",
+      "purl": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u1?arch=amd64&distro=debian-12&upstream=glibc",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u1?arch=arm64&distro=debian-12&upstream=glibc",
+      "name": "libc6",
+      "version": "2.36-9+deb12u1",
+      "purl": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u1?arch=arm64&distro=debian-12&upstream=glibc",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "bom-ref": "pkg:oci/base-debian12@sha256%3Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?repository_url=registry.example/images/base-debian12",
+      "name": "registry.example/images/base-debian12",
+      "version": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "purl": "pkg:oci/base-debian12@sha256%3Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?repository_url=registry.example/images/base-debian12",
+      "properties": [
+        {
+          "name": "advisories:eol",
+          "value": "2026-09-10"
+        },
+        {
+          "name": "advisories:source",
+          "value": "oci"
+        },
+        {
+          "name": "advisories:tracks",
+          "value": "registry.example/images/base-debian12:latest"
+        }
+      ]
+    }
+  ]
+}

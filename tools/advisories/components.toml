@@ -4,7 +4,8 @@
 # unclassified, stale or duplicate entry.
 #
 #   shipped      in the sipi binary or image; `cpe` is the NVD vendor:product
-#                prefix, and an `http_archive` adds `version_re`, whose group 1
+#                prefix, or a list of them when NVD files the product under
+#                several, and an `http_archive` adds `version_re`, whose group 1
 #                is read from its URL
 #   not_shipped  build tooling, dev-only or test-only; `reason` says why
 #   no_feed      shipped but no public advisory feed; `reason` says why
@@ -45,7 +46,8 @@ cpe = "cpe:2.3:a:cliutils:cli11"
 source = "bcr"
 name = "curl"
 status = "shipped"
-cpe = "cpe:2.3:a:haxx:curl"
+# NVD files some curl CVEs under libcurl only (CVE-2023-38545).
+cpe = ["cpe:2.3:a:haxx:curl", "cpe:2.3:a:haxx:libcurl"]
 
 [[component]]
 source = "bcr"

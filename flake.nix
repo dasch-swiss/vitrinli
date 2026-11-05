@@ -52,6 +52,11 @@
             cargo-audit
             osv-scanner
 
+            # grype — with osv-scanner, the scanners behind
+            # `just advisories-scan` (ADR-0029). Without it the scan exits 3
+            # on "grype not found on PATH".
+            grype
+
             # jpylyzer — JP2 conformance validator. Runs against
             # regenerated JP2 goldens to confirm the SIPI UUID box reads as an
             # informational `Unknown UUID` and the file otherwise passes

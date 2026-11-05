@@ -13,6 +13,10 @@
         {
           "name": "advisories:source",
           "value": "bcr"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:haxx:libcurl:8.21.0:*:*:*:*:*:*:*"
         }
       ]
     },

@@ -90,6 +90,17 @@ class InventoryTest(unittest.TestCase):
         curl = self.component(bom, "bcr:curl@8.21.0")
         self.assertEqual(curl["cpe"], "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*")
 
+    def test_extra_cpes_become_syft_cpe23_properties(self):
+        _, _, bom = self.run_inventory()
+        curl = self.component(bom, "bcr:curl@8.21.0")
+        self.assertEqual([p["value"] for p in curl["properties"] if p["name"] == "syft:cpe23"], ["cpe:2.3:a:haxx:libcurl:8.21.0:*:*:*:*:*:*:*"])
+
+    def test_empty_cpe_list_exits_3(self):
+        self.edit("components.toml", 'cpe = ["cpe:2.3:a:haxx:curl", "cpe:2.3:a:haxx:libcurl"]', "cpe = []")
+        code, err, _ = self.run_inventory()
+        self.assertEqual(code, 3, err)
+        self.assertIn("cpe", err)
+
     def test_source_json_keys_over_module_bazel_candidates(self):
         _, _, bom = self.run_inventory()
         names = {c["bom-ref"] for c in bom["components"]}
