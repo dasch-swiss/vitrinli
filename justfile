@@ -576,6 +576,11 @@ loadtest-decode concs='10,20,40' dur='20' warm='5' id='knora/load_test.jpx':
 # other runners (see dasch-specs research-findings §1).
 #####################################
 
+# Regenerate `bazel/distroless/bookworm.lock.json` from
+# `bazel/distroless/bookworm.yaml` after changing its packages or snapshot pin.
+bazel-distroless-lock:
+    bazel run @bookworm//:lock
+
 # Build the per-arch image and load it into the local Docker daemon as
 # `daschswiss/sipi:latest`. Smoke-test consumes `latest`; CI re-tags
 # with `:v<version>-${arch}` via `bazel-docker-push-${arch}` below.
