@@ -1,0 +1,18 @@
+{
+  "lockFileVersion": 26,
+  "registryFileHashes": {
+    "https://bcr.bazel.build/bazel_registry.json": "0000",
+    "https://bcr.bazel.build/modules/curl/8.21.0.bcr.1/MODULE.bazel": "0000",
+    "https://bcr.bazel.build/modules/curl/8.21.0.bcr.1/source.json": "0000",
+    "https://bcr.bazel.build/modules/mimalloc/3.5.3/MODULE.bazel": "0000",
+    "https://bcr.bazel.build/modules/mimalloc/3.5.3/source.json": "0000",
+    "https://bcr.bazel.build/modules/rules_cc/0.2.25/MODULE.bazel": "0000",
+    "https://bcr.bazel.build/modules/rules_cc/0.2.25/source.json": "0000",
+    "https://bcr.bazel.build/modules/zlib/1.2.11/MODULE.bazel": "0000",
+    "https://bcr.bazel.build/modules/zlib/1.3.1.bcr.5/MODULE.bazel": "0000",
+    "https://bcr.bazel.build/modules/zlib/1.3.2/MODULE.bazel": "0000",
+    "https://bcr.bazel.build/modules/zlib/1.3.2/source.json": "0000",
+    "https://bcr.bazel.build/modules/candidate_only/1.0.0/MODULE.bazel": "0000"
+  },
+  "selectedYankedVersions": {}
+}

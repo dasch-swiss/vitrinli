@@ -1,0 +1,19 @@
+name: fixture
+on: push
+jobs:
+  reuse:
+    uses: extractions/setup-just/.github/workflows/reusable.yml@v3
+  local-reuse:
+    uses: ./ci/workflows/other.yml
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+      - uses: actions/cache@v4
+      - uses: bazelbuild/setup-bazelisk@v3
+      - uses: imjasonh/setup-crane@main
+      - uses: docker://alpine:3.19
+      - uses: mhausenblas/mkdocs-deploy-gh-pages@a31c6b13a80e4a4fbb525eeb7a2a78253bb15fa5
+      - uses: example/gone@v1
+      - uses: ./ci/actions/composite

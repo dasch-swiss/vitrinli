@@ -1,0 +1,408 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "bcr:curl@8.21.0",
+      "name": "curl",
+      "version": "8.21.0",
+      "cpe": "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "bcr"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "bcr:zlib@1.3.2",
+      "name": "zlib",
+      "version": "1.3.2",
+      "cpe": "cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:eol",
+          "value": "2030-01-01"
+        },
+        {
+          "name": "advisories:source",
+          "value": "bcr"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "custom_rule:kakadu_extension@8.7",
+      "name": "kakadu_extension",
+      "version": "8.7",
+      "properties": [
+        {
+          "name": "advisories:no_feed",
+          "value": "proprietary, no public advisory feed"
+        },
+        {
+          "name": "advisories:source",
+          "value": "custom_rule"
+        }
+      ]
+    },
+    {
+      "type": "operating-system",
+      "bom-ref": "deb:debian@12",
+      "name": "debian",
+      "version": "12",
+      "properties": [
+        {
+          "name": "advisories:eol",
+          "value": "2026-07-12"
+        },
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "githubactions:docker://alpine:3.19@",
+      "name": "docker://alpine:3.19",
+      "properties": [
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "advisories:unresolved",
+          "value": "docker:// image"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "githubactions:example/gone@v1",
+      "name": "example/gone",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "v1"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "advisories:unresolved",
+          "value": "repository missing or private"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "githubactions:imjasonh/setup-crane@main",
+      "name": "imjasonh/setup-crane",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "main"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "advisories:unresolved",
+          "value": "no release tag on this ref"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "githubactions:mhausenblas/mkdocs-deploy-gh-pages@a31c6b13a80e4a4fbb525eeb7a2a78253bb15fa5",
+      "name": "mhausenblas/mkdocs-deploy-gh-pages",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "a31c6b13a80e4a4fbb525eeb7a2a78253bb15fa5"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "advisories:unresolved",
+          "value": "no release tag on this ref"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "http_archive:ffmpeg_static_linux_amd64@8.1.1",
+      "name": "ffmpeg_static_linux_amd64",
+      "version": "8.1.1",
+      "cpe": "cpe:2.3:a:ffmpeg:ffmpeg:8.1.1:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "http_archive"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "http_archive:ffmpeg_static_linux_arm64@8.1.1",
+      "name": "ffmpeg_static_linux_arm64",
+      "version": "8.1.1",
+      "cpe": "cpe:2.3:a:ffmpeg:ffmpeg:8.1.1:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "http_archive"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "http_archive:mimalloc@3.4.3",
+      "name": "mimalloc",
+      "version": "3.4.3",
+      "cpe": "cpe:2.3:a:microsoft:mimalloc:3.4.3:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "http_archive"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "http_archive:tiff@4.7.2",
+      "name": "tiff",
+      "version": "4.7.2",
+      "cpe": "cpe:2.3:a:libtiff:libtiff:4.7.2:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "http_archive"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/bytes@1.12.1",
+      "name": "bytes",
+      "version": "1.12.1",
+      "purl": "pkg:cargo/bytes@1.12.1",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/serde@1.0.229",
+      "name": "serde",
+      "version": "1.0.229",
+      "purl": "pkg:cargo/serde@1.0.229",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u13?arch=amd64&distro=debian-12&upstream=glibc",
+      "name": "libc6",
+      "version": "2.36-9+deb12u13",
+      "purl": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u13?arch=amd64&distro=debian-12&upstream=glibc",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u13?arch=arm64&distro=debian-12&upstream=glibc",
+      "name": "libc6",
+      "version": "2.36-9+deb12u13",
+      "purl": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u13?arch=arm64&distro=debian-12&upstream=glibc",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/tini@0.19.0-1%2Bb3?arch=amd64&distro=debian-12",
+      "name": "tini",
+      "version": "0.19.0-1+b3",
+      "purl": "pkg:deb/debian/tini@0.19.0-1%2Bb3?arch=amd64&distro=debian-12",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/tini@0.19.0-1%2Bb3?arch=arm64&distro=debian-12",
+      "name": "tini",
+      "version": "0.19.0-1+b3",
+      "purl": "pkg:deb/debian/tini@0.19.0-1%2Bb3?arch=arm64&distro=debian-12",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:githubactions/actions/cache@4.3.0",
+      "name": "actions/cache",
+      "version": "4.3.0",
+      "purl": "pkg:githubactions/actions/cache@4.3.0",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "0057852bfaa89a56745cba8c7296529d2fc39830 v4"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "github-action"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:githubactions/actions/checkout@6.1.0",
+      "name": "actions/checkout",
+      "version": "6.1.0",
+      "purl": "pkg:githubactions/actions/checkout@6.1.0",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "d23441a48e516b6c34aea4fa41551a30e30af803 v6"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "github-action"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:githubactions/bazelbuild/setup-bazelisk@3.0.0",
+      "name": "bazelbuild/setup-bazelisk",
+      "version": "3.0.0",
+      "purl": "pkg:githubactions/bazelbuild/setup-bazelisk@3.0.0",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "v3"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "github-action"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:githubactions/extractions/setup-just@3.1.0",
+      "name": "extractions/setup-just",
+      "version": "3.1.0",
+      "purl": "pkg:githubactions/extractions/setup-just@3.1.0",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "v3"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "github-action"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "bom-ref": "pkg:oci/base-debian12@sha256%3A1111111111111111111111111111111111111111111111111111111111111111?repository_url=registry.example/images/base-debian12",
+      "name": "registry.example/images/base-debian12",
+      "version": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "purl": "pkg:oci/base-debian12@sha256%3A1111111111111111111111111111111111111111111111111111111111111111?repository_url=registry.example/images/base-debian12",
+      "properties": [
+        {
+          "name": "advisories:eol",
+          "value": "2026-09-10"
+        },
+        {
+          "name": "advisories:source",
+          "value": "oci"
+        },
+        {
+          "name": "advisories:tracks",
+          "value": "registry.example/images/base-debian12:latest"
+        }
+      ]
+    }
+  ]
+}

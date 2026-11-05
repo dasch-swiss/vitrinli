@@ -1,0 +1,85 @@
+{
+  "packages": [
+    {
+      "arch": "amd64",
+      "dependencies": [
+        {
+          "key": "libc6_2.36-9-p-deb12u13_amd64",
+          "name": "libc6",
+          "version": "2.36-9+deb12u13"
+        },
+        {
+          "key": "libgcc-s1_12.2.0-14-p-deb12u1_amd64",
+          "name": "libgcc-s1",
+          "version": "12.2.0-14+deb12u1"
+        },
+        {
+          "key": "gcc-12-base_12.2.0-14-p-deb12u1_amd64",
+          "name": "gcc-12-base",
+          "version": "12.2.0-14+deb12u1"
+        }
+      ],
+      "key": "tini_0.19.0-1-p-b3_amd64",
+      "name": "tini",
+      "sha256": "7d1947665fa40e55f218fefad773dc6de66458d0b39eaa292cdcadfc7c996632",
+      "urls": [
+        "https://snapshot-cloudflare.debian.org/archive/debian/20260101T000000Z/pool/main/t/tini/tini_0.19.0-1+b3_amd64.deb",
+        "https://snapshot.debian.org/archive/debian/20260101T000000Z/pool/main/t/tini/tini_0.19.0-1+b3_amd64.deb"
+      ],
+      "version": "0.19.0-1+b3"
+    },
+    {
+      "arch": "amd64",
+      "dependencies": [],
+      "key": "libc6_2.36-9-p-deb12u13_amd64",
+      "name": "libc6",
+      "sha256": "3d8072c73b017e907bbf44b7db870687888a991961d74f1ecbba6b9458f32a2c",
+      "urls": [
+        "https://snapshot-cloudflare.debian.org/archive/debian/20260101T000000Z/pool/main/g/glibc/libc6_2.36-9+deb12u13_amd64.deb",
+        "https://snapshot.debian.org/archive/debian/20260101T000000Z/pool/main/g/glibc/libc6_2.36-9+deb12u13_amd64.deb"
+      ],
+      "version": "2.36-9+deb12u13"
+    },
+    {
+      "arch": "arm64",
+      "dependencies": [
+        {
+          "key": "libc6_2.36-9-p-deb12u13_arm64",
+          "name": "libc6",
+          "version": "2.36-9+deb12u13"
+        },
+        {
+          "key": "libgcc-s1_12.2.0-14-p-deb12u1_arm64",
+          "name": "libgcc-s1",
+          "version": "12.2.0-14+deb12u1"
+        },
+        {
+          "key": "gcc-12-base_12.2.0-14-p-deb12u1_arm64",
+          "name": "gcc-12-base",
+          "version": "12.2.0-14+deb12u1"
+        }
+      ],
+      "key": "tini_0.19.0-1-p-b3_arm64",
+      "name": "tini",
+      "sha256": "335dee1e36c0bf61f11c9fe9740012966a3183bd50405b73ed19477293c28f7f",
+      "urls": [
+        "https://snapshot-cloudflare.debian.org/archive/debian/20260101T000000Z/pool/main/t/tini/tini_0.19.0-1+b3_arm64.deb",
+        "https://snapshot.debian.org/archive/debian/20260101T000000Z/pool/main/t/tini/tini_0.19.0-1+b3_arm64.deb"
+      ],
+      "version": "0.19.0-1+b3"
+    },
+    {
+      "arch": "arm64",
+      "dependencies": [],
+      "key": "libc6_2.36-9-p-deb12u13_arm64",
+      "name": "libc6",
+      "sha256": "03c3909c47a6df9f6f05357474efefca9bc30212069135a7c354fa78a1ec2415",
+      "urls": [
+        "https://snapshot-cloudflare.debian.org/archive/debian/20260101T000000Z/pool/main/g/glibc/libc6_2.36-9+deb12u13_arm64.deb",
+        "https://snapshot.debian.org/archive/debian/20260101T000000Z/pool/main/g/glibc/libc6_2.36-9+deb12u13_arm64.deb"
+      ],
+      "version": "2.36-9+deb12u13"
+    }
+  ],
+  "version": 1
+}

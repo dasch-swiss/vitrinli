@@ -174,6 +174,16 @@ audit:
     cargo audit --file Cargo.Bazel.lock --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2026-0387
     osv-scanner scan source --lockfile=Cargo.lock:Cargo.Bazel.lock --config=osv-scanner.toml
 
+# Inputs and component map live in `tools/advisories/`.
+
+# Write advisories.cdx.json (needs network); exit 1 on an unclassified dependency.
+advisories-inventory:
+    python3 tools/advisories/inventory.py --config tools/advisories/advisories.toml --output advisories.cdx.json
+
+# Run the advisory tools' offline tests.
+advisories-test:
+    python3 -m unittest discover -s tools/advisories/tests -t tools/advisories
+
 # Lint commit messages with commitlint-rs — the CI `commit-lint` gate. Enforces
 # the type allowlist + mandatory scope from `.commitlintrc.yml` on every commit in
 # `<from>..HEAD` (`from` defaults to origin/main). `commitlint` is in the Nix dev
