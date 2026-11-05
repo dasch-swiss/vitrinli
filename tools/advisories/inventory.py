@@ -117,6 +117,11 @@ def starlark_calls(text: str) -> list[Call]:
     return calls
 
 
+def http_archive_url(call: Call) -> str | None:
+    """The URL an `http_archive` pins: `url`, else the first of `urls`."""
+    return call.kwargs.get("url") or (call.kwargs.get("urls") or [None])[0]
+
+
 # ── Inputs ────────────────────────────────────────────────────────────────────
 
 _SOURCE_JSON = re.compile(r"/modules/([^/]+)/([^/]+)/source\.json$")
@@ -335,8 +340,7 @@ def build(config_path: Path, root: Path, ls_remote=None) -> tuple[list[Component
     found: dict[tuple[str, str], dict] = {}
     for c in calls:
         if c.callee == "http_archive" and isinstance(c.kwargs.get("name"), str):
-            url = c.kwargs.get("url") or (c.kwargs.get("urls") or [None])[0]
-            found[("http_archive", c.kwargs["name"])] = {"url": url, "line": c.line}
+            found[("http_archive", c.kwargs["name"])] = {"url": http_archive_url(c), "line": c.line}
         elif c.callee == "git_override" and isinstance(c.kwargs.get("module_name"), str):
             found[("git_override", c.kwargs["module_name"])] = {"line": c.line}
         elif c.callee in ("use_extension", "use_repo_rule") and len(c.args) >= 2:
