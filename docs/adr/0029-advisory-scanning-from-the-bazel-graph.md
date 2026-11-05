@@ -14,12 +14,13 @@ C/C++ libraries (by CPE), the distroless base image and GitHub Actions.**
 
 The scan wrapper `tools/advisories/scan.py` (`just advisories-scan`) applies
 one scanner-agnostic `tools/advisories/ignores.toml` with expiry. Scanners are
-called only through it, never directly from a workflow step.
+called only through it, never directly from a workflow step. The `advisories`
+PR job (`.github/workflows/ci.yml`) runs `tools/advisories/diff.py`
+(`just advisories-scan-diff`) and fails on new findings only.
 
-Not yet in code: the PR job that fails on new findings only, the daily scan
-with its rolling issue, the release gate before the image push, and the fix
-PRs. Until the PR job and the release gate land, Docker Scout, the
-`dependency-audit` job and `just audit` stay in place.
+Not yet in code: the daily scan with its rolling issue, the release gate
+before the image push, and the fix PRs. Until the release gate lands, Docker
+Scout stays in place.
 
 ## Context
 

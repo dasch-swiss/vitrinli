@@ -101,10 +101,12 @@ than on the runner.
 
 ### Dependency advisory scan
 
-A `dependency-audit` job runs `just audit` against the checked-in
-Cargo-format lockfile — see "Dependency advisory scanning" below for
-what it covers. Self-contained (no Bazel/RBE setup); not currently a
-required branch-protection check.
+The `advisories` job runs `just advisories-test` and
+`just advisories-scan-diff origin/<base branch>`: it fails on an advisory
+the PR adds over its base branch, never on one the base already has. See
+"Dependency advisory scanning" below. Self-contained (no Bazel, RBE or Nix),
+unfiltered by path so it always reports on a PR, and skipped on
+`workflow_dispatch`, which has no base branch.
 
 ### CI environment provisioning
 
@@ -139,8 +141,9 @@ and the build short-circuits. Internal PRs are unaffected.
 
 Branch rulesets require the three `test / *` legs
 (`test / linux-amd64`, `test / linux-arm64`, `test / darwin-arm64`)
-plus the `asan-ubsan / amd64` job. The `docs` job, the `dependency-audit`
-job and the `changes` gate itself are not required checks. (The
+plus the `asan-ubsan / amd64` job. The `docs` job, the `advisories`
+job (not yet required; it reports on every PR, so it can be) and the
+`changes` gate itself are not required checks. (The
 asan-ubsan job was previously split into `asan-ubsan-unit / amd64` +
 `asan-ubsan-e2e / amd64`; the ruleset must be updated to the merged name.)
 
@@ -188,25 +191,110 @@ to this workflow.
 
 ## Dependency advisory scanning
 
-Workflow: `.github/workflows/ci.yml`, job `dependency-audit`. Runs `just
-audit` — `cargo-audit` and `osv-scanner` (installed in-job; neither is in the
-Nix dev shell) scanning `Cargo.Bazel.lock`, the checked-in Cargo-format
-lockfile materialized by `crate.from_specs(cargo_lockfile = ...)` in
-`MODULE.bazel` (`crate_universe`'s own `MODULE.bazel.lock` is JSON, which
-neither tool reads). Repin with
-`CARGO_BAZEL_REPIN=1 bazel build //src/server/rust:lib` after any
-`crate.spec()` change. Covers the single `@crates` hub: server, cli,
-scripting and the e2e suite.
+The scan reads what the build resolves against, not the image: every Rust
+crate and C/C++ library is statically linked into one binary that carries no
+package metadata. [ADR-0029](../../adr/0029-advisory-scanning-from-the-bazel-graph.md)
+records the design and the scanner choice.
 
-Dependabot is off: no version-update or security-update PRs. GitHub Actions,
-the Nix flake inputs and the BCR `bazel_dep`s are bumped by hand.
+**Pipeline.** All tools live in `tools/advisories/` (stdlib Python 3.11+,
+inputs named in `advisories.toml`):
 
-This closes one gap, not the whole dependency surface: `dependency-audit`
-does not see the native `http_archive` / `cc_library` pins below —
-they have no lockfile-based advisory feed. Docker Scout (`ci.yml`'s PR-time
-CVE scan and `publish.yml`'s release-time Critical gate) covers OS/runtime
-packages in the *image layers*, which also does not reach these
-statically-linked libraries.
+1. `inventory.py` (`just advisories-inventory`) writes `advisories.cdx.json`,
+   a CycloneDX inventory of `Cargo.Bazel.lock`, the BCR modules of
+   `MODULE.bazel.lock`, the `http_archive` pins, both arches of
+   `bazel/distroless/bookworm.lock.json`, the `oci.pull` base digest and every
+   `uses:` ref of the workflows. Its drift check fails on a dependency the
+   component map does not classify.
+2. `scan.py` (`just advisories-scan`) runs OSV-Scanner over the crates and
+   Grype over everything else, both without their own ignores, then applies
+   `ignores.toml`.
+3. `diff.py` (`just advisories-scan-diff <base>`) scans this tree and a
+   worktree of `<base>` with this tree's tools, keys findings by component
+   name and advisory id (never by version), and applies this tree's ignores to
+   what only this tree has. Drift in the base is tolerated, since `main` and
+   older tags may predate the component map, and printed as `base drift
+   (skipped)`: a base component left out that way makes its findings read as
+   new. A base without one of the config's input files exits 3.
+
+In CI, the `advisories` job in `ci.yml` runs the diff against the PR's base
+branch. A PR that fixes a finding passes; an advisory published against `main`
+does not block unrelated PRs, and a PR adding a second vulnerable version of an
+already-flagged crate passes too. Both cases stay visible to the full scan.
+Exit codes, for every tool: 0 clean, 1 findings or drift, 3 a tool or scanner
+error, which never reads as clean. The scanners are installed by
+`.github/actions/advisories-scanners`, pinned by version and sha256; bump them
+there. The dev shell carries nixpkgs' `osv-scanner` and `grype`, which can
+trail those pins.
+
+**Running it locally.** Inside `nix develop`, `just advisories-scan` scans the
+working tree and `just advisories-scan-diff origin/main` reproduces the PR
+job. Both need network (the Grype database, about 200 MB on first use, the OSV
+API, `git ls-remote` for the Actions refs, the base image's registry).
+`just advisories-test` runs the offline tests. Set `ADVISORIES_BIN` to a
+directory holding `osv-scanner` and `grype` to use other binaries than PATH's.
+
+**Classifying a component.** Every BCR module, `http_archive`, `git_override`
+and custom repository rule has exactly one `[[component]]` in
+`tools/advisories/components.toml`, keyed by `source` and `name`:
+
+```toml
+[[component]]
+source = "http_archive"
+name = "tiff"
+status = "shipped"
+cpe = "cpe:2.3:a:libtiff:libtiff"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+```
+
+`shipped` takes the NVD `cpe` vendor:product prefix (a list when NVD files the
+product under several) and, for an `http_archive`, a `version_re` whose group 1
+reads the version from the URL. `not_shipped` (build tooling, dev- or
+test-only) and `no_feed` (shipped, no public advisory feed, as for Kakadu) take
+a `reason`. The map holds no versions: the scanned tree's URL or lockfile is the
+only version record, so the base of a diff reports its own. Adding a dependency
+without an entry fails the PR job.
+
+**Ignoring a finding.** Add an `[[ignore]]` to `tools/advisories/ignores.toml`
+with the advisory `id` (or one of its aliases, or `EOL`), the inventory
+`component`, a non-empty `reason` and an `expiry`:
+
+```toml
+[[ignore]]
+id = "RUSTSEC-2023-0071"
+component = "rsa"
+reason = "Why the vulnerable path is unreachable, and when to revisit."
+expiry = 2027-02-05
+```
+
+`expiry` is a bare TOML date, never quoted; the entry suppresses through that
+day and stops after it, so the finding returns for a fresh decision. The tools
+reject a malformed entry with exit 3. An ignore matters to the PR job only for
+a finding the PR adds; a finding shared with the base never fails it.
+
+**End of life.** A component map entry, or the `[deb]` or `[base_image]` table
+of `advisories.toml`, may carry `eol = <bare date>`: the end of regular upstream
+support, LTS and paid extended support not counted. From that date the scan
+reports a finding with the id `EOL` against it (one per config table, not per
+package), which an ignore with an expiry can suppress like any other. A PR that
+adds an end-of-life component therefore fails.
+
+**What a clean result means.** A clean crate result is strong: crates match by
+exact name and version against RustSec and GHSA. A clean C/C++ library result is
+weaker: those match only by CPE, whose NVD ranges are noisy and ignore distro
+backports, so expect false positives (triaged with an ignore) and accept that a
+CPE miss produces no finding at all. The quarterly review below stays the check
+for them.
+
+**GitHub Actions.** Every `uses:` ref is inventoried, a SHA resolved to the
+release tag that points at it; a branch ref or a SHA no tag points at is listed
+as unresolved. Actions findings are alert-only: no tool proposes a bump, because
+a SHA bump changes code that runs with the workflow's secrets, so a person
+reviews it. Dependabot alerts stay on, but they miss the SHA-pinned actions,
+which is every action here.
+
+Dependabot opens no version-update PRs; version updates are by hand: GitHub
+Actions, the Nix flake inputs and the BCR `bazel_dep`s. Docker Scout still
+scans the *image layers* in `ci.yml` (PR) and `publish.yml` (release).
 
 ### Quarterly native-pin review
 

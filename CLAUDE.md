@@ -100,7 +100,7 @@ protobuf. Native `cc_library`: libtiff (codecs re-enabled + JBIG via jbigkit),
 exiv2, lcms2, jansson, jbigkit, libexpat, and Kakadu (requires license).
 Every BCR module, `http_archive`, `git_override` and custom repository rule is
 classified once in `tools/advisories/components.toml`; `just advisories-inventory`
-fails on one that is not.
+and the `advisories` PR job fail on one that is not.
 
 **System Dependencies:** Threads (pthread), iconv (macOS only).
 
