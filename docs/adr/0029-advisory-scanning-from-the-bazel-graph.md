@@ -12,13 +12,14 @@ digest and the workflows' `uses:` refs into one CycloneDX 1.6 inventory. Two
 scanners match it: **OSV-Scanner for Rust crates, Grype for Debian packages,
 C/C++ libraries (by CPE), the distroless base image and GitHub Actions.**
 
-Not yet in code: the scan wrapper (`just advisories-scan`, one
-scanner-agnostic `tools/advisories/ignores.toml` with expiry), the PR job
-that fails on new findings only, the daily scan with its rolling issue, the
-release gate before the image push, and the fix PRs. Scanners are called only
-through the scan wrapper behind `just advisories-scan`, never directly from a
-workflow step. Until it lands,
-Docker Scout, the `dependency-audit` job and `just audit` stay in place.
+The scan wrapper `tools/advisories/scan.py` (`just advisories-scan`) applies
+one scanner-agnostic `tools/advisories/ignores.toml` with expiry. Scanners are
+called only through it, never directly from a workflow step.
+
+Not yet in code: the PR job that fails on new findings only, the daily scan
+with its rolling issue, the release gate before the image push, and the fix
+PRs. Until the PR job and the release gate land, Docker Scout, the
+`dependency-audit` job and `just audit` stay in place.
 
 ## Context
 
