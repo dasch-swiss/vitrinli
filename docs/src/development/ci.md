@@ -228,6 +228,27 @@ error, which never reads as clean. The scanners are installed by
 there. The dev shell carries nixpkgs' `osv-scanner` and `grype`, which can
 trail those pins.
 
+The backlog lives in one rolling issue, "Open dependency advisories", labelled
+with `issue_label` from `advisories.toml`. `.github/workflows/advisories.yml`
+runs `just advisories-scan` on the default branch daily at 05:41 UTC and
+`tools/advisories/report.py` renders the body: the open findings, the Grype
+database's build time, the ignores expiring within 14 days, the components
+whose `eol` falls within 90 days, and a pin table dating every `http_archive`,
+Kakadu and Actions pin by the last commit that changed its occurrences (a bump,
+or a new or removed use of the same pin; a floating ref such as `@v4` has no
+date). A run with open findings updates the issue or opens it; a run without
+closes it, and the next finding opens a new one. A scanner error fails the run
+and leaves the issue alone; `report.py` only renders, so it exits 0 or 3. The
+issue body is capped at 60 000 characters; the run's job summary holds the
+whole of it. Dispatch the workflow with `dry_run` to get the body in the job
+summary without touching the issue; a dispatch from another branch never
+touches it either. Locally, after `just advisories-scan`:
+
+```bash
+python3 tools/advisories/report.py --config tools/advisories/advisories.toml \
+  --inventory advisories.cdx.json --findings advisories-findings.json --output body.md
+```
+
 **Running it locally.** Inside `nix develop`, `just advisories-scan` scans the
 working tree and `just advisories-scan-diff origin/main` reproduces the PR
 job. Both need network (the Grype database, about 200 MB on first use, the OSV
@@ -445,9 +466,10 @@ justfile is missing a recipe and should grow one.
 ## Fuzz testing
 
 Workflow: `.github/workflows/fuzz.yml`. Trigger: `schedule` at `17 3 * * *`
-(03:17 UTC) plus manual `workflow_dispatch` — the repo's only scheduled
-workflow. One job on `ubuntu-24.04`: it restores the previous nightly's
-working corpus from the `fuzz-corpus` artifact, builds the instrumented
+(03:17 UTC) plus manual `workflow_dispatch`; the repo's other scheduled
+workflow is `advisories.yml` (05:41 UTC). One job on `ubuntu-24.04`: it
+restores the previous nightly's working corpus from the `fuzz-corpus`
+artifact, builds the instrumented
 libFuzzer binary with `just bazel-build-fuzz` (RBE-eligible, `bep-fuzz`
 artifact attached like the other legs), fuzzes
 `//src/iiifparser/fuzz:parse_request_fuzz` for 600s, minimizes and re-uploads

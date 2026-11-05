@@ -19,9 +19,11 @@ PR job (`.github/workflows/ci.yml`) runs `tools/advisories/diff.py`
 (`just advisories-scan-diff`) and fails on new findings only. The
 `advisories-gate` job (`.github/workflows/publish.yml`) runs the same diff
 against the last release whose image reached Docker Hub, before the image
-push, and uploads the release SBOM.
+push, and uploads the release SBOM. The daily `.github/workflows/advisories.yml`
+runs the full scan and keeps its findings in one rolling issue, rendered by
+`tools/advisories/report.py`.
 
-Not yet in code: the daily scan with its rolling issue, and the fix PRs.
+Not yet in code: the fix PRs.
 
 ## Context
 
