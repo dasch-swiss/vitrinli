@@ -116,7 +116,7 @@ jobs:
             bazel-platform: "//platforms:linux_aarch64"
           - platform: darwin-arm64
             arch: arm64
-            runs-on: macos-14
+            runs-on: macos-15
             bazel-platform: "//platforms:darwin_aarch64"
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
