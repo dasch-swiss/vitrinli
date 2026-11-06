@@ -185,6 +185,11 @@ class FixTest(unittest.TestCase):
         rows = [line for line in report.findings_section(recorded_scan(), outcomes).splitlines() if line.startswith("| debian ")]
         self.assertEqual([r.rsplit(" | ", 1)[1] for r in rows], ["- |"])
 
+    def test_a_finding_without_a_version_shows_unknown(self):
+        doc = recorded_scan()
+        doc["findings"] = [{**f, "version": None, "packages": []} for f in doc["findings"] if f["component"] == "curl"][:1]
+        self.assertIn("| curl unknown |", report.findings_section(doc))
+
     def test_without_outcomes_there_is_no_fix_column(self):
         self.assertNotIn("| Fix |", report.findings_section(recorded_scan()))
 
@@ -206,6 +211,34 @@ class FixTest(unittest.TestCase):
             section,
             "## Fix PRs\n\n| PR | Title | State |\n|---|---|---|\n| #5 | raise curl | open |\n| #4 | latest decline | closed unmerged; needs an ignore |",
         )
+
+    def test_a_declined_debian_pr_shows_while_any_package_is_flagged(self):
+        # Every Debian package's fix is the one `advisories/debian` branch.
+        doc = recorded_scan()
+        doc["findings"] = [f for f in doc["findings"] if f["component"] == "libc6"]
+        section = report.fix_prs_section([pr(3, "advisories/debian", "CLOSED", "raise debian")], doc)
+        self.assertIn("| #3 | raise debian | closed unmerged; needs an ignore |", section)
+
+    def test_an_eol_finding_alone_keeps_no_declined_pr(self):
+        # fix.py skips `EOL` findings, so they ask for no ignore.
+        doc = recorded_scan()
+        doc["findings"] = [f for f in doc["findings"] if f["component"] == "debian"]
+        self.assertEqual({f["id"] for f in doc["findings"]}, {"EOL"})
+        self.assertEqual(report.fix_prs_section([pr(3, "advisories/debian", "CLOSED", "raise debian")], doc), "")
+
+    def test_with_outcomes_the_declined_prs_are_fix_pys(self):
+        prs = [
+            pr(1, "advisories/opentelemetry_sdk", "CLOSED", "the decline fix.py matched"),
+            pr(4, "advisories/opentelemetry_sdk", "CLOSED", "latest decline, other advisories"),
+            pr(3, "advisories/debian", "CLOSED", "raise debian"),
+        ]
+        declined = outcome("opentelemetry_sdk", "cargo", "declined", "fix PR closed unmerged; needs an ignore", "https://github.com/o/r/pull/1")
+        section = report.fix_prs_section(prs, recorded_scan(), [declined])
+        self.assertEqual(
+            section,
+            "## Fix PRs\n\n| PR | Title | State |\n|---|---|---|\n| #1 | the decline fix.py matched | closed unmerged; needs an ignore |",
+        )
+        self.assertEqual(report.fix_prs_section(prs, recorded_scan(), [outcome("opentelemetry_sdk", "cargo", "opened", "fix PR opened")]), "")
 
     def test_no_fix_pr_leaves_the_section_out(self):
         self.assertEqual(report.fix_prs_section([pr(9, "feature/x", "OPEN")], recorded_scan()), "")
@@ -316,7 +349,7 @@ class MainTest(unittest.TestCase):
     def run_main(self, root, *extra):
         stdout, stderr = io.StringIO(), io.StringIO()
         argv = ["--config", str(self.dir / "advisories.toml"), "--inventory", str(self.inventory), "--findings", str(self.findings), "--output", str(self.output), "--root", str(root), *extra]
-        with mock.patch.object(report, "utc_today", lambda: TODAY), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+        with mock.patch.object(report.scan, "utc_today", lambda: TODAY), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             code = report.main(argv)
         return code, stdout.getvalue(), stderr.getvalue()
 

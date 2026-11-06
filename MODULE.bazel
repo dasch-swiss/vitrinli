@@ -209,15 +209,14 @@ bazel_dep(name = "tar.bzl", version = "0.10.4")
 # Pinned by `digest =`, never `tag =` (reproducibility-critical: tags
 # float; digests don't). Multi-arch index — `rules_oci`'s platform-aware
 # resolution selects amd64 or arm64 manifest at build time. The digest
-# below was captured 2026-05-08 from
-#   curl -sSL https://gcr.io/v2/distroless/base-debian12/manifests/latest \
-#     -H 'Accept: application/vnd.oci.image.index.v1+json'
-# Bumping it later means re-running the curl and copying the
-# `Docker-Content-Digest` response header.
+# is the index digest of the tag `[base_image] tracks` in
+# `tools/advisories/advisories.toml` names (`crane digest <tag>`); its
+# trailing comment records the tag and the capture date, and the daily
+# advisory scan's fix PR rewrites both.
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
     name = "distroless_base",
-    digest = "sha256:9dce90e688a57e59ce473ff7bc4c80bc8fe52d2303b4d99b44f297310bbd2210",
+    digest = "sha256:9dce90e688a57e59ce473ff7bc4c80bc8fe52d2303b4d99b44f297310bbd2210",  # gcr.io/distroless/base-debian12:latest on 2026-05-08
     image = "gcr.io/distroless/base-debian12",
     platforms = [
         "linux/amd64",
@@ -632,7 +631,7 @@ crate.spec(package = "webpki-root-certs", version = "1.0.10", default_features =
 # `cargo_lockfile` materializes a Cargo-format lock alongside the Bazel-native
 # resolution — `just advisories-scan` inventories the crates from it, not from
 # MODULE.bazel.lock's JSON. Repin with:
-#   CARGO_BAZEL_REPIN=1 bazel build //src/server/rust:lib
+#   CARGO_BAZEL_REPIN=1 bazel fetch @crates//:all (one crate: `just bazel-repin-crate <spec>`)
 crate.from_specs(cargo_lockfile = "//:Cargo.Bazel.lock")
 use_repo(crate, "crates")
 

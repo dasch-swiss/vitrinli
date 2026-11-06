@@ -18,12 +18,27 @@ EXIT_FINDINGS = 1
 EXIT_USAGE = 2
 EXIT_ERROR = 3
 
-# Prefix of the branches `fix.py` opens fix PRs from, one per component.
+# Prefix of the branches `fix.py` opens fix PRs from, one per component (one for all Debian packages).
 BRANCH_PREFIX = "advisories/"
 
 
 def branch_name(component: str) -> str:
     return BRANCH_PREFIX + component
+
+
+# Every Debian package is fixed by the one snapshot bump, so their findings
+# share the fix of the release component the inventory names `debian`.
+DEB_FIX_COMPONENT = "debian"
+
+
+def fix_component(component: str, source: str) -> str:
+    """The component whose fix branch carries a finding's fix."""
+    return DEB_FIX_COMPONENT if source == "deb" else component
+
+
+def actionable_finding(f: dict) -> bool:
+    """Whether `fix.py` acts on a finding: unignored, and neither `EOL` nor a GitHub Actions component."""
+    return not f["ignored"] and f["id"] != "EOL" and f["source"] != "githubactions"
 
 
 class ToolError(Exception):

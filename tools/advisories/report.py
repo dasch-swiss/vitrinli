@@ -7,8 +7,10 @@ Usage:
 The body lists the open findings, each with its component's fix outcome when
 `--fix-outcomes` (what `fix.py` wrote) is given; with `--fix-prs` (`gh pr list
 --state all --json number,title,state,headRefName,isCrossRepository`), every
-open fix PR, and a branch's latest fix PR when it was closed unmerged, the
-branch has no open PR, and its component is still flagged; the Grype advisory database's build time, the
+open fix PR, and each fix PR closed unmerged that declines a fix (with
+`--fix-outcomes`, the ones `fix.py` found suppressing a new PR; without, a
+branch's latest one when the branch has no open PR and its component is still
+flagged); the Grype advisory database's build time, the
 ignores expiring within 14 days, the components whose `eol` falls within 90
 days ("Approaching end of life"), and the pin table: every `http_archive`
 (its `MODULE.bazel` URL), every component whose version comes from an
@@ -43,12 +45,12 @@ from pathlib import Path
 
 import inventory
 import scan
-from _model import BRANCH_PREFIX, EXIT_CLEAN, EXIT_ERROR, ToolError, branch_name
+from _model import BRANCH_PREFIX, EXIT_CLEAN, EXIT_ERROR, ToolError, actionable_finding, branch_name, fix_component
+from fix import DECLINED
 
 CAP = 60_000
 IGNORE_EXPIRY_DAYS = 14
 EOL_NOTICE_DAYS = 90
-_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
 # ── Pin table ─────────────────────────────────────────────────────────────────
@@ -110,7 +112,7 @@ def pins(config: dict, config_dir: Path, root: Path, components: list[dict]) -> 
             if not refs:
                 out.add(Pin(name, version, None))
             for ref in refs:
-                changed = last_change(root, ref, workflows) if _SHA.match(ref) else None
+                changed = last_change(root, ref, workflows) if inventory.COMMIT_SHA.match(ref) else None
                 out.add(Pin(f"{name}@{ref}", version, changed))
     return sorted(out, key=lambda p: (p.component, p.version, p.changed or ""))
 
@@ -156,30 +158,41 @@ def findings_section(doc: dict, outcomes: list[dict] | None = None) -> str:
     by_component = {(o["component"], o["source"]): o for o in outcomes or []}
     rows = []
     for f in sorted(open_findings(doc), key=rank):
-        what = f"{f['component']} ({', '.join(f['packages'])})" if f["packages"] else f"{f['component']} {f['version']}"
+        what = f"{f['component']} ({', '.join(f['packages'])})" if f["packages"] else f"{f['component']} {f['version'] or 'unknown'}"
         advisory = f["id"] + (f" ({', '.join(f['aliases'])})" if f["aliases"] else "")
         row = [what, advisory, f["severity"], f["fixed"] or "no fix"]
         if outcomes is not None:
             # EOL findings and Actions components get no outcome: fix.py skips them.
-            row.append(_fix_cell(None if f["id"] == "EOL" else by_component.get((f["component"], f["source"]))))
+            row.append(_fix_cell(by_component.get((f["component"], f["source"])) if actionable_finding(f) else None))
         rows.append(row)
     header = ["Component", "Advisory", "Severity", "Fixed in"] + (["Fix"] if outcomes is not None else [])
     body = _table(header, rows) if rows else "No open finding."
     return "## Findings\n\n" + body
 
 
-def fix_prs_section(prs: list[dict] | None, doc: dict) -> str:
-    """Open fix PRs, and a flagged component's latest fix PR when it was closed unmerged and none is open."""
+def fix_prs_section(prs: list[dict] | None, doc: dict, outcomes: list[dict] | None = None) -> str:
+    """Open fix PRs, and the PRs closed unmerged that decline a fix.
+
+    With `outcomes`, a declined PR is one `fix.py` found suppressing a new PR
+    (its ids equal the component's advisory set). Without, when the fix job did
+    not run, it is a flagged component's latest PR closed unmerged while none
+    is open.
+    """
     if prs is None:
         return ""
     # A fork's branch may carry the same name; only this repository's branches are fix branches.
     ours = sorted((p for p in prs if p["headRefName"].startswith(BRANCH_PREFIX) and not p["isCrossRepository"]), key=lambda p: p["number"])
     opened = [p for p in ours if p["state"] == "OPEN"]
-    flagged = {branch_name(f["component"]) for f in open_findings(doc)}
-    latest = {p["headRefName"]: p for p in ours}
-    with_open = {p["headRefName"] for p in opened}
-    # `gh pr list` reports a merged PR as MERGED, so CLOSED is closed unmerged.
-    declined = [p for head, p in latest.items() if p["state"] == "CLOSED" and head in flagged - with_open]
+    if outcomes is not None:
+        # A declined outcome's `pr` is that PR's URL, `.../pull/<number>`.
+        numbers = {int(o["pr"].rsplit("/", 1)[1]) for o in outcomes if o["status"] == DECLINED and o.get("pr")}
+        declined = [p for p in ours if p["number"] in numbers]
+    else:
+        flagged = {branch_name(fix_component(f["component"], f["source"])) for f in doc["findings"] if actionable_finding(f)}
+        latest = {p["headRefName"]: p for p in ours}
+        with_open = {p["headRefName"] for p in opened}
+        # `gh pr list` reports a merged PR as MERGED, so CLOSED is closed unmerged.
+        declined = [p for head, p in latest.items() if p["state"] == "CLOSED" and head in flagged - with_open]
     rows = [[f"#{p['number']}", p["title"], "open"] for p in opened]
     rows += [[f"#{p['number']}", p["title"], "closed unmerged; needs an ignore"] for p in sorted(declined, key=lambda p: p["number"])]
     if not rows:
@@ -221,7 +234,7 @@ def render(doc: dict, components: list[dict], table: list[Pin], today: datetime.
     sections = [
         summary_section(doc, today),
         findings_section(doc, outcomes),
-        fix_prs_section(prs, doc),
+        fix_prs_section(prs, doc, outcomes),
         expiring_section(doc, today),
         eol_section(components, today),
         pin_section(table),
@@ -235,10 +248,6 @@ def cap(body: str, run_url: str | None, limit: int = CAP) -> str:
     where = f"[run summary]({run_url})" if run_url else "run summary"
     note = f"\n_Truncated at {limit:,} characters; the full report is in the {where}._\n"
     return body[: body.rfind("\n", 0, limit - len(note)) + 1] + note
-
-
-def utc_today() -> datetime.date:
-    return datetime.datetime.now(datetime.UTC).date()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -263,7 +272,7 @@ def main(argv: list[str] | None = None) -> int:
         label = config["issue_label"]
         require_full_history(args.root)
         table = pins(config, args.config.parent, args.root, components)
-        body = render(doc, components, table, utc_today(), outcomes, prs)
+        body = render(doc, components, table, scan.utc_today(), outcomes, prs)
         if args.summary:
             with args.summary.open("a") as f:
                 f.write(body)

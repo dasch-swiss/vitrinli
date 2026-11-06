@@ -37,7 +37,7 @@ import urllib.parse
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from _model import EXIT_CLEAN, EXIT_ERROR, EXIT_FINDINGS, Component, ToolError, cyclonedx
+from _model import DEB_FIX_COMPONENT, EXIT_CLEAN, EXIT_ERROR, EXIT_FINDINGS, Component, ToolError, cyclonedx
 
 SOURCES = ("bcr", "http_archive", "git_override", "custom_rule")
 STATUSES = ("shipped", "not_shipped", "no_feed")
@@ -67,6 +67,8 @@ class Call:
     args: list
     kwargs: dict
     line: int
+    # Offsets of the callee name and just past the closing parenthesis.
+    span: tuple[int, int] = (0, 0)
 
 
 def _value(tokens: list) -> str | list | None:
@@ -106,7 +108,7 @@ def starlark_calls(text: str) -> list[Call]:
                     kwargs[g[0][1]] = _value(g[2:])
                 else:
                     args.append(_value(g))
-            calls.append(Call(val, args, kwargs, text.count("\n", 0, pos) + 1))
+            calls.append(Call(val, args, kwargs, text.count("\n", 0, pos) + 1, (pos, toks[j - 1][2] + 1)))
             i = j
             continue
         if kind == "op" and val in "([{":
@@ -128,8 +130,8 @@ _SOURCE_JSON = re.compile(r"/modules/([^/]+)/([^/]+)/source\.json$")
 _BCR_SUFFIX = re.compile(r"\.bcr\.\d+$")
 
 
-def bcr_modules(lock: dict) -> dict[str, str]:
-    """Resolved BCR modules, name -> upstream version.
+def bcr_resolved(lock: dict) -> dict[str, str]:
+    """Resolved BCR modules, name -> BCR version (`.bcr.N` kept).
 
     Only `source.json` keys name the resolved set; `MODULE.bazel` keys also
     cover the candidates MVS rejected.
@@ -138,10 +140,19 @@ def bcr_modules(lock: dict) -> dict[str, str]:
     for key in lock.get("registryFileHashes", {}):
         m = _SOURCE_JSON.search(key)
         if m:
-            found[m.group(1)] = _BCR_SUFFIX.sub("", m.group(2))
+            found[m.group(1)] = m.group(2)
     if not found:
         raise ToolError("no `…/modules/<name>/<version>/source.json` key in the module lockfile")
     return found
+
+
+def bcr_upstream(version: str) -> str:
+    return _BCR_SUFFIX.sub("", version)
+
+
+def bcr_modules(lock: dict) -> dict[str, str]:
+    """Resolved BCR modules, name -> upstream version."""
+    return {name: bcr_upstream(v) for name, v in bcr_resolved(lock).items()}
 
 
 CRATES_IO = "registry+https://github.com/rust-lang/crates.io-index"
@@ -228,7 +239,7 @@ def _eol(table: dict) -> dict[str, str]:
 
 _USES = re.compile(r"^\s*(?:-\s+)?uses:\s*[\"']?([^\s\"'#]+)", re.M)
 _RELEASE_TAG = re.compile(r"^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?$")
-_SHA = re.compile(r"^[0-9a-f]{40}$")
+COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 LS_REMOTE_ATTEMPTS = 3
 
 
@@ -275,7 +286,7 @@ def release_tag(ls_remote: str, ref: str) -> str | None:
             commits[tag[:-3]] = sha  # an annotated tag's commit is its peeled line
         else:
             commits.setdefault(tag, sha)
-    commit = ref if _SHA.match(ref) else commits.get(ref)
+    commit = ref if COMMIT_SHA.match(ref) else commits.get(ref)
     if commit is None:
         return None
     candidates = [m for t, c in commits.items() if c == commit and (m := _RELEASE_TAG.match(t))]
@@ -394,7 +405,7 @@ def build(config_path: Path, root: Path, ls_remote=None) -> tuple[list[Component
     deb = config["deb"]
     release = debian_release((root / deb["manifest"]).read_text())
     components += debs(json.loads((root / deb["lock"]).read_text()), release)
-    components.append(Component(name="debian", version=release, source="deb", type="operating-system", properties=_eol(deb)))
+    components.append(Component(name=DEB_FIX_COMPONENT, version=release, source="deb", type="operating-system", properties=_eol(deb)))
 
     base = config["base_image"]
     pulls = [c for c in calls if c.callee.endswith(".pull") and c.kwargs.get("name") == base["oci_pull"]]
