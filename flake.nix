@@ -43,14 +43,13 @@
             # Local only; CI installs it via `cargo install commitlint-rs`.
             commitlint-rs
 
-            # cargo-audit + osv-scanner — the two halves of the
-            # `dependency-audit` gate (`just audit`), both reading
-            # `Cargo.Bazel.lock`. Local only; CI installs them itself. Without
-            # them the recipe dies on "no such command: audit" and
-            # "osv-scanner: command not found", so the gate could only be
-            # checked by pushing and waiting for CI.
-            cargo-audit
+            # osv-scanner + grype — the scanners behind `just advisories-scan`
+            # and `just advisories-scan-diff` (ADR-0029). Without them the scan
+            # exits 3 on "<name> not found on PATH". CI installs the ADR's
+            # pinned releases through `.github/actions/advisories-scanners`
+            # instead; these are nixpkgs' versions, which can trail the pins.
             osv-scanner
+            grype
 
             # jpylyzer — JP2 conformance validator. Runs against
             # regenerated JP2 goldens to confirm the SIPI UUID box reads as an

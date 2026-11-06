@@ -11,7 +11,7 @@ the C++ image engine — pulled transitively through `//src/server/rust:lib`'s
 seam stays in `//src/server/rust`. Dependencies resolve from the single `@crates`
 crate_universe `from_specs` hub (direct deps in `MODULE.bazel`, no `Cargo.toml`)
 as `@crates//:<crate>` labels. Repin via:
-`CARGO_BAZEL_REPIN=1 bazelisk fetch @crates//:all`.
+`CARGO_BAZEL_REPIN=1 bazel fetch @crates//:all`.
 
 Additive: this binary runs in parallel with `//src/cli:sipi` (the C++ server),
 which keeps the production socket until the cutover renames this to the stock

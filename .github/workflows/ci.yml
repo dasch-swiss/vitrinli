@@ -9,13 +9,12 @@
 #      instrumentation; unit + approval + e2e). The linux-amd64 leg runs the
 #      Rust lint gates (formatting + clippy) BEFORE its build+test, as
 #      fail-fast gates (clippy compiles the Rust crates natively on the amd64
-#      RBE worker — no cross-compile). amd64 carries the heaviest downstream
-#      work (Docker smoke, Scout, SARIF), so short-circuiting it on a lint
-#      finding saves the most. Linux legs additionally build the Docker image,
-#      run the Bazel-built smoke test against it, and feed Docker Scout; amd64
-#      alone uploads the SARIF CVE scan. Every leg writes its
-#      `just bazel-test` invocation's Build Event Protocol JSON and uploads it
-#      as a `bep-<platform>` artifact for offline cache-hit-rate analysis.
+#      RBE worker — no cross-compile), so a lint finding short-circuits the
+#      leg's build+test and Docker smoke. Linux legs additionally build the
+#      Docker image and run the Bazel-built smoke test against it. Every leg
+#      writes its `just bazel-test` invocation's Build Event Protocol JSON and
+#      uploads it as a `bep-<platform>` artifact for offline cache-hit-rate
+#      analysis.
 #   3. `sanitizer` — a path-gated ASan+UBSan job running unit + e2e in one
 #      invocation (see the scope-rationale comment above the job).
 #   4. `docs` — MkDocs build.
@@ -96,8 +95,6 @@ jobs:
     name: test / ${{ matrix.platform }}
     permissions:
       contents: read
-      pull-requests: write   # Docker Scout PR comment
-      security-events: write # SARIF upload (linux-amd64 only)
     concurrency:
       group: ${{ github.workflow }}-test-${{ matrix.platform }}-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
@@ -137,7 +134,7 @@ jobs:
 
       # Rust lint gates on the linux-amd64 leg, BEFORE build+test, so a
       # formatting/clippy finding fails the leg in lint time — short-circuiting
-      # the leg's heavy downstream steps (build+test, Docker smoke, Scout).
+      # the leg's heavy downstream steps (build+test, Docker smoke).
       - if: matrix.arch == 'amd64'
         name: Check Rust formatting
         env:
@@ -214,47 +211,11 @@ jobs:
       #      local Docker daemon as `daschswiss/sipi:latest` (matching
       #      `oci_load.repo_tags`).
       #   3. Probes HTTP endpoints against the loaded container.
-      #
-      # Docker Scout reads `local://daschswiss/sipi:latest` left in the
-      # daemon by step 2 — no separate build/load step needed.
       - name: Run Docker smoke tests (builds + loads image, then smoke-tests)
         if: runner.os == 'Linux'
         env:
           GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}
         run: just bazel-test-smoke ${{ steps.setup.outputs.flags }}
-
-      # amd64-only: arm64 and amd64 build the same image contents from the
-      # same source, so a second Scout comparison adds no signal — and one
-      # leg means one PR comment.
-      - name: Docker Scout — compare to production
-        if: matrix.platform == 'linux-amd64' && github.event_name == 'pull_request'
-        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3 # v1
-        with:
-          command: compare
-          image: local://daschswiss/sipi:latest
-          to-env: production
-          ignore-unchanged: true
-          only-severities: critical,high
-          write-comment: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          organization: daschswiss
-
-      - name: Docker Scout — CVE report (SARIF)
-        if: matrix.platform == 'linux-amd64' && github.event_name == 'pull_request'
-        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3 # v1
-        with:
-          command: cves
-          image: local://daschswiss/sipi:latest
-          sarif-file: scout-results.sarif
-          only-severities: critical,high
-          write-comment: false
-          organization: daschswiss
-
-      - name: Upload SARIF to GitHub Security
-        if: matrix.platform == 'linux-amd64' && github.event_name == 'pull_request'
-        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4
-        with:
-          sarif_file: scout-results.sarif
 
       # Persist the repository cache even when the job fails — the paired
       # save for ci-setup's restore-only cache step (rationale there).
@@ -408,43 +369,31 @@ jobs:
         with:
           base-ref: ${{ github.event.pull_request.base.sha }}
 
-  # Advisory scan over the checked-in Cargo-format lockfile (`Cargo.Bazel.lock`,
-  # materialized by `crate.from_specs(cargo_lockfile = ...)` in MODULE.bazel).
-  # Covers the single `@crates` hub: every Rust crate in the build, the e2e
-  # suite included. See `just audit`.
-  dependency-audit:
-    name: dependency-audit
-    runs-on: ubuntu-latest
+  # Advisory gate (ADR-0029): fails on an advisory this PR adds over its base
+  # branch, never on one the base already has. No path filter, so it can be a
+  # required check: a filtered one never reports and blocks merge (see
+  # `changes` above). PRs only: a dispatched run has no base branch.
+  # `fetch-depth: 0` gives `just advisories-scan-diff` the base branch to check
+  # out as a worktree. No Bazel and no Nix: the tools are stdlib Python on the
+  # runner's `python3`, the scanners come from `advisories-scanners`.
+  advisories:
+    name: advisories
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
     concurrency:
-      group: ${{ github.workflow }}-dependency-audit-${{ github.head_ref || github.run_id }}
+      group: ${{ github.workflow }}-advisories-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           lfs: false
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3
-
-      # Cache the compiled binary so `cargo install` only pays the build cost
-      # when the pinned version changes (cargo is preinstalled on GitHub-hosted
-      # ubuntu runners).
-      - name: Cache cargo-audit
-        id: cache-cargo-audit
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ~/.cargo/bin/cargo-audit
-          key: cargo-audit-${{ runner.os }}-0.22.2
-      - name: Install cargo-audit
-        if: steps.cache-cargo-audit.outputs.cache-hit != 'true'
-        run: cargo install cargo-audit --version 0.22.2 --locked
-
-      # osv-scanner has no BCR/cargo distribution — install the pinned Linux
-      # release binary directly, verified against its published checksum.
-      - name: Install osv-scanner
-        run: |
-          curl -fsSLo osv-scanner "https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64"
-          echo "f9f25499a2c8cc367b3af45df2ea7eeca7fbccceab9c35079968f4b3652194be  osv-scanner" | sha256sum -c -
-          chmod +x osv-scanner
-          sudo mv osv-scanner /usr/local/bin/osv-scanner
-
-      - run: just audit
+      - uses: ./.github/actions/advisories-scanners
+      - run: just advisories-test
+      - run: just advisories-scan-diff "origin/$BASE_REF"
+        env:
+          BASE_REF: ${{ github.base_ref }}

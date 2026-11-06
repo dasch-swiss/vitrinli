@@ -3,7 +3,7 @@
 #
 # Anytime this file is changed, the lockfile needs to be regenerated:
 #
-#     bazel run @bookworm//:lock
+#     just bazel-distroless-lock
 #
 # The lockfile is the source of truth at build time; `bookworm.yaml`
 # only matters at lock-regeneration time.
@@ -37,8 +37,5 @@ packages:
   # SIGKILL grace timeout.
   - "tini"
 
-  # Runtime healthcheck probe — invoked by ops-deploy's compose-level
-  # `healthcheck.test: ["CMD", "curl", "-sf", "http://localhost:1024/health"]`.
-  # The healthcheck runs *inside* the container, so curl must be in the
-  # image regardless of where the directive lives.
-  - "curl"
+  # No curl: the container healthcheck is `sipi health`. The curl that
+  # sipi links statically (the BCR module) is unrelated to this list.

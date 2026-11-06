@@ -148,31 +148,36 @@ bazel-rustfmt-check *FLAGS='':
 bazel-clippy-check *FLAGS='':
     bazel build //src/iiifparser/... //src/scripting/rust/... //src/throttling/rust/... //src/server/rust/... //src/cli/rust/... //test/e2e/... --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect --output_groups=clippy_checks --@rules_rust//rust/settings:clippy_flags=-Dwarnings {{FLAGS}}
 
-# Advisory scan over the checked-in Cargo-format lockfile (`Cargo.Bazel.lock`,
-# materialized from `crate.from_specs(cargo_lockfile = ...)` in MODULE.bazel —
-# cargo-audit/OSV-Scanner read Cargo.lock syntax, not MODULE.bazel.lock's
-# JSON). Covers the single `@crates` hub: server, cli, scripting and the e2e
-# suite.
-#
-# Neither tool exposes a CLI severity threshold (RustSec advisories and OSV
-# entries don't uniformly carry a Critical/High label), so both fail on any
-# matched advisory — a conservative superset of "Critical/High", never a
-# silent under-fail. `cargo-audit` and `osv-scanner` are not in the Nix dev
-# shell — CI installs them (see `.github/workflows/ci.yml`); run locally after
-# `cargo install cargo-audit` / installing osv-scanner from its release page.
-# RUSTSEC-2023-0071 (`rsa` Marvin timing side-channel) has no fixed upstream
-# release. `rsa` is transitive via `jsonwebtoken` (pulled for RS256/PS256); SIPI
-# pins JWT to HS256, so no RSA private-key operation runs and the side-channel is
-# unreachable. Ignored in both tools until an upstream fix ships (rationale also
-# in `osv-scanner.toml`). Revisit when `rsa` cuts a fixed release.
-# RUSTSEC-2026-0387 (`crypto-bigint` 0.5 timing variability) is fixed only in
-# 0.7.6+, which needs `elliptic-curve` 0.14; `jsonwebtoken` (10.x and 11.1)
-# still requires `p256`/`p384` 0.13 on 0.5. Those curves serve ES256/ES384 only;
-# with HS256 pinned no elliptic-curve operation runs, so the timing leak is
-# unreachable. Revisit when `jsonwebtoken` moves to `p256` 0.14.
-audit:
-    cargo audit --file Cargo.Bazel.lock --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2026-0387
-    osv-scanner scan source --lockfile=Cargo.lock:Cargo.Bazel.lock --config=osv-scanner.toml
+# Inputs and component map live in `tools/advisories/`.
+
+# Write advisories.cdx.json (needs network); exit 1 on an unclassified dependency.
+advisories-inventory:
+    python3 tools/advisories/inventory.py --config tools/advisories/advisories.toml --output advisories.cdx.json
+
+# Scan the inventory for advisories and apply `tools/advisories/ignores.toml`
+# (needs network: the Grype database, the OSV API, the base image). Writes
+# advisories-findings.json; exit 1 on an unignored finding, 3 on a scanner error.
+advisories-scan: advisories-inventory
+    python3 tools/advisories/scan.py --config tools/advisories/advisories.toml --inventory advisories.cdx.json --output advisories-findings.json
+
+# This tree and a worktree of `base` (e.g. origin/main) are both scanned
+# without ignores, drift tolerated in the base only; this tree's ignores then
+# apply to the findings only it has. Writes advisories.cdx.json,
+# advisories-diff.json and advisories-sbom.cdx.json (the shipped components,
+# the release SBOM). Exit 1 on a new unignored finding or on drift here, 3
+# on a scanner error on either side.
+# Fail on an advisory this tree adds over `base` (the PR and release gates).
+advisories-scan-diff base:
+    python3 tools/advisories/diff.py --config tools/advisories/advisories.toml --base "{{base}}" --inventory advisories.cdx.json --output advisories-diff.json --sbom advisories-sbom.cdx.json
+
+# Print the tag the release `tag` diffs against: the newest older `v*` tag
+# whose image reached Docker Hub (needs network). Exit 3 when there is none.
+advisories-release-baseline tag:
+    python3 tools/advisories/diff.py --config tools/advisories/advisories.toml --release-baseline "{{tag}}"
+
+# Run the advisory tools' offline tests.
+advisories-test:
+    python3 -m unittest discover -s tools/advisories/tests -t tools/advisories
 
 # Lint commit messages with commitlint-rs — the CI `commit-lint` gate. Enforces
 # the type allowlist + mandatory scope from `.commitlintrc.yml` on every commit in
@@ -260,8 +265,8 @@ bazel-test-sanitized *FLAGS='':
 # `bazel run //src:image_load` loads the image into the local daemon as
 # `daschswiss/sipi:latest` (its `oci_load` repo_tag) explicitly, BEFORE the
 # test — not as a side-effect of it. On a warm cache `:docker_smoke` is a cache
-# hit and never executes its own `docker load`, yet downstream CI steps (Docker
-# Scout) still need the image present in the daemon. `bazel run` also
+# hit and never executes its own `docker load`, so without this run the image
+# would be in the daemon only when the test ran. `bazel run` also
 # materialises the tarball under the `.bazelrc` default `--remote_download_minimal`,
 # which a cached test would leave absent.
 #
@@ -576,14 +581,31 @@ loadtest-decode concs='10,20,40' dur='20' warm='5' id='knora/load_test.jpx':
 # other runners (see dasch-specs research-findings §1).
 #####################################
 
+# Regenerate `bazel/distroless/bookworm.lock.json` from
+# `bazel/distroless/bookworm.yaml` after changing its packages or snapshot pin.
+bazel-distroless-lock:
+    bazel run @bookworm//:lock
+
+# Repin the `@crates` hub: `spec` is a `CARGO_BAZEL_REPIN` value, `<crate>`
+# (cargo update -p) or `<crate>@<locked>=<target>` (--precise; names one of a
+# crate's locked versions). Changes `Cargo.Bazel.lock` and `MODULE.bazel.lock`.
+# The crate extension records `CARGO_BAZEL_REPIN` in `MODULE.bazel.lock`; only
+# the second fetch, without it, records it as unset again.
+bazel-repin-crate spec:
+    CARGO_BAZEL_REPIN="{{spec}}" bazel fetch @crates//:all
+    bazel fetch @crates//:all
+
+# Refresh MODULE.bazel.lock after a `bazel_dep` or `single_version_override` change.
+bazel-lock-update:
+    bazel mod deps
+
 # Build the per-arch image and load it into the local Docker daemon as
 # `daschswiss/sipi:latest`. Smoke-test consumes `latest`; CI re-tags
 # with `:v<version>-${arch}` via `bazel-docker-push-${arch}` below.
 # `--stamp` runs `tools/workspace_status.sh` so STABLE_SIPI_VERSION
 # (from version.txt) is baked into image labels and tag suffixes;
 # without it, tags resolve to `0.0.0-unstamped-${arch}` and `publish.yml`'s
-# version-based downstream steps (Sentry release naming, Scout
-# environment recording) silently break.
+# version-based downstream steps (Sentry release naming) silently break.
 #
 # `--config=release` is the production build: `-c opt` codegen (-O3 -DNDEBUG) +
 # `_FORTIFY_SOURCE=2` hardening (both inert at the default fastbuild `-O0`; see

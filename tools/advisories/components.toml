@@ -1,0 +1,533 @@
+# Component map: every BCR module with a `source.json` key in MODULE.bazel.lock
+# and every `http_archive`, `git_override` and custom repository rule in
+# MODULE.bazel, exactly once per (source, name). `inventory.py` fails on an
+# unclassified, stale or duplicate entry.
+#
+#   shipped      in the sipi binary or image; `cpe` is the NVD vendor:product
+#                prefix, or a list of them when NVD files the product under
+#                several, and an `http_archive` adds `version_re`, whose group 1
+#                is read from its URL
+#   not_shipped  build tooling, dev-only or test-only; `reason` says why
+#   no_feed      shipped but no public advisory feed; `reason` says why
+#
+# Optional `eol = <bare date>`: end of regular upstream support, recorded on the
+# component (LTS and paid extended support do not count).
+#
+# No versions here: the lockfile or the URL of the scanned tree is the only
+# version record, so a base tree reports its own.
+#
+# "Not linked" below means absent from `bazel query 'deps(//src/cli/rust:sipi)'`;
+# protobuf and abseil-cpp enter the link through `cc_proto_library`'s aspect,
+# which that query does not follow.
+
+# ── BCR modules, shipped ──────────────────────────────────────────────────────
+
+[[component]]
+source = "bcr"
+name = "abseil-cpp"
+status = "shipped"
+# NVD files Abseil under common_libraries, not abseil-cpp.
+cpe = "cpe:2.3:a:abseil:common_libraries"
+
+[[component]]
+source = "bcr"
+name = "bzip2"
+status = "shipped"
+cpe = "cpe:2.3:a:bzip:bzip2"
+
+[[component]]
+source = "bcr"
+name = "cli11"
+status = "shipped"
+# NVD has no CPE product for it; a guess that matches nothing until NVD adds one.
+cpe = "cpe:2.3:a:cliutils:cli11"
+
+[[component]]
+source = "bcr"
+name = "curl"
+status = "shipped"
+# NVD files some curl CVEs under libcurl only (CVE-2023-38545).
+cpe = ["cpe:2.3:a:haxx:curl", "cpe:2.3:a:haxx:libcurl"]
+
+[[component]]
+source = "bcr"
+name = "highway"
+status = "shipped"
+# NVD has no CPE product for it; a guess that matches nothing until NVD adds one.
+cpe = "cpe:2.3:a:google:highway"
+
+[[component]]
+source = "bcr"
+name = "libdeflate"
+status = "shipped"
+# NVD has no CPE product for it; a guess that matches nothing until NVD adds one.
+cpe = "cpe:2.3:a:libdeflate_project:libdeflate"
+
+[[component]]
+source = "bcr"
+name = "libjpeg_turbo"
+status = "shipped"
+cpe = "cpe:2.3:a:libjpeg-turbo:libjpeg-turbo"
+
+[[component]]
+source = "bcr"
+name = "libmagic"
+status = "shipped"
+cpe = "cpe:2.3:a:file_project:file"
+
+[[component]]
+source = "bcr"
+name = "libpng"
+status = "shipped"
+cpe = "cpe:2.3:a:libpng:libpng"
+
+[[component]]
+source = "bcr"
+name = "libwebp"
+status = "shipped"
+cpe = "cpe:2.3:a:webmproject:libwebp"
+
+[[component]]
+source = "bcr"
+name = "lua"
+status = "shipped"
+cpe = "cpe:2.3:a:lua:lua"
+
+[[component]]
+source = "bcr"
+name = "openssl"
+status = "shipped"
+cpe = "cpe:2.3:a:openssl:openssl"
+
+[[component]]
+source = "bcr"
+name = "protobuf"
+status = "shipped"
+cpe = "cpe:2.3:a:google:protobuf"
+
+[[component]]
+source = "bcr"
+name = "sqlite3"
+status = "shipped"
+cpe = "cpe:2.3:a:sqlite:sqlite"
+
+[[component]]
+source = "bcr"
+name = "xz"
+status = "shipped"
+cpe = "cpe:2.3:a:tukaani:xz"
+
+[[component]]
+source = "bcr"
+name = "zlib"
+status = "shipped"
+cpe = "cpe:2.3:a:zlib:zlib"
+
+[[component]]
+source = "bcr"
+name = "zstd"
+status = "shipped"
+cpe = "cpe:2.3:a:facebook:zstandard"
+
+# ── BCR modules, not shipped ──────────────────────────────────────────────────
+
+[[component]]
+source = "bcr"
+name = "abseil-py"
+status = "not_shipped"
+reason = "Python build tooling; not linked"
+
+[[component]]
+source = "bcr"
+name = "apple_support"
+status = "not_shipped"
+reason = "Bazel rules (macOS toolchain support)"
+
+[[component]]
+source = "bcr"
+name = "aspect_bazel_lib"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "bazel_features"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "bazel_lib"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "bazel_skylib"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "bazel_worker_api"
+status = "not_shipped"
+reason = "Bazel persistent-worker protocol, build tooling"
+
+[[component]]
+source = "bcr"
+name = "bazel_worker_java"
+status = "not_shipped"
+reason = "Bazel persistent-worker protocol, build tooling"
+
+[[component]]
+source = "bcr"
+name = "boringssl"
+status = "not_shipped"
+reason = "curl TLS backend not selected: .bazelrc sets --@curl//:ssl_lib=openssl"
+
+[[component]]
+source = "bcr"
+name = "buildozer"
+status = "not_shipped"
+reason = "build-file editing tool"
+
+[[component]]
+source = "bcr"
+name = "cmake_configure_file"
+status = "not_shipped"
+reason = "Bazel rule generating headers at build time"
+
+[[component]]
+source = "bcr"
+name = "gawk"
+status = "not_shipped"
+reason = "build tool; not linked"
+
+[[component]]
+source = "bcr"
+name = "gazelle"
+status = "not_shipped"
+reason = "Bazel BUILD-file generator"
+
+[[component]]
+source = "bcr"
+name = "google_benchmark"
+status = "not_shipped"
+reason = "dev-only: microbenchmarks"
+
+[[component]]
+source = "bcr"
+name = "googletest"
+status = "not_shipped"
+reason = "test-only"
+
+[[component]]
+source = "bcr"
+name = "jq.bzl"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "jsoncpp"
+status = "not_shipped"
+reason = "transitive module; not linked"
+
+[[component]]
+source = "bcr"
+name = "libpfm"
+status = "not_shipped"
+reason = "dev-only: google_benchmark's perf-counter dependency"
+
+[[component]]
+source = "bcr"
+name = "libxml2"
+status = "not_shipped"
+reason = "transitive module; not linked"
+
+[[component]]
+source = "bcr"
+name = "llvm"
+status = "not_shipped"
+reason = "hermetic compiler toolchain"
+
+[[component]]
+source = "bcr"
+name = "mbedtls"
+status = "not_shipped"
+reason = "curl TLS backend not selected: .bazelrc sets --@curl//:ssl_lib=openssl"
+
+[[component]]
+source = "bcr"
+name = "mimalloc"
+status = "not_shipped"
+reason = "arrives through llvm, not linked; the shipped allocator is the http_archive mimalloc"
+
+[[component]]
+source = "bcr"
+name = "nasm"
+status = "not_shipped"
+reason = "assembler, exec tool for libjpeg_turbo"
+
+[[component]]
+source = "bcr"
+name = "package_metadata"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "platforms"
+status = "not_shipped"
+reason = "Bazel platform definitions"
+
+[[component]]
+source = "bcr"
+name = "pybind11_bazel"
+status = "not_shipped"
+reason = "Bazel rules; not linked"
+
+[[component]]
+source = "bcr"
+name = "re2"
+status = "not_shipped"
+reason = "transitive module; not linked"
+
+[[component]]
+source = "bcr"
+name = "rules_android"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_cc"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_distroless"
+status = "not_shipped"
+reason = "Bazel rules; the Debian packages it installs are inventoried from the deb lock"
+
+[[component]]
+source = "bcr"
+name = "rules_fuzzing"
+status = "not_shipped"
+reason = "dev-only: fuzzing rules"
+
+[[component]]
+source = "bcr"
+name = "rules_go"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_java"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_jvm_external"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_kotlin"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_license"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_oci"
+status = "not_shipped"
+reason = "Bazel rules; the base image is inventoried from its oci.pull digest"
+
+[[component]]
+source = "bcr"
+name = "rules_perl"
+status = "not_shipped"
+reason = "Bazel rules; Perl runs only in openssl's build"
+
+[[component]]
+source = "bcr"
+name = "rules_pkg"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_proto"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_python"
+status = "not_shipped"
+reason = "dev-only: benchmark tooling"
+
+[[component]]
+source = "bcr"
+name = "rules_robolectric"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "rules_rust"
+status = "not_shipped"
+reason = "Bazel rules; crates are inventoried from Cargo.Bazel.lock"
+
+[[component]]
+source = "bcr"
+name = "rules_shell"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "stardoc"
+status = "not_shipped"
+reason = "documentation generator"
+
+[[component]]
+source = "bcr"
+name = "tar.bzl"
+status = "not_shipped"
+reason = "Bazel rules for image layers"
+
+[[component]]
+source = "bcr"
+name = "windows_support"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "with_cfg.bzl"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "yq.bzl"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "bcr"
+name = "zlib-ng"
+status = "not_shipped"
+reason = "transitive module; not linked"
+
+# ── http_archive ──────────────────────────────────────────────────────────────
+
+[[component]]
+source = "http_archive"
+name = "exiv2"
+status = "shipped"
+cpe = "cpe:2.3:a:exiv2:exiv2"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "ffmpeg_static_linux_amd64"
+status = "shipped"
+cpe = "cpe:2.3:a:ffmpeg:ffmpeg"
+version_re = '/ffmpeg-n(\d+(?:\.\d+)+)-'
+
+[[component]]
+source = "http_archive"
+name = "ffmpeg_static_linux_arm64"
+status = "shipped"
+cpe = "cpe:2.3:a:ffmpeg:ffmpeg"
+version_re = '/ffmpeg-n(\d+(?:\.\d+)+)-'
+
+[[component]]
+source = "http_archive"
+name = "jansson"
+status = "shipped"
+cpe = "cpe:2.3:a:jansson_project:jansson"
+version_re = '/jansson-(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "jbigkit"
+status = "shipped"
+cpe = "cpe:2.3:a:jbigkit_project:jbigkit"
+version_re = '/jbigkit-(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "lcms2"
+status = "shipped"
+cpe = "cpe:2.3:a:littlecms:little_cms_color_engine"
+version_re = '/lcms2-(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "libexpat"
+status = "shipped"
+cpe = "cpe:2.3:a:libexpat_project:libexpat"
+version_re = '/expat-(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "mimalloc"
+status = "shipped"
+cpe = "cpe:2.3:a:microsoft:mimalloc"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "tiff"
+status = "shipped"
+# The libsdl-org mirror ships upstream libtiff; NVD files it under libtiff.
+cpe = "cpe:2.3:a:libtiff:libtiff"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "tracy"
+status = "not_shipped"
+reason = "dev-only profiler: linked but inert, its machinery compiles only under --config=tracy (TRACY_ENABLE)"
+
+# ── git_override ──────────────────────────────────────────────────────────────
+
+[[component]]
+source = "git_override"
+name = "hedron_compile_commands"
+status = "not_shipped"
+reason = "dev-only: compile_commands.json generator"
+
+# ── Custom repository rules and extensions ────────────────────────────────────
+
+[[component]]
+source = "custom_rule"
+name = "approvaltests_cpp"
+status = "not_shipped"
+reason = "test-only: ApprovalTests.cpp header"
+
+[[component]]
+source = "custom_rule"
+name = "benchmark_fixtures_extension"
+status = "not_shipped"
+reason = "dev-only: benchmark input images"
+
+[[component]]
+source = "custom_rule"
+name = "kakadu_extension"
+status = "no_feed"
+reason = "Kakadu is proprietary and has no public advisory feed"
+version_re = 'tag = "kakadu-v(\d+(?:\.\d+)+)"'

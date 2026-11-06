@@ -16,8 +16,12 @@ automated release.
 3. Merging the release PR pushes a `vX.Y.Z` tag.
 4. The tag triggers [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
    - `validate-docker` — per-arch Nix-built Docker image + smoke test.
-   - `publish-docker` — push images to Docker Hub, generate SBOM, upload
-     debug symbols to Sentry.
+   - `advisories-gate` — fails on an advisory this tag adds over the last
+     release whose image reached Docker Hub, and uploads the release SBOM
+     (one CycloneDX file, both arches). Nothing is pushed or deployed
+     unless it and `validate-docker` pass.
+   - `publish-docker` — push images to Docker Hub, upload debug symbols to
+     Sentry.
    - `manifest` — multi-arch Docker manifest combining amd64 + arm64.
    - `docs` — mkdocs deploy to https://sipi.io.
    - `sentry` — release finalisation.
@@ -33,8 +37,8 @@ automated release.
 
 **After merging the release PR (publish.yml runs automatically):**
 
-- [ ] Watch `publish.yml` to green: `validate-docker` →
-      `publish-docker` → `manifest` → `docs` → `sentry`.
+- [ ] Watch `publish.yml` to green: `validate-docker` and
+      `advisories-gate` → `publish-docker` → `manifest` → `docs` → `sentry`.
 - [ ] Verify the Docker manifest exists:
       `docker pull daschswiss/sipi:vX.Y.Z`.
 - [ ] Verify the GitHub release page shows the changelog from
@@ -56,7 +60,10 @@ When release-please goes wrong:
 - **Emergency patch on an old version** — branch from the tag, cherry-pick
   the fix, push a tag manually. `publish.yml` runs the same way.
 - **`publish.yml` fails after a tag** — fix forward; do not delete the tag.
-  Push a new patch-bump tag via release-please.
+  Push a new patch-bump tag via release-please. An `advisories-gate` failure
+  on a finding is fixed the same way, with the fix or an
+  `tools/advisories/ignores.toml` entry; re-running the job helps only on a
+  transient scanner or network error (exit 3).
 
 ## What is NOT manual any more
 

@@ -32,8 +32,8 @@ _build/
 #
 # Cmake things to be ignored
 #
-lib
-local
+/lib
+/local
 build/
 build-linux/
 build-mac/
@@ -104,3 +104,8 @@ terraform.rc
 /compile_commands.json
 /.cache/
 /external
+# Written by `just advisories-inventory`, `advisories-scan` and `advisories-scan-diff`.
+/advisories.cdx.json
+/advisories-findings.json
+/advisories-diff.json
+/advisories-sbom.cdx.json

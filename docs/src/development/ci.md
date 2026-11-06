@@ -70,10 +70,6 @@ none of them wait on a separate lint gate. Every leg runs:
    `:docker_smoke` rust_test, the test loads the OCI tarball into
    the local Docker daemon, and runs the smoke suite against the
    loaded container.
-3. **Docker Scout** (linux-amd64 PRs only, one leg — a single PR
-   comment): `Docker Scout — compare to production`,
-   `Docker Scout — CVE report (SARIF)`, and
-   `Upload SARIF to GitHub Security`.
 
 The standalone `lint` job is gone. Its lint checks —
 `bazel-rustfmt-check` and `bazel-clippy-check` — now run as extra
@@ -101,10 +97,12 @@ than on the runner.
 
 ### Dependency advisory scan
 
-A `dependency-audit` job runs `just audit` against the checked-in
-Cargo-format lockfile — see "Dependency advisory scanning" below for
-what it covers. Self-contained (no Bazel/RBE setup); not currently a
-required branch-protection check.
+The `advisories` job runs `just advisories-test` and
+`just advisories-scan-diff origin/<base branch>`: it fails on an advisory
+the PR adds over its base branch, never on one the base already has. See
+"Dependency advisory scanning" below. Self-contained (no Bazel, RBE or Nix),
+unfiltered by path so it always reports on a PR, and skipped on
+`workflow_dispatch`, which has no base branch.
 
 ### CI environment provisioning
 
@@ -139,8 +137,9 @@ and the build short-circuits. Internal PRs are unaffected.
 
 Branch rulesets require the three `test / *` legs
 (`test / linux-amd64`, `test / linux-arm64`, `test / darwin-arm64`)
-plus the `asan-ubsan / amd64` job. The `docs` job, the `dependency-audit`
-job and the `changes` gate itself are not required checks. (The
+plus the `asan-ubsan / amd64` job. The `docs` job, the `advisories`
+job (not yet required; it reports on every PR, so it can be) and the
+`changes` gate itself are not required checks. (The
 asan-ubsan job was previously split into `asan-ubsan-unit / amd64` +
 `asan-ubsan-e2e / amd64`; the ruleset must be updated to the merged name.)
 
@@ -188,68 +187,216 @@ to this workflow.
 
 ## Dependency advisory scanning
 
-Workflow: `.github/workflows/ci.yml`, job `dependency-audit`. Runs `just
-audit` — `cargo-audit` and `osv-scanner` (installed in-job; neither is in the
-Nix dev shell) scanning `Cargo.Bazel.lock`, the checked-in Cargo-format
-lockfile materialized by `crate.from_specs(cargo_lockfile = ...)` in
-`MODULE.bazel` (`crate_universe`'s own `MODULE.bazel.lock` is JSON, which
-neither tool reads). Repin with
-`CARGO_BAZEL_REPIN=1 bazel build //src/server/rust:lib` after any
-`crate.spec()` change. Covers the single `@crates` hub: server, cli,
-scripting and the e2e suite.
+The scan reads what the build resolves against, not the image: every Rust
+crate and C/C++ library is statically linked into one binary that carries no
+package metadata. [ADR-0029](../../adr/0029-advisory-scanning-from-the-bazel-graph.md)
+records the design and the scanner choice.
 
-Dependabot is off: no version-update or security-update PRs. GitHub Actions,
-the Nix flake inputs and the BCR `bazel_dep`s are bumped by hand.
+**Pipeline.** All tools live in `tools/advisories/` (stdlib Python 3.11+,
+inputs named in `advisories.toml`):
 
-This closes one gap, not the whole dependency surface: `dependency-audit`
-does not see the native `http_archive` / `cc_library` pins below —
-they have no lockfile-based advisory feed. Docker Scout (`ci.yml`'s PR-time
-CVE scan and `publish.yml`'s release-time Critical gate) covers OS/runtime
-packages in the *image layers*, which also does not reach these
-statically-linked libraries.
+1. `inventory.py` (`just advisories-inventory`) writes `advisories.cdx.json`,
+   a CycloneDX inventory of `Cargo.Bazel.lock`, the BCR modules of
+   `MODULE.bazel.lock`, the `http_archive` pins, both arches of
+   `bazel/distroless/bookworm.lock.json`, the `oci.pull` base digest and every
+   `uses:` ref of the workflows. Its drift check fails on a dependency the
+   component map does not classify.
+2. `scan.py` (`just advisories-scan`) runs OSV-Scanner over the crates and
+   Grype over everything else, both without their own ignores, then applies
+   `ignores.toml`.
+3. `diff.py` (`just advisories-scan-diff <base>`) scans this tree and a
+   worktree of `<base>` with this tree's tools, keys findings by component
+   name and advisory id (never by version), and applies this tree's ignores to
+   what only this tree has. Drift in the base is tolerated, since `main` and
+   older tags may predate the component map, and printed as `base drift
+   (skipped)`: a base component left out that way makes its findings read as
+   new. A base without one of the config's input files exits 3.
 
-### Quarterly native-pin review
+In CI, the `advisories` job in `ci.yml` runs the diff against the PR's base
+branch. A PR that fixes a finding passes; an advisory published against `main`
+does not block unrelated PRs, and a PR adding a second vulnerable version of an
+already-flagged crate passes too. Both cases stay visible to the full scan.
+The `advisories-gate` job in `publish.yml` runs the same diff once per release,
+against the baseline `just advisories-release-baseline <tag>` prints: the
+newest older `v*` tag whose image reached Docker Hub (`[release]` in
+`advisories.toml`), skipping a tag whose release failed, since diffing against
+it would let its findings through. So a release never introduces a vulnerable
+pin, and a backlog finding never blocks a hotfix.
+Exit codes, for every tool: 0 clean, 1 findings or drift, 3 a tool or scanner
+error, which never reads as clean. The scanners are installed by
+`.github/actions/advisories-scanners`, pinned by version and sha256; bump them
+there. The dev shell carries nixpkgs' `osv-scanner` and `grype`, which can
+trail those pins.
 
-Manually check each project's release page against the pinned version in
-`MODULE.bazel` and CVE feeds (NVD, GitHub Advisory Database) for the pinned
-version. Bump via a normal version-pin PR (update `sha256`/`strip_prefix`/`url`
-or the BCR module version) when a fix is available.
+The backlog lives in one rolling issue, "Open dependency advisories", labelled
+with `issue_label` from `advisories.toml`. `.github/workflows/advisories.yml`
+runs `just advisories-scan` on the default branch daily at 05:41 UTC and
+`tools/advisories/report.py` renders the body: the open findings, the Grype
+database's build time, the ignores expiring within 14 days, the components
+whose `eol` falls within 90 days, and a pin table dating every `http_archive`,
+Kakadu and Actions pin by the last commit that changed its occurrences (a bump,
+or a new or removed use of the same pin; a floating ref such as `@v4` has no
+date). A run with open findings updates the issue or opens it; a run without
+closes it, and the next finding opens a new one. A scanner error fails the run
+and leaves the issue alone; `report.py` only renders, so it exits 0 or 3. The
+issue body is capped at 60 000 characters; the run's job summary holds the
+whole of it. Dispatch the workflow with `dry_run` to get the body in the job
+summary without touching the issue; a dispatch from another branch never
+touches it either. Locally, after `just advisories-scan`:
 
-**Native `cc_library` (`http_archive`, hand-pinned — see
-[ADR-0015](../../adr/0015-native-cc_library-over-foreign_cc.md)):**
+```bash
+python3 tools/advisories/report.py --config tools/advisories/advisories.toml \
+  --inventory advisories.cdx.json --findings advisories-findings.json --output body.md
+```
 
-| Dependency | Pinned via | Releases |
-|---|---|---|
-| libtiff | `tiff` `http_archive` | <https://github.com/libsdl-org/libtiff/releases> |
-| exiv2 | `exiv2` `http_archive` | <https://github.com/Exiv2/exiv2/releases> |
-| lcms2 | `lcms2` `http_archive` | <https://github.com/mm2/Little-CMS/releases> |
-| jansson | `jansson` `http_archive` | <https://github.com/akheron/jansson/releases> |
-| jbigkit | `jbigkit` `http_archive` | no GitHub releases; upstream page: <https://www.cl.cam.ac.uk/~mgk25/jbigkit/> |
-| mimalloc | `mimalloc` `http_archive` | <https://github.com/microsoft/mimalloc/releases> |
-| tracy | `tracy` `http_archive` (dev-only, `--config=tracy`-gated) | <https://github.com/wolfpld/tracy/releases> |
-| Kakadu | `kakadu_extension` (proprietary, license-gated) | <https://github.com/dasch-swiss/dsp-ci-assets/releases> (private, org-restricted) |
+**Fix PRs.** Between the scan and the issue, the workflow's `fix` job runs
+`tools/advisories/fix.py` over the unignored findings, skipping `EOL` findings
+and GitHub Actions. A Rust crate gets one PR on the branch
+`advisories/<crate>`, one commit `fix(deps): raise <crate> to <version> past
+<ids>`: the highest fixed version among its advisories, reached by `just
+bazel-repin-crate <crate>@<locked>=<version>` when it is on the locked
+version's semver line, and kept only when a re-scan with `ignores.toml` reports
+no advisory for the crate left. A fix on a newer line, or an older line's
+locked version that the repin leaves flagged, is alert-only, "needs a major
+bump of" the nearest `crate.spec` dependency; a fixed version at or below the
+locked one, or a repin that changes nothing or clears nothing, is "at or past
+the fix, still flagged; needs an ignore".
 
-**BCR `bazel_dep` drop-ins** (image codec / parsing surface — see
-CLAUDE.md's Dependencies table for the full BCR list; excludes pure
-build-tooling deps like `rules_cc`/`rules_rust`/`rules_python`):
+The other mechanical pins follow the same lifecycle and the same "needs an
+ignore" rule:
 
-| Dependency | Releases |
-|---|---|
-| libpng | <https://github.com/pnggroup/libpng/releases> |
-| libjpeg_turbo | <https://github.com/libjpeg-turbo/libjpeg-turbo/releases> |
-| libwebp | <https://github.com/webmproject/libwebp/releases> |
-| libdeflate | <https://github.com/ebiggers/libdeflate/releases> |
-| zlib | <https://github.com/madler/zlib/releases> |
-| bzip2 | no GitHub releases; upstream page: <https://sourceware.org/bzip2/> |
-| xz | <https://github.com/tukaani-project/xz/releases> |
-| zstd | <https://github.com/facebook/zstd/releases> |
-| sqlite3 | no GitHub release notes; changelog: <https://www.sqlite.org/changes.html> |
-| libexpat | <https://github.com/libexpat/libexpat/releases> |
-| libmagic | <https://github.com/file/file/releases> |
-| Lua | no GitHub releases; upstream page: <https://www.lua.org/versions.html> |
-| curl | <https://github.com/curl/curl/releases> |
-| OpenSSL | <https://github.com/openssl/openssl/releases> |
-| protobuf | <https://github.com/protocolbuffers/protobuf/releases> |
+- **BCR module** (`advisories/<module>`): the lowest non-yanked version in the
+  registry's `metadata.json` at or past the fixed version, in Bazel's module
+  version order (`8.21.0` < `8.21.0.bcr.1` < `8.22.0`). The `bazel_dep` and a
+  `single_version_override` holding a `version` (openssl pins both) are raised,
+  `just bazel-lock-update` refreshes `MODULE.bazel.lock`, and a Grype re-scan
+  of the module by its component map CPEs must clear. A module held by an
+  override with `patches` or `patch_cmds`, reached only transitively, or whose
+  fix has no registry version yet is alert-only.
+- **Base image** (`advisories/<image>`): the current index digest of the tag
+  `[base_image] tracks` names, from `crane digest`, written into the `oci.pull`
+  with the tag and date as the line's comment, kept when a Grype re-scan of the
+  new digest on every platform clears its advisories that have a released
+  fix.
+- **Debian packages** (one PR for all of them, `advisories/debian`): the
+  snapshot timestamp of `bazel/distroless/bookworm.yaml` moves to the scan
+  date, `just bazel-distroless-lock` regenerates the lock, and a Grype re-scan
+  of the new lock must clear the advisories with a released fix. Its version
+  is the date, new every day, so an open Debian PR is rebuilt only when its
+  advisory set changes; a package with no released fix stays alert-only.
+
+`http_archive` libraries, FFmpeg, GitHub Actions, `EOL` findings and every
+advisory with no released fix stay alert-only (ADR-0029's alert-only
+classes).
+An open fix PR is rebuilt from the default branch and force-pushed only when
+its advisory set or version changes, never for being behind; one whose branch
+holds a maintainer's extra commit is left alone. A fix branch without an open
+PR is replaced. A fix PR closed unmerged suppresses a new one while the
+advisory set stays the same, and the issue asks for an ignore instead. PRs from
+forks never count. A component whose fix fails is recorded and the others still
+run; the `fix` job then fails, and the issue job still runs. The issue shows
+each finding's fix outcome and the open and declined fix PRs. Pushes and PRs go
+through `DASCHBOT_PAT` so their CI runs; a `dry_run` dispatch, or one from
+another branch, prints each branch, title and body instead, and runs with the
+workflow's own token: the PAT reaches only a run of the default branch. Either
+way the fixes start from the default branch's tree, so a dispatch from a branch
+does not test that branch's fix tooling.
+
+**Running it locally.** Inside `nix develop`, `just advisories-scan` scans the
+working tree and `just advisories-scan-diff origin/main` reproduces the PR
+job. Both need network (the Grype database, about 200 MB on first use, the OSV
+API, `git ls-remote` for the Actions refs, the base image's registry).
+`just advisories-test` runs the offline tests. Set `ADVISORIES_BIN` to a
+directory holding `osv-scanner`, `grype` and `crane` to use other binaries
+than PATH's.
+
+**Classifying a component.** Every BCR module, `http_archive`, `git_override`
+and custom repository rule has exactly one `[[component]]` in
+`tools/advisories/components.toml`, keyed by `source` and `name`:
+
+```toml
+[[component]]
+source = "http_archive"
+name = "tiff"
+status = "shipped"
+cpe = "cpe:2.3:a:libtiff:libtiff"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+```
+
+`shipped` takes the NVD `cpe` vendor:product prefix (a list when NVD files the
+product under several) and, for an `http_archive`, a `version_re` whose group 1
+reads the version from the URL. `not_shipped` (build tooling, dev- or
+test-only) and `no_feed` (shipped, no public advisory feed, as for Kakadu) take
+a `reason`. The map holds no versions: the scanned tree's URL or lockfile is the
+only version record, so the base of a diff reports its own. Adding a dependency
+without an entry fails the PR job.
+
+**Ignoring a finding.** Add an `[[ignore]]` to `tools/advisories/ignores.toml`
+with the advisory `id` (or one of its aliases, or `EOL`), the inventory
+`component`, a non-empty `reason` and an `expiry`:
+
+```toml
+[[ignore]]
+id = "RUSTSEC-2023-0071"
+component = "rsa"
+reason = "Why the vulnerable path is unreachable, and when to revisit."
+expiry = 2027-02-05
+```
+
+`expiry` is a bare TOML date, never quoted; the entry suppresses through that
+day and stops after it, so the finding returns for a fresh decision. The tools
+reject a malformed entry with exit 3. An ignore matters to the PR job only for
+a finding the PR adds; a finding shared with the base never fails it.
+
+**End of life.** A component map entry, or the `[deb]` or `[base_image]` table
+of `advisories.toml`, may carry `eol = <bare date>`: the end of regular upstream
+support, LTS and paid extended support not counted. From that date the scan
+reports a finding with the id `EOL` against it (one per config table, not per
+package), which an ignore with an expiry can suppress like any other. A PR that
+adds an end-of-life component therefore fails.
+
+**What a clean result means.** A clean crate result is strong: crates match by
+exact name and version against RustSec and GHSA. A clean C/C++ library result is
+weaker: those match only by CPE, whose NVD ranges are noisy and ignore distro
+backports, so expect false positives (triaged with an ignore) and accept that a
+CPE miss produces no finding at all. The pin table below stays the check for
+them.
+
+**GitHub Actions.** Every `uses:` ref is inventoried, a SHA resolved to the
+release tag that points at it; a branch ref or a SHA no tag points at is listed
+as unresolved. Actions findings are alert-only: no tool proposes a bump, because
+a SHA bump changes code that runs with the workflow's secrets, so a person
+reviews it. Dependabot alerts stay on, but they miss the SHA-pinned actions,
+which is every action here.
+
+Dependabot opens no version-update PRs; version updates are by hand: GitHub
+Actions, the Nix flake inputs and the BCR `bazel_dep`s. The only automated
+bumps are the fix PRs above, and only past an advisory. The image layers need
+no scan of their own: the Debian packages and the base digest are in the
+inventory.
+
+### Native pins: the pin table
+
+The `http_archive` libraries, FFmpeg and Kakadu get no fix PR, and a CPE miss
+on them raises nothing, so the rolling issue's **Pins** table is their human
+check: every `http_archive` (FFmpeg's two archives included), Kakadu and each
+Actions pin, with the pinned version and the date its pin last changed.
+Kakadu is `no_feed`: it has no public advisory feed, and its version and date
+come from the release `tag` in `bazel/kakadu_extension.bzl`.
+
+When a finding lands on one of them, or the table shows a pin gone stale:
+
+1. Check the project's release notes and the advisory for the fixed version.
+2. Bump it in a normal PR, re-deriving the native build as
+   [ADR-0015](../../adr/0015-native-cc_library-over-foreign_cc.md) requires
+   (`url`, `sha256`, `strip_prefix`, and the `defines` and patches the new
+   release needs; exiv2 carries a patch).
+3. If the finding does not apply (a CPE range that misses a backport, an
+   unreachable code path), add an `[[ignore]]` with its reason and expiry
+   instead.
+
+The PR's `advisories` job then fails if the bump introduces an advisory, and
+the daily scan drops the finding once it is merged.
 
 ## Tag release CI/CD
 
@@ -265,17 +412,24 @@ Gate model:
    builds the Docker image via
    `just bazel-docker-build-${arch}` and runs
    `just bazel-test-smoke` against it.
-2. `release-gate` — fires on `validate-docker` success.
+   `advisories-gate` runs alongside: `just advisories-scan-diff` against
+   the release baseline (see "Dependency advisory scanning" above). It
+   uploads the release SBOM, `advisories-sbom.cdx.json` as the
+   `sbom-<tag>` artifact: one CycloneDX file per release covering both
+   arches, every shipped component and no GitHub Actions. The tag and its
+   `ignores.toml` are fixed, so re-running a failed gate clears only a
+   transient scanner or network error (exit 3); a release that fails on a
+   finding, or on a baseline missing one of the config's input files, ships
+   only through a new release carrying the fix or an ignore entry.
+2. `release-gate` — fires when `validate-docker` and `advisories-gate`
+   both succeed, so neither the image push nor the docs deploy happens
+   on a new advisory.
 3. Publish jobs run after the gate:
    - `publish-docker / {amd64, arm64}` — rebuilds the per-arch
      image, extracts the `.debug` file via
      `just bazel-docker-extract-debug ${arch}`, pushes via
-     `just bazel-docker-push-${arch}`, records the image with Docker
-     Scout, runs a Docker Scout CVE gate (`only-severities: critical`,
-     `exit-code: true` — fails the job on any Critical finding in the
-     image layers; see "Dependency advisory scanning" above for what
-     this does and doesn't cover), uploads SBOM, pushes debug
-     symbols to Sentry. It does not repeat the smoke test —
+     `just bazel-docker-push-${arch}`, pushes debug symbols to
+     Sentry. It does not repeat the smoke test —
      `validate-docker` already validated the same commit.
    - `manifest` — needs `publish-docker`; runs
      `just bazel-docker-publish-manifest` (`crane index append`) to
@@ -347,9 +501,10 @@ justfile is missing a recipe and should grow one.
 ## Fuzz testing
 
 Workflow: `.github/workflows/fuzz.yml`. Trigger: `schedule` at `17 3 * * *`
-(03:17 UTC) plus manual `workflow_dispatch` — the repo's only scheduled
-workflow. One job on `ubuntu-24.04`: it restores the previous nightly's
-working corpus from the `fuzz-corpus` artifact, builds the instrumented
+(03:17 UTC) plus manual `workflow_dispatch`; the repo's other scheduled
+workflow is `advisories.yml` (05:41 UTC). One job on `ubuntu-24.04`: it
+restores the previous nightly's working corpus from the `fuzz-corpus`
+artifact, builds the instrumented
 libFuzzer binary with `just bazel-build-fuzz` (RBE-eligible, `bep-fuzz`
 artifact attached like the other legs), fuzzes
 `//src/iiifparser/fuzz:parse_request_fuzz` for 600s, minimizes and re-uploads

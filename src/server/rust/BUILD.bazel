@@ -16,7 +16,7 @@ depends on the C++ CLI (`//src/cli:cli_app`); `//src/cli/rust` adds that for
 Dependencies resolve from the single `@crates` crate_universe `from_specs` hub
 (direct deps declared in `MODULE.bazel`, no `Cargo.toml`); this library
 references the subset it needs as `@crates//:<crate>` labels. Repin via:
-`CARGO_BAZEL_REPIN=1 bazelisk fetch @crates//:all`.
+`CARGO_BAZEL_REPIN=1 bazel fetch @crates//:all`.
 
 The shell is additive: it runs in parallel with `//src/cli:sipi`, which keeps
 the production socket until the cutover.

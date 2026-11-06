@@ -25,6 +25,12 @@ should be a deliberate, self-contained unit of change. Working commits
   service of that principle: fold working commits, fixups and
   trial-and-error into the commit they belong to, reword messages, and
   reorder as needed.
+- **Whoever wrote the branch curates it.** An agent that ran the work reads
+  this page and rewrites the branch and the PR description itself, from the
+  diff and what it decided along the way. It does not hand curation to a
+  separate finalizer agent (`eng:workflow:pr-finalizer`,
+  `/eng:workflows:finalize`): that agent sees only the diff, not the
+  decisions the bodies must carry.
 
 ### Stacked PRs
 

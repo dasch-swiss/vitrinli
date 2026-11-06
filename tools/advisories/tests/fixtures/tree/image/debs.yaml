@@ -1,0 +1,15 @@
+version: 1
+
+sources:
+  - channel: bookworm main
+    urls:
+      - https://snapshot.debian.org/archive/debian/20260101T000000Z
+  - channel: bookworm-security main
+    url: https://snapshot.debian.org/archive/debian-security/20260101T000000Z
+
+archs:
+  - "amd64"
+  - "arm64"
+
+packages:
+  - "tini"

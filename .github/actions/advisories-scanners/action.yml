@@ -1,0 +1,50 @@
+name: Advisory scanners
+description: >
+  Installs the pinned OSV-Scanner and Grype (ADR-0029), and crane, which the
+  base-image fix PR reads the tracked tag's digest with, into
+  `$RUNNER_TEMP/advisories-bin` and exports `ADVISORIES_BIN`, which
+  `tools/advisories/scan.py` and `fix.py` prefer over PATH. Every job that
+  scans (the PR `advisories` job, the release gate, the daily scan and its fix
+  job) installs through this one action, so all of them run the same versions;
+  bump a pin here only, with its sha256 from the release page.
+
+  PATH is left alone: `.bazelrc` passes PATH into every action key
+  (`action_env=PATH`), so changing it in a job that also runs Bazel would cost
+  a full remote-cache rebuild.
+
+  Linux x86-64 runners only.
+
+runs:
+  using: composite
+  steps:
+    - name: Install OSV-Scanner, Grype and crane
+      shell: bash
+      env:
+        OSV_SCANNER_VERSION: 2.7.0
+        OSV_SCANNER_SHA256: 160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b
+        GRYPE_VERSION: 0.121.1
+        GRYPE_SHA256: bc3ea3f9e6fd56ac781c08c6c5e614271b79f438200757f6932085c19b0a4657
+        CRANE_VERSION: 0.21.6
+        CRANE_SHA256: 7ebbdcd05b652345c1f5105f8475e518534b90d66f3bdb50017be63f426ea435
+      run: |
+        set -euo pipefail
+        if [ "$RUNNER_OS" != Linux ] || [ "$RUNNER_ARCH" != X64 ]; then
+          echo "::error::advisories-scanners pins Linux x86-64 binaries, not $RUNNER_OS $RUNNER_ARCH"
+          exit 1
+        fi
+        bin="$RUNNER_TEMP/advisories-bin"
+        mkdir -p "$bin"
+        cd "$RUNNER_TEMP"
+        curl -fsSL --retry 3 --retry-all-errors -o osv-scanner \
+          "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64"
+        echo "${OSV_SCANNER_SHA256}  osv-scanner" | sha256sum -c -
+        install -m 0755 osv-scanner "$bin/osv-scanner"
+        curl -fsSL --retry 3 --retry-all-errors -o grype.tar.gz \
+          "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz"
+        echo "${GRYPE_SHA256}  grype.tar.gz" | sha256sum -c -
+        tar -xzf grype.tar.gz -C "$bin" grype
+        curl -fsSL --retry 3 --retry-all-errors -o crane.tar.gz \
+          "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz"
+        echo "${CRANE_SHA256}  crane.tar.gz" | sha256sum -c -
+        tar -xzf crane.tar.gz -C "$bin" crane
+        echo "ADVISORIES_BIN=$bin" >> "$GITHUB_ENV"

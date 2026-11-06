@@ -1,0 +1,71 @@
+[[component]]
+source = "bcr"
+name = "curl"
+status = "shipped"
+cpe = ["cpe:2.3:a:haxx:curl", "cpe:2.3:a:haxx:libcurl"]
+
+[[component]]
+source = "bcr"
+name = "zlib"
+status = "shipped"
+cpe = "cpe:2.3:a:zlib:zlib"
+eol = 2030-01-01
+
+[[component]]
+source = "bcr"
+name = "mimalloc"
+status = "not_shipped"
+reason = "arrives through the toolchain, not linked"
+
+[[component]]
+source = "bcr"
+name = "rules_cc"
+status = "not_shipped"
+reason = "Bazel rules"
+
+[[component]]
+source = "http_archive"
+name = "ffmpeg_static_linux_amd64"
+status = "shipped"
+cpe = "cpe:2.3:a:ffmpeg:ffmpeg"
+version_re = '/ffmpeg-n(\d+(?:\.\d+)+)-'
+
+[[component]]
+source = "http_archive"
+name = "ffmpeg_static_linux_arm64"
+status = "shipped"
+cpe = "cpe:2.3:a:ffmpeg:ffmpeg"
+version_re = '/ffmpeg-n(\d+(?:\.\d+)+)-'
+
+[[component]]
+source = "http_archive"
+name = "mimalloc"
+status = "shipped"
+cpe = "cpe:2.3:a:microsoft:mimalloc"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "http_archive"
+name = "tiff"
+status = "shipped"
+cpe = "cpe:2.3:a:libtiff:libtiff"
+version_re = '/v(\d+(?:\.\d+)+)\.tar\.gz$'
+
+[[component]]
+source = "git_override"
+name = "hedron_compile_commands"
+status = "not_shipped"
+reason = "dev-only"
+
+[[component]]
+source = "custom_rule"
+name = "approvaltests_cpp"
+status = "not_shipped"
+reason = "test-only"
+
+[[component]]
+source = "custom_rule"
+name = "kakadu_extension"
+status = "no_feed"
+reason = "proprietary, no public advisory feed"
+version_re = 'tag = "kakadu-v(\d+(?:\.\d+)+)"'

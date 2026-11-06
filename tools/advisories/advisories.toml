@@ -1,0 +1,43 @@
+# Inputs of the advisory tools for this repository. Paths are relative to the
+# scanned tree's root; `component_map` and `ignores` are relative to this file.
+
+component_map = "components.toml"
+ignores = "ignores.toml"
+issue_label = "advisory"
+
+[inputs]
+cargo_lock = "Cargo.Bazel.lock"
+module_bazel = "MODULE.bazel"
+module_lock = "MODULE.bazel.lock"
+# Workflow files whose `uses:` refs are inventoried; local `./` actions are skipped.
+workflows = [
+    ".github/workflows/*.yml",
+    ".github/workflows/*.yaml",
+    ".github/actions/*/action.yml",
+    ".github/actions/*/action.yaml",
+]
+
+# Files a non-`http_archive` map entry's `version_re` reads its version from.
+[inputs.version_files]
+kakadu_extension = "bazel/kakadu_extension.bzl"
+
+[deb]
+manifest = "bazel/distroless/bookworm.yaml"
+lock = "bazel/distroless/bookworm.lock.json"
+# End of Debian 12's regular security support (12.15, the last point release,
+# 2026-07-11). LTS does not count.
+eol = 2026-07-12
+
+[base_image]
+oci_pull = "distroless_base"
+tracks = "gcr.io/distroless/base-debian12:latest"
+# GoogleContainerTools/distroless SUPPORT_POLICY.md: base-debian12 "Sept 2026";
+# the debian12 builds were removed on 2026-09-10.
+eol = 2026-09-10
+# Scanned once per platform: the index digest names both arches' images.
+platforms = ["linux/amd64", "linux/arm64"]
+
+[release]
+# A release diffs against the newest older `v*` tag whose image is on this
+# Docker Hub repository.
+docker_hub_repository = "daschswiss/sipi"

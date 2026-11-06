@@ -56,9 +56,9 @@ name: fuzz
 
 on:
   # 03:17 UTC — off-peak for the DaSCH team (04:17/05:17 CET/CEST) and off the
-  # top of the hour, which is the congested slot on GitHub's scheduler. No
-  # other workflow in this repo is scheduled, so there is nothing to collide
-  # with; keep it that way when adding one.
+  # top of the hour, which is the congested slot on GitHub's scheduler. The
+  # repo's two scheduled workflows are this one (03:17 UTC) and advisories.yml
+  # (05:41 UTC); give a new one its own slot off the hour.
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:

@@ -1,0 +1,137 @@
+{
+  "results": [
+    {
+      "source": {
+        "path": "/tmp/advisories-scan/cargo.cdx.json",
+        "type": "sbom"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "rsa",
+            "version": "0.9.10",
+            "ecosystem": "crates.io",
+            "purl": "pkg:cargo/rsa@0.9.10"
+          },
+          "vulnerabilities": [
+            {
+              "id": "RUSTSEC-2023-0071",
+              "aliases": [
+                "CVE-2023-49092",
+                "GHSA-4grx-2x9w-596c",
+                "GHSA-c38w-74pg-36hr"
+              ],
+              "database_specific": {
+                "license": "CC0-1.0"
+              },
+              "severity": [
+                {
+                  "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "type": "CVSS_V3"
+                }
+              ],
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "crates.io",
+                    "name": "rsa",
+                    "purl": "pkg:cargo/rsa"
+                  },
+                  "ranges": [
+                    {
+                      "events": [
+                        {
+                          "introduced": "0.0.0-0"
+                        }
+                      ],
+                      "type": "SEMVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": [
+                "RUSTSEC-2023-0071"
+              ],
+              "aliases": [
+                "CVE-2023-49092",
+                "GHSA-4grx-2x9w-596c",
+                "GHSA-c38w-74pg-36hr",
+                "RUSTSEC-2023-0071"
+              ],
+              "max_severity": "5.9"
+            }
+          ]
+        },
+        {
+          "package": {
+            "name": "opentelemetry_sdk",
+            "version": "0.31.0",
+            "ecosystem": "crates.io",
+            "purl": "pkg:cargo/opentelemetry_sdk@0.31.0"
+          },
+          "vulnerabilities": [
+            {
+              "id": "GHSA-w9wp-h8wv-79jx",
+              "aliases": [
+                "CVE-2026-48504"
+              ],
+              "database_specific": {
+                "cwe_ids": [
+                  "CWE-770"
+                ],
+                "github_reviewed": true,
+                "github_reviewed_at": "2026-06-25T18:40:04Z",
+                "nvd_published_at": null,
+                "severity": "MODERATE"
+              },
+              "severity": [
+                {
+                  "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+                  "type": "CVSS_V3"
+                }
+              ],
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "crates.io",
+                    "name": "opentelemetry_sdk",
+                    "purl": "pkg:cargo/opentelemetry_sdk"
+                  },
+                  "ranges": [
+                    {
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "0.32.1"
+                        }
+                      ],
+                      "type": "SEMVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": [
+                "GHSA-w9wp-h8wv-79jx"
+              ],
+              "aliases": [
+                "CVE-2026-48504",
+                "GHSA-w9wp-h8wv-79jx"
+              ],
+              "max_severity": "5.3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "bcr:curl@8.3.0",
+      "name": "curl",
+      "version": "8.3.0",
+      "cpe": "cpe:2.3:a:haxx:curl:8.3.0:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "bcr"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "http_archive:tiff@4.5.0",
+      "name": "tiff",
+      "version": "4.5.0",
+      "cpe": "cpe:2.3:a:libtiff:libtiff:4.5.0:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "http_archive"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:cargo/smallvec@1.6.0",
+      "name": "smallvec",
+      "version": "1.6.0",
+      "purl": "pkg:cargo/smallvec@1.6.0",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "cargo"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u1?arch=amd64&distro=debian-12&upstream=glibc",
+      "name": "libc6",
+      "version": "2.36-9+deb12u1",
+      "purl": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u1?arch=amd64&distro=debian-12&upstream=glibc",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "deb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:githubactions/tj-actions/changed-files@45.0.0",
+      "name": "tj-actions/changed-files",
+      "version": "45.0.0",
+      "purl": "pkg:githubactions/tj-actions/changed-files@45.0.0",
+      "properties": [
+        {
+          "name": "advisories:ref",
+          "value": "v45.0.0"
+        },
+        {
+          "name": "advisories:scope",
+          "value": "ci"
+        },
+        {
+          "name": "advisories:source",
+          "value": "githubactions"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "github-action"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "bom-ref": "pkg:oci/base-debian12@sha256%3A74ddbf52d93fafbdd21b399271b0b4aac1babf8fa98cab59e5692e01169a1348?repository_url=gcr.io/distroless/base-debian12",
+      "name": "gcr.io/distroless/base-debian12",
+      "version": "sha256:74ddbf52d93fafbdd21b399271b0b4aac1babf8fa98cab59e5692e01169a1348",
+      "purl": "pkg:oci/base-debian12@sha256%3A74ddbf52d93fafbdd21b399271b0b4aac1babf8fa98cab59e5692e01169a1348?repository_url=gcr.io/distroless/base-debian12",
+      "properties": [
+        {
+          "name": "advisories:source",
+          "value": "oci"
+        },
+        {
+          "name": "advisories:tracks",
+          "value": "gcr.io/distroless/base-debian12:latest"
+        }
+      ]
+    }
+  ]
+}

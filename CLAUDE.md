@@ -95,9 +95,14 @@ hand-written native `cc_library` over an `http_archive`/release fetch
 (`bazel/<lib>.BUILD.bazel`) — never `rules_foreign_cc` (see
 [`docs/adr/0015-native-cc_library-over-foreign_cc.md`](docs/adr/0015-native-cc_library-over-foreign_cc.md)).
 BCR drop-ins: libpng, libjpeg_turbo, libwebp, libdeflate, zlib, bzip2, xz, zstd,
-sqlite3, libexpat, libmagic, Lua, curl, OpenSSL,
+sqlite3, libmagic, Lua, curl, OpenSSL,
 protobuf. Native `cc_library`: libtiff (codecs re-enabled + JBIG via jbigkit),
-exiv2, lcms2, jansson, jbigkit, and Kakadu (requires license).
+exiv2, lcms2, jansson, jbigkit, libexpat, and Kakadu (requires license).
+`tools/advisories/components.toml` is the classification of record: every BCR
+module, `http_archive`, `git_override` and custom repository rule appears there
+once, as shipped (with the CPE the advisory scan matches), not shipped or
+without an advisory feed, and `just advisories-inventory` and the `advisories`
+PR job fail on one that is not.
 
 **System Dependencies:** Threads (pthread), iconv (macOS only).
 
@@ -134,7 +139,7 @@ For CI pipeline details (Docker publishing, release automation), see [`docs/src/
 
 Valid types (exactly eight): `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `chore`. `revert`, `style`, and `ci` are **not** valid — use `chore(ci): ...`, fold formatting in, and `fix`/`chore` for reverts. Breaking changes use `!` suffix: `feat(scope)!: ...`. **A scope is mandatory** (`type(scope): subject`, no catch-all) — a module name from [`CONVENTIONS.md` § Module Layout](CONVENTIONS.md); if none fits, ask the maintainer before coining a new one. A CI gate (`commitlint-rs`, `just commit-lint`) enforces this. Full schema single-sourced in [`docs/src/development/commit-conventions.md`](docs/src/development/commit-conventions.md).
 
-**The history's reader is a coding agent.** Rebase-merge puts every branch commit on `main` verbatim — there is no squash safety net. Before merge, curate the branch to **one commit per module per slice**, each with a body that explains the end state (decisions, rejected alternatives, invariants, gotchas), never the journey. A small one-slice, one-module PR is one commit. A `fix:` corrects behavior already on `main`; a bug introduced earlier in the same branch is folded into its introducing commit, never a standalone `fix:`.
+**The history's reader is a coding agent.** Rebase-merge puts every branch commit on `main` verbatim — there is no squash safety net. Before merge, curate the branch to **one commit per module per slice**, each with a body that explains the end state (decisions, rejected alternatives, invariants, gotchas), never the journey. A small one-slice, one-module PR is one commit. A `fix:` corrects behavior already on `main`; a bug introduced earlier in the same branch is folded into its introducing commit, never a standalone `fix:`. Curate the branch yourself after reading `commit-conventions.md`; never delegate curation or the PR body to `pr-finalizer` / `/eng:workflows:finalize`.
 
 For the git workflow, commit message schema, scope vocabulary, and PR description format (all single-sourced), see [`docs/src/development/commit-conventions.md`](docs/src/development/commit-conventions.md). PRs are scaffolded by [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
 

@@ -1,0 +1,6 @@
+# Matches the finding through its alias: OSV-Scanner reports RUSTSEC-2023-0071.
+[[ignore]]
+id = "GHSA-4grx-2x9w-596c"
+component = "rsa"
+reason = "fixture"
+expiry = 2027-01-31

@@ -300,7 +300,7 @@ On a warm cache the two approaches are essentially equal. RBE is slower cold bec
 three legs share one worker and each has to rebuild the shared exec-config toolchain from
 scratch concurrently (only ~220–430 cross-leg cache hits on a cold run). The cache-only
 setup has no shared bottleneck. A ~6–9 minute fixed per-leg overhead (`ci-setup`
-provisioning, LFS pull, Docker Scout) is identical either way and cannot be accelerated
+provisioning, LFS pull) is identical either way and cannot be accelerated
 by RBE.
 
 **RBE buys no per-PR speed on a single worker. Its value is cross-compilation and the
@@ -364,18 +364,6 @@ cores has the most impact.
 Cross legs execute very few actions remotely on a warm cache (almost everything hits the
 shared AC), which is why their warm wall-clock drops to ~2.4–2.9 min.
 
-## Docker Scout warm-cache fix
-
-Docker Scout inspects `daschswiss/sipi:latest` from the local Docker daemon. The image
-is loaded as a side effect of the `:docker_smoke` test's own `docker load` step. On a
-warm cache the smoke test is a cache hit and never runs — the image is absent and Docker
-Scout fails with `No such image`.
-
-The fix: `bazel-test-smoke` in `ci.yml` runs `bazel run //src:image_load` explicitly
-before the test. This both loads the image into the daemon and materialises the OCI
-tarball on disk under `--remote_download_minimal` (where it would otherwise not be
-fetched). The smoke test then finds the image regardless of its cache state.
-
 ## CI topology
 
 `ci.yml`'s `test` job runs the matrix on all three platforms. Each leg:
@@ -386,7 +374,6 @@ fetched). The smoke test then finds the image regardless of its cache state.
 2. Passes `$RBE_FLAGS` to every `just bazel-*` invocation.
 3. Runs `just bazel-test` (unit + approval + e2e).
 4. On Linux: runs `just bazel-test-smoke` (which first calls `bazel run //src:image_load`).
-5. On linux-amd64 PRs: runs Docker Scout.
 
 `ci.yml`'s path-gated `sanitizer` job, plus `coverage.yml`,
 `fuzz.yml`, and `publish.yml`, all go

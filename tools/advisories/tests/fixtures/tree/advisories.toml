@@ -1,0 +1,21 @@
+component_map = "components.toml"
+issue_label = "fixture-advisory"
+
+[inputs]
+cargo_lock = "deps/crates.lock"
+module_bazel = "deps/module.star"
+module_lock = "deps/module.lock.json"
+workflows = ["ci/workflows/*.yml", "ci/workflows/*.yaml", "ci/actions/*/action.yml", "ci/actions/*/action.yaml"]
+
+[inputs.version_files]
+kakadu_extension = "deps/kakadu.bzl"
+
+[deb]
+manifest = "image/debs.yaml"
+lock = "image/debs.lock.json"
+eol = 2026-07-12
+
+[base_image]
+oci_pull = "base"
+tracks = "registry.example/images/base-debian12:latest"
+eol = 2026-09-10
