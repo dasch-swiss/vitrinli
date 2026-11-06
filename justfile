@@ -595,6 +595,10 @@ bazel-repin-crate spec:
     CARGO_BAZEL_REPIN="{{spec}}" bazel fetch @crates//:all
     bazel fetch @crates//:all
 
+# Refresh MODULE.bazel.lock after a `bazel_dep` or `single_version_override` change.
+bazel-lock-update:
+    bazel mod deps
+
 # Build the per-arch image and load it into the local Docker daemon as
 # `daschswiss/sipi:latest`. Smoke-test consumes `latest`; CI re-tags
 # with `:v<version>-${arch}` via `bazel-docker-push-${arch}` below.
