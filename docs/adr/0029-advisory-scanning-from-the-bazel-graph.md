@@ -21,9 +21,11 @@ PR job (`.github/workflows/ci.yml`) runs `tools/advisories/diff.py`
 against the last release whose image reached Docker Hub, before the image
 push, and uploads the release SBOM. The daily `.github/workflows/advisories.yml`
 runs the full scan and keeps its findings in one rolling issue, rendered by
-`tools/advisories/report.py`.
+`tools/advisories/report.py`, and opens the crate fix PRs through
+`tools/advisories/fix.py`.
 
-Not yet in code: the fix PRs.
+Not yet in code: the fix PRs for BCR modules, the base digest and the Debian
+snapshot date.
 
 ## Context
 

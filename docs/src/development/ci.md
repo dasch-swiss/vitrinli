@@ -249,6 +249,31 @@ python3 tools/advisories/report.py --config tools/advisories/advisories.toml \
   --inventory advisories.cdx.json --findings advisories-findings.json --output body.md
 ```
 
+**Fix PRs.** Between the scan and the issue, the workflow's `fix` job runs
+`tools/advisories/fix.py` over the unignored findings, skipping `EOL` findings
+and GitHub Actions. A Rust crate gets one PR on the branch
+`advisories/<crate>`, one commit `fix(deps): raise <crate> to <version> past
+<ids>`: the highest fixed version among its advisories, reached by `just
+bazel-repin-crate <crate>@<locked>=<version>` when it is on the locked
+version's semver line, and kept only when a re-scan with `ignores.toml` reports
+no advisory for the crate left. A fix on a newer line, or an older line's
+locked version that the repin leaves flagged, is alert-only, "needs a major
+bump of" the nearest `crate.spec` dependency; a fixed version at or below the
+locked one, or a repin that changes nothing or clears nothing, is "at or past
+the fix, still flagged; needs an ignore". Every other component is alert-only.
+An open fix PR is rebuilt from the default branch and force-pushed only when
+its advisory set or version changes, never for being behind; one whose branch
+holds a maintainer's extra commit is left alone. A fix branch without an open
+PR is replaced. A fix PR closed unmerged suppresses a new one while the
+advisory set stays the same, and the issue asks for an ignore instead. PRs from
+forks never count. A component whose fix fails is recorded and the others still
+run; the `fix` job then fails, and the issue job still runs. The issue shows
+each finding's fix outcome and the open and declined fix PRs. Pushes and PRs go
+through `DASCHBOT_PAT` so their CI runs; a `dry_run` dispatch, or one from
+another branch, prints each branch, title and body instead. Either way the
+fixes start from the default branch's tree, so a dispatch from a branch does
+not test that branch's fix tooling.
+
 **Running it locally.** Inside `nix develop`, `just advisories-scan` scans the
 working tree and `just advisories-scan-diff origin/main` reproduces the PR
 job. Both need network (the Grype database, about 200 MB on first use, the OSV
@@ -316,9 +341,10 @@ reviews it. Dependabot alerts stay on, but they miss the SHA-pinned actions,
 which is every action here.
 
 Dependabot opens no version-update PRs; version updates are by hand: GitHub
-Actions, the Nix flake inputs and the BCR `bazel_dep`s. The image layers need
-no scan of their own: the Debian packages and the base digest are in the
-inventory.
+Actions, the Nix flake inputs and the BCR `bazel_dep`s. The only automated
+bumps are the crate fix PRs above, and only past an advisory. The image
+layers need no scan of their own: the Debian packages and the base digest are
+in the inventory.
 
 ### Quarterly native-pin review
 
