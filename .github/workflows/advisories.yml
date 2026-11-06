@@ -1,7 +1,8 @@
-# Daily advisory scan of the default branch and the rolling issue that carries
-# its findings ("Dependency advisory scanning" in docs/src/development/ci.md).
-# No Bazel and no Nix: the tools are stdlib Python on the runner's `python3`,
-# the scanners come from `advisories-scanners`.
+# Daily advisory scan of the default branch, the fix PRs it opens, and the
+# rolling issue that carries its findings ("Dependency advisory scanning" in
+# docs/src/development/ci.md). No Nix: the tools are stdlib Python on the
+# runner's `python3`, the scanners come from `advisories-scanners`; only the
+# fix job runs Bazel.
 
 name: advisories
 
@@ -12,11 +13,17 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Write the issue body to the job summary and leave the issue alone
+        description: Write the issue body to the job summary and print each fix branch, title and body; touch no issue, branch or PR
         type: boolean
         default: false
 
 permissions: {}
+
+env:
+  # Whether this run writes: a schedule always does (it runs on the default
+  # branch), a dispatch only from the default branch and without dry_run. The
+  # fix job pushes and the issue step edits under this one value.
+  WRITE: ${{ github.event_name == 'schedule' || (!inputs.dry_run && github.ref_name == github.event.repository.default_branch) }}
 
 concurrency:
   group: advisories
@@ -52,8 +59,71 @@ jobs:
             advisories-findings.json
           if-no-files-found: error
 
-  issue:
+  # One fix PR per fixable component (`tools/advisories/fix.py`), pushed and
+  # opened with DASCHBOT_PAT: pushes and PRs made with GITHUB_TOKEN start no
+  # CI. Bazel runs only inside `just bazel-repin-crate`; the scanners come
+  # through ADVISORIES_BIN, so PATH, part of every Bazel action key, stays as
+  # `ci-setup` leaves it.
+  fix:
     needs: [scan]
+    runs-on: ubuntu-24.04
+    # Each crate costs two crate_universe splices and a re-scan.
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}
+    steps:
+      # Full history: a fix branch is rebuilt from origin/<default branch> and
+      # its commits are counted over that merge base.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.DASCHBOT_PAT }}
+          lfs: false
+      - name: CI setup (bazelisk, just, repo cache)
+        id: setup
+        uses: ./.github/actions/ci-setup
+      - uses: ./.github/actions/advisories-scanners
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: advisories-scan
+      # A run that does not write is a dry run printing each branch, title and
+      # body. The fixes start from the default branch's tree, whichever branch
+      # was dispatched.
+      - name: Open or update the fix PRs
+        env:
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git config --local user.name "DaSCH Bot"
+          git config --local user.email "50987250+daschbot@users.noreply.github.com"
+          mode=()
+          if [ "$WRITE" != true ]; then mode=(--dry-run); fi
+          python3 tools/advisories/fix.py \
+            --config tools/advisories/advisories.toml \
+            --findings advisories-findings.json \
+            --outcomes advisories-fix.json \
+            --base "$BASE" "${mode[@]}"
+      # `always()`: a timeout counts as cancelled, and the outcomes written
+      # so far, and the fetched repository cache, are worth keeping.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        with:
+          name: advisories-fix
+          path: advisories-fix.json
+          if-no-files-found: warn
+      - name: Save Bazel repository cache
+        if: ${{ always() && steps.setup.outputs.repo-cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/bazel-repo
+          key: ${{ steps.setup.outputs.repo-cache-key }}
+
+  # Runs after the fix job whatever its result, so a failing fix never leaves
+  # the issue stale, and a PR opened in this run shows in this run's issue.
+  issue:
+    needs: [scan, fix]
     if: ${{ !cancelled() && needs.scan.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -73,21 +143,36 @@ jobs:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: advisories-scan
+      # Absent when the fix job failed before its upload; the body then has
+      # no fix column.
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: ${{ needs.fix.result != 'skipped' }}
+        continue-on-error: true
+        with:
+          name: advisories-fix
+      - name: List the fix PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr list --state all --limit 1000 --json number,title,state,headRefName,isCrossRepository > advisories-fix-prs.json
       - name: Render the issue body
         id: report
-        run: >-
-          python3 tools/advisories/report.py
-          --config tools/advisories/advisories.toml
-          --inventory advisories.cdx.json
-          --findings advisories-findings.json
-          --output advisories-issue.md
-          --summary "$GITHUB_STEP_SUMMARY"
-          --run-url "$RUN_URL"
-          >> "$GITHUB_OUTPUT"
-      # Only a run of the default branch speaks for it (a schedule always is
-      # one); a dispatch from another branch acts as a dry run.
+        run: |
+          set -euo pipefail
+          outcomes=()
+          if [ -f advisories-fix.json ]; then outcomes=(--fix-outcomes advisories-fix.json); fi
+          python3 tools/advisories/report.py \
+            --config tools/advisories/advisories.toml \
+            --inventory advisories.cdx.json \
+            --findings advisories-findings.json \
+            --fix-prs advisories-fix-prs.json "${outcomes[@]}" \
+            --output advisories-issue.md \
+            --summary "$GITHUB_STEP_SUMMARY" \
+            --run-url "$RUN_URL" \
+            >> "$GITHUB_OUTPUT"
+      # Only a run of the default branch speaks for it (`WRITE`); a dispatch
+      # from another branch acts as a dry run.
       - name: Create, update or close the issue
-        if: ${{ github.event_name == 'schedule' || (!inputs.dry_run && github.ref_name == github.event.repository.default_branch) }}
+        if: ${{ env.WRITE == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           LABEL: ${{ steps.report.outputs.label }}
