@@ -157,6 +157,62 @@ class CapTest(unittest.TestCase):
         self.assertLessEqual(len(report.cap(body, "https://run")), report.CAP)
 
 
+def outcome(component, source, status, note, pr=None):
+    return {"component": component, "source": source, "ids": [], "status": status, "note": note, "target": None, "branch": None, "pr": pr}
+
+
+def pr(number, head, state, title="t", fork=False):
+    return {"number": number, "headRefName": head, "state": state, "title": title, "isCrossRepository": fork}
+
+
+class FixTest(unittest.TestCase):
+    def test_each_finding_shows_its_components_fix_outcome(self):
+        outcomes = [
+            outcome("opentelemetry_sdk", "cargo", "opened", "fix PR opened", "https://github.com/o/r/pull/9"),
+            # Same name, other source, listed first: must not attach to the bcr curl.
+            outcome("curl", "cargo", "needs-ignore", "at or past the fix, still flagged; needs an ignore"),
+            outcome("curl", "bcr", "alert-only", "alert only: no fix PR for bcr components"),
+        ]
+        section = report.findings_section(recorded_scan(), outcomes)
+        self.assertIn("| Component | Advisory | Severity | Fixed in | Fix |", section)
+        self.assertIn("| GHSA-w9wp-h8wv-79jx (CVE-2026-48504) | medium | 0.32.1 | fix PR opened (https://github.com/o/r/pull/9) |", section)
+        self.assertIn("| curl 8.3.0 | CVE-2023-38545 | critical | 8.4.0 | alert only: no fix PR for bcr components |", section)
+        self.assertIn("| libc6 2.36-9+deb12u1 | CVE-2023-4911 | high | 2.36-9+deb12u3 | - |", section)
+        self.assertNotIn("needs an ignore", section)
+
+    def test_eol_findings_get_no_outcome(self):
+        outcomes = [outcome("debian", "deb", "alert-only", "alert only: no fix PR for deb components")]
+        rows = [line for line in report.findings_section(recorded_scan(), outcomes).splitlines() if line.startswith("| debian ")]
+        self.assertEqual([r.rsplit(" | ", 1)[1] for r in rows], ["- |"])
+
+    def test_without_outcomes_there_is_no_fix_column(self):
+        self.assertNotIn("| Fix |", report.findings_section(recorded_scan()))
+
+    def test_lists_open_and_declined_fix_prs(self):
+        prs = [
+            pr(1, "advisories/opentelemetry_sdk", "CLOSED", "older decline"),
+            pr(4, "advisories/opentelemetry_sdk", "CLOSED", "latest decline"),
+            pr(5, "advisories/curl", "OPEN", "raise curl"),
+            pr(6, "advisories/curl", "CLOSED", "declined while another is open"),
+            pr(7, "advisories/tokio", "CLOSED", "declined, no longer flagged"),
+            pr(2, "advisories/libc6", "CLOSED", "declined, then fixed"),
+            pr(8, "advisories/libc6", "MERGED", "merged"),
+            pr(9, "feature/x", "OPEN", "not a fix PR"),
+            pr(10, "advisories/curl", "OPEN", "from a fork", fork=True),
+            pr(11, "advisories/debian", "CLOSED", "from a fork", fork=True),
+        ]
+        section = report.fix_prs_section(prs, recorded_scan())
+        self.assertEqual(
+            section,
+            "## Fix PRs\n\n| PR | Title | State |\n|---|---|---|\n| #5 | raise curl | open |\n| #4 | latest decline | closed unmerged; needs an ignore |",
+        )
+
+    def test_no_fix_pr_leaves_the_section_out(self):
+        self.assertEqual(report.fix_prs_section([pr(9, "feature/x", "OPEN")], recorded_scan()), "")
+        self.assertEqual(report.fix_prs_section(None, recorded_scan()), "")
+        self.assertNotIn("## Fix PRs", report.render(recorded_scan(), [], [], TODAY))
+
+
 def git(root, *args, date=None):
     env = {**os.environ, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull}
     if date:
@@ -292,6 +348,16 @@ class MainTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(out, "open=0\nlabel=advisory\n")
         self.assertIn("## Approaching end of life", self.output.read_text())
+
+    def test_reads_the_fix_outcomes_and_prs(self):
+        outcomes, prs = self.dir / "fix.json", self.dir / "prs.json"
+        outcomes.write_text(json.dumps({"outcomes": [outcome("opentelemetry_sdk", "cargo", "dry-run", "dry run: would open a fix PR")]}))
+        prs.write_text(json.dumps([pr(3, "advisories/opentelemetry_sdk", "OPEN", "raise opentelemetry_sdk")]))
+        code, _, _ = self.run_main(self.git_root(), "--fix-outcomes", str(outcomes), "--fix-prs", str(prs))
+        self.assertEqual(code, 0)
+        body = self.output.read_text()
+        self.assertIn("| dry run: would open a fix PR |", body)
+        self.assertIn("| #3 | raise opentelemetry_sdk | open |", body)
 
     def test_a_config_without_issue_label_exits_3(self):
         (self.dir / "advisories.toml").write_text(CONFIG.replace('issue_label = "advisory"\n', ""))

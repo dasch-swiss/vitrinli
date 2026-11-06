@@ -18,6 +18,13 @@ EXIT_FINDINGS = 1
 EXIT_USAGE = 2
 EXIT_ERROR = 3
 
+# Prefix of the branches `fix.py` opens fix PRs from, one per component.
+BRANCH_PREFIX = "advisories/"
+
+
+def branch_name(component: str) -> str:
+    return BRANCH_PREFIX + component
+
 
 class ToolError(Exception):
     """An input the tool cannot read or interpret; `main` maps it to exit 3."""

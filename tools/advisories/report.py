@@ -2,11 +2,15 @@
 """Render the rolling advisory issue body from a scan.
 
 Usage:
-    report.py --config advisories.toml --inventory advisories.cdx.json --findings advisories-findings.json --output body.md [--summary FILE] [--run-url URL] [--root DIR]
+    report.py --config advisories.toml --inventory advisories.cdx.json --findings advisories-findings.json --output body.md [--fix-outcomes FILE] [--fix-prs FILE] [--summary FILE] [--run-url URL] [--root DIR]
 
-The body lists the open findings, the Grype advisory database's build time,
-the ignores expiring within 14 days, the components whose `eol` falls within
-90 days ("Approaching end of life"), and the pin table: every `http_archive`
+The body lists the open findings, each with its component's fix outcome when
+`--fix-outcomes` (what `fix.py` wrote) is given; with `--fix-prs` (`gh pr list
+--state all --json number,title,state,headRefName,isCrossRepository`), every
+open fix PR, and a branch's latest fix PR when it was closed unmerged, the
+branch has no open PR, and its component is still flagged; the Grype advisory database's build time, the
+ignores expiring within 14 days, the components whose `eol` falls within 90
+days ("Approaching end of life"), and the pin table: every `http_archive`
 (its `MODULE.bazel` URL), every component whose version comes from an
 `inputs.version_files` entry (Kakadu's tag), and every GitHub Actions ref, one
 row per repository and ref, each dated by the last commit that changed how
@@ -39,7 +43,7 @@ from pathlib import Path
 
 import inventory
 import scan
-from _model import EXIT_CLEAN, EXIT_ERROR, ToolError
+from _model import BRANCH_PREFIX, EXIT_CLEAN, EXIT_ERROR, ToolError, branch_name
 
 CAP = 60_000
 IGNORE_EXPIRY_DAYS = 14
@@ -137,17 +141,50 @@ def summary_section(doc: dict, today: datetime.date) -> str:
     )
 
 
-def findings_section(doc: dict) -> str:
+def _fix_cell(outcome: dict | None) -> str:
+    if not outcome:
+        return "-"
+    return outcome["note"] + (f" ({outcome['pr']})" if outcome.get("pr") else "")
+
+
+def findings_section(doc: dict, outcomes: list[dict] | None = None) -> str:
+    """The open findings; with `outcomes`, a column for what the fix job did about each one's component."""
+
     def rank(f):
         return (-scan.SEVERITIES.index(f["severity"]), f["component"], f["id"])
 
+    by_component = {(o["component"], o["source"]): o for o in outcomes or []}
     rows = []
     for f in sorted(open_findings(doc), key=rank):
         what = f"{f['component']} ({', '.join(f['packages'])})" if f["packages"] else f"{f['component']} {f['version']}"
         advisory = f["id"] + (f" ({', '.join(f['aliases'])})" if f["aliases"] else "")
-        rows.append([what, advisory, f["severity"], f["fixed"] or "no fix"])
-    body = _table(["Component", "Advisory", "Severity", "Fixed in"], rows) if rows else "No open finding."
+        row = [what, advisory, f["severity"], f["fixed"] or "no fix"]
+        if outcomes is not None:
+            # EOL findings and Actions components get no outcome: fix.py skips them.
+            row.append(_fix_cell(None if f["id"] == "EOL" else by_component.get((f["component"], f["source"]))))
+        rows.append(row)
+    header = ["Component", "Advisory", "Severity", "Fixed in"] + (["Fix"] if outcomes is not None else [])
+    body = _table(header, rows) if rows else "No open finding."
     return "## Findings\n\n" + body
+
+
+def fix_prs_section(prs: list[dict] | None, doc: dict) -> str:
+    """Open fix PRs, and a flagged component's latest fix PR when it was closed unmerged and none is open."""
+    if prs is None:
+        return ""
+    # A fork's branch may carry the same name; only this repository's branches are fix branches.
+    ours = sorted((p for p in prs if p["headRefName"].startswith(BRANCH_PREFIX) and not p["isCrossRepository"]), key=lambda p: p["number"])
+    opened = [p for p in ours if p["state"] == "OPEN"]
+    flagged = {branch_name(f["component"]) for f in open_findings(doc)}
+    latest = {p["headRefName"]: p for p in ours}
+    with_open = {p["headRefName"] for p in opened}
+    # `gh pr list` reports a merged PR as MERGED, so CLOSED is closed unmerged.
+    declined = [p for head, p in latest.items() if p["state"] == "CLOSED" and head in flagged - with_open]
+    rows = [[f"#{p['number']}", p["title"], "open"] for p in opened]
+    rows += [[f"#{p['number']}", p["title"], "closed unmerged; needs an ignore"] for p in sorted(declined, key=lambda p: p["number"])]
+    if not rows:
+        return ""
+    return "## Fix PRs\n\n" + _table(["PR", "Title", "State"], rows)
 
 
 def expiring_section(doc: dict, today: datetime.date) -> str:
@@ -180,8 +217,15 @@ def pin_section(table: list[Pin]) -> str:
     return "## Pins\n\n" + _table(["Component", "Version", "Pin changed"], rows)
 
 
-def render(doc: dict, components: list[dict], table: list[Pin], today: datetime.date) -> str:
-    sections = [summary_section(doc, today), findings_section(doc), expiring_section(doc, today), eol_section(components, today), pin_section(table)]
+def render(doc: dict, components: list[dict], table: list[Pin], today: datetime.date, outcomes: list[dict] | None = None, prs: list[dict] | None = None) -> str:
+    sections = [
+        summary_section(doc, today),
+        findings_section(doc, outcomes),
+        fix_prs_section(prs, doc),
+        expiring_section(doc, today),
+        eol_section(components, today),
+        pin_section(table),
+    ]
     return "\n\n".join(s for s in sections if s) + "\n"
 
 
@@ -203,6 +247,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--inventory", required=True, type=Path, help="CycloneDX inventory from inventory.py")
     parser.add_argument("--findings", required=True, type=Path, help="findings JSON from scan.py")
     parser.add_argument("--output", required=True, type=Path, help="capped issue body to write")
+    parser.add_argument("--fix-outcomes", type=Path, help="outcomes JSON from fix.py")
+    parser.add_argument("--fix-prs", type=Path, help="`gh pr list --state all` JSON with number, title, state, headRefName, isCrossRepository")
     parser.add_argument("--summary", type=Path, help="file to append the whole body to")
     parser.add_argument("--run-url", help="the run whose summary holds the whole body")
     parser.add_argument("--root", default=Path("."), type=Path, help="tree the pins are read from (default: .)")
@@ -212,10 +258,12 @@ def main(argv: list[str] | None = None) -> int:
         config = tomllib.loads(args.config.read_text())
         doc = json.loads(args.findings.read_text())
         components = json.loads(args.inventory.read_text())["components"]
+        outcomes = json.loads(args.fix_outcomes.read_text())["outcomes"] if args.fix_outcomes else None
+        prs = json.loads(args.fix_prs.read_text()) if args.fix_prs else None
         label = config["issue_label"]
         require_full_history(args.root)
         table = pins(config, args.config.parent, args.root, components)
-        body = render(doc, components, table, utc_today())
+        body = render(doc, components, table, utc_today(), outcomes, prs)
         if args.summary:
             with args.summary.open("a") as f:
                 f.write(body)

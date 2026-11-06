@@ -586,6 +586,15 @@ loadtest-decode concs='10,20,40' dur='20' warm='5' id='knora/load_test.jpx':
 bazel-distroless-lock:
     bazel run @bookworm//:lock
 
+# Repin the `@crates` hub: `spec` is a `CARGO_BAZEL_REPIN` value, `<crate>`
+# (cargo update -p) or `<crate>@<locked>=<target>` (--precise; names one of a
+# crate's locked versions). Changes `Cargo.Bazel.lock` and `MODULE.bazel.lock`.
+# The crate extension records `CARGO_BAZEL_REPIN` in `MODULE.bazel.lock`; only
+# the second fetch, without it, records it as unset again.
+bazel-repin-crate spec:
+    CARGO_BAZEL_REPIN="{{spec}}" bazel fetch @crates//:all
+    bazel fetch @crates//:all
+
 # Build the per-arch image and load it into the local Docker daemon as
 # `daschswiss/sipi:latest`. Smoke-test consumes `latest`; CI re-tags
 # with `:v<version>-${arch}` via `bazel-docker-push-${arch}` below.

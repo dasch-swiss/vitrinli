@@ -537,7 +537,7 @@ register_toolchains("@rust_toolchains//:all")
 # and `jsonwebtoken` uses the pure-Rust `rust_crypto` backend (HS256 in the e2e
 # suite; `rust_crypto` also covers RSA/ECDSA via `rsa` + `p256`/`p384` if needed).
 #
-# Repin via:  CARGO_BAZEL_REPIN=1 bazelisk fetch @crates//:all
+# Repin via:  CARGO_BAZEL_REPIN=1 bazel fetch @crates//:all (one crate: `just bazel-repin-crate <spec>`)
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
 # //src/server/rust — the `sipi` server library
