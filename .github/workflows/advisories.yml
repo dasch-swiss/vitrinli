@@ -59,27 +59,31 @@ jobs:
             advisories-findings.json
           if-no-files-found: error
 
-  # One fix PR per fixable component (`tools/advisories/fix.py`), pushed and
+  # One fix PR per fixable component (`tools/advisories/fix.py`): crates, BCR
+  # modules, the base digest, and one for all Debian packages. Pushed and
   # opened with DASCHBOT_PAT: pushes and PRs made with GITHUB_TOKEN start no
-  # CI. Bazel runs only inside `just bazel-repin-crate`; the scanners come
-  # through ADVISORIES_BIN, so PATH, part of every Bazel action key, stays as
-  # `ci-setup` leaves it.
+  # CI. Only a run that writes gets the PAT, so it never reaches another
+  # branch's code; a dry run reads the public PRs with the run's own token.
+  # Bazel runs only inside the `just bazel-*` recipes fix.py calls; the
+  # scanners and crane come through ADVISORIES_BIN, so PATH, part of every
+  # Bazel action key, stays as `ci-setup` leaves it.
   fix:
     needs: [scan]
     runs-on: ubuntu-24.04
-    # Each crate costs two crate_universe splices and a re-scan.
+    # A crate costs two crate_universe splices and a re-scan; a BCR module a
+    # module resolution, the Debian fix a lock regeneration.
     timeout-minutes: 120
     permissions:
       contents: read
-    env:
-      GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}
+      pull-requests: read
     steps:
       # Full history: a fix branch is rebuilt from origin/<default branch> and
-      # its commits are counted over that merge base.
+      # its commits are counted over that merge base. The persisted token is
+      # what fix.py's `git push` uses.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.DASCHBOT_PAT }}
+          token: ${{ env.WRITE == 'true' && secrets.DASCHBOT_PAT || github.token }}
           lfs: false
       - name: CI setup (bazelisk, just, repo cache)
         id: setup
@@ -94,6 +98,7 @@ jobs:
       - name: Open or update the fix PRs
         env:
           BASE: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ env.WRITE == 'true' && secrets.DASCHBOT_PAT || github.token }}
         run: |
           set -euo pipefail
           git config --local user.name "DaSCH Bot"
