@@ -98,9 +98,11 @@ BCR drop-ins: libpng, libjpeg_turbo, libwebp, libdeflate, zlib, bzip2, xz, zstd,
 sqlite3, libmagic, Lua, curl, OpenSSL,
 protobuf. Native `cc_library`: libtiff (codecs re-enabled + JBIG via jbigkit),
 exiv2, lcms2, jansson, jbigkit, libexpat, and Kakadu (requires license).
-Every BCR module, `http_archive`, `git_override` and custom repository rule is
-classified once in `tools/advisories/components.toml`; `just advisories-inventory`
-and the `advisories` PR job fail on one that is not.
+`tools/advisories/components.toml` is the classification of record: every BCR
+module, `http_archive`, `git_override` and custom repository rule appears there
+once, as shipped (with the CPE the advisory scan matches), not shipped or
+without an advisory feed, and `just advisories-inventory` and the `advisories`
+PR job fail on one that is not.
 
 **System Dependencies:** Threads (pthread), iconv (macOS only).
 

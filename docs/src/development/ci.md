@@ -260,7 +260,34 @@ no advisory for the crate left. A fix on a newer line, or an older line's
 locked version that the repin leaves flagged, is alert-only, "needs a major
 bump of" the nearest `crate.spec` dependency; a fixed version at or below the
 locked one, or a repin that changes nothing or clears nothing, is "at or past
-the fix, still flagged; needs an ignore". Every other component is alert-only.
+the fix, still flagged; needs an ignore".
+
+The other mechanical pins follow the same lifecycle and the same "needs an
+ignore" rule:
+
+- **BCR module** (`advisories/<module>`): the lowest non-yanked version in the
+  registry's `metadata.json` at or past the fixed version, in Bazel's module
+  version order (`8.21.0` < `8.21.0.bcr.1` < `8.22.0`). The `bazel_dep` and a
+  `single_version_override` holding a `version` (openssl pins both) are raised,
+  `just bazel-lock-update` refreshes `MODULE.bazel.lock`, and a Grype re-scan
+  of the module by its component map CPEs must clear. A module held by an
+  override with `patches` or `patch_cmds`, reached only transitively, or whose
+  fix has no registry version yet is alert-only.
+- **Base image** (`advisories/<image>`): the current index digest of the tag
+  `[base_image] tracks` names, from `crane digest`, written into the `oci.pull`
+  with the tag and date as the line's comment, kept when a Grype re-scan of the
+  new digest on every platform clears its advisories that have a released
+  fix.
+- **Debian packages** (one PR for all of them, `advisories/debian`): the
+  snapshot timestamp of `bazel/distroless/bookworm.yaml` moves to the scan
+  date, `just bazel-distroless-lock` regenerates the lock, and a Grype re-scan
+  of the new lock must clear the advisories with a released fix. Its version
+  is the date, new every day, so an open Debian PR is rebuilt only when its
+  advisory set changes; a package with no released fix stays alert-only.
+
+`http_archive` libraries, FFmpeg, GitHub Actions, `EOL` findings and every
+advisory with no released fix stay alert-only (ADR-0029's alert-only
+classes).
 An open fix PR is rebuilt from the default branch and force-pushed only when
 its advisory set or version changes, never for being behind; one whose branch
 holds a maintainer's extra commit is left alone. A fix branch without an open
@@ -270,16 +297,18 @@ forks never count. A component whose fix fails is recorded and the others still
 run; the `fix` job then fails, and the issue job still runs. The issue shows
 each finding's fix outcome and the open and declined fix PRs. Pushes and PRs go
 through `DASCHBOT_PAT` so their CI runs; a `dry_run` dispatch, or one from
-another branch, prints each branch, title and body instead. Either way the
-fixes start from the default branch's tree, so a dispatch from a branch does
-not test that branch's fix tooling.
+another branch, prints each branch, title and body instead, and runs with the
+workflow's own token: the PAT reaches only a run of the default branch. Either
+way the fixes start from the default branch's tree, so a dispatch from a branch
+does not test that branch's fix tooling.
 
 **Running it locally.** Inside `nix develop`, `just advisories-scan` scans the
 working tree and `just advisories-scan-diff origin/main` reproduces the PR
 job. Both need network (the Grype database, about 200 MB on first use, the OSV
 API, `git ls-remote` for the Actions refs, the base image's registry).
 `just advisories-test` runs the offline tests. Set `ADVISORIES_BIN` to a
-directory holding `osv-scanner` and `grype` to use other binaries than PATH's.
+directory holding `osv-scanner`, `grype` and `crane` to use other binaries
+than PATH's.
 
 **Classifying a component.** Every BCR module, `http_archive`, `git_override`
 and custom repository rule has exactly one `[[component]]` in
@@ -330,8 +359,8 @@ adds an end-of-life component therefore fails.
 exact name and version against RustSec and GHSA. A clean C/C++ library result is
 weaker: those match only by CPE, whose NVD ranges are noisy and ignore distro
 backports, so expect false positives (triaged with an ignore) and accept that a
-CPE miss produces no finding at all. The quarterly review below stays the check
-for them.
+CPE miss produces no finding at all. The pin table below stays the check for
+them.
 
 **GitHub Actions.** Every `uses:` ref is inventoried, a SHA resolved to the
 release tag that points at it; a branch ref or a SHA no tag points at is listed
@@ -342,52 +371,32 @@ which is every action here.
 
 Dependabot opens no version-update PRs; version updates are by hand: GitHub
 Actions, the Nix flake inputs and the BCR `bazel_dep`s. The only automated
-bumps are the crate fix PRs above, and only past an advisory. The image
-layers need no scan of their own: the Debian packages and the base digest are
-in the inventory.
+bumps are the fix PRs above, and only past an advisory. The image layers need
+no scan of their own: the Debian packages and the base digest are in the
+inventory.
 
-### Quarterly native-pin review
+### Native pins: the pin table
 
-Manually check each project's release page against the pinned version in
-`MODULE.bazel` and CVE feeds (NVD, GitHub Advisory Database) for the pinned
-version. Bump via a normal version-pin PR (update `sha256`/`strip_prefix`/`url`
-or the BCR module version) when a fix is available.
+The `http_archive` libraries, FFmpeg and Kakadu get no fix PR, and a CPE miss
+on them raises nothing, so the rolling issue's **Pins** table is their human
+check: every `http_archive` (FFmpeg's two archives included), Kakadu and each
+Actions pin, with the pinned version and the date its pin last changed.
+Kakadu is `no_feed`: it has no public advisory feed, and its version and date
+come from the release `tag` in `bazel/kakadu_extension.bzl`.
 
-**Native `cc_library` (`http_archive`, hand-pinned — see
-[ADR-0015](../../adr/0015-native-cc_library-over-foreign_cc.md)):**
+When a finding lands on one of them, or the table shows a pin gone stale:
 
-| Dependency | Pinned via | Releases |
-|---|---|---|
-| libtiff | `tiff` `http_archive` | <https://github.com/libsdl-org/libtiff/releases> |
-| exiv2 | `exiv2` `http_archive` | <https://github.com/Exiv2/exiv2/releases> |
-| lcms2 | `lcms2` `http_archive` | <https://github.com/mm2/Little-CMS/releases> |
-| jansson | `jansson` `http_archive` | <https://github.com/akheron/jansson/releases> |
-| jbigkit | `jbigkit` `http_archive` | no GitHub releases; upstream page: <https://www.cl.cam.ac.uk/~mgk25/jbigkit/> |
-| mimalloc | `mimalloc` `http_archive` | <https://github.com/microsoft/mimalloc/releases> |
-| tracy | `tracy` `http_archive` (dev-only, `--config=tracy`-gated) | <https://github.com/wolfpld/tracy/releases> |
-| Kakadu | `kakadu_extension` (proprietary, license-gated) | <https://github.com/dasch-swiss/dsp-ci-assets/releases> (private, org-restricted) |
+1. Check the project's release notes and the advisory for the fixed version.
+2. Bump it in a normal PR, re-deriving the native build as
+   [ADR-0015](../../adr/0015-native-cc_library-over-foreign_cc.md) requires
+   (`url`, `sha256`, `strip_prefix`, and the `defines` and patches the new
+   release needs; exiv2 carries a patch).
+3. If the finding does not apply (a CPE range that misses a backport, an
+   unreachable code path), add an `[[ignore]]` with its reason and expiry
+   instead.
 
-**BCR `bazel_dep` drop-ins** (image codec / parsing surface — see
-CLAUDE.md's Dependencies table for the full BCR list; excludes pure
-build-tooling deps like `rules_cc`/`rules_rust`/`rules_python`):
-
-| Dependency | Releases |
-|---|---|
-| libpng | <https://github.com/pnggroup/libpng/releases> |
-| libjpeg_turbo | <https://github.com/libjpeg-turbo/libjpeg-turbo/releases> |
-| libwebp | <https://github.com/webmproject/libwebp/releases> |
-| libdeflate | <https://github.com/ebiggers/libdeflate/releases> |
-| zlib | <https://github.com/madler/zlib/releases> |
-| bzip2 | no GitHub releases; upstream page: <https://sourceware.org/bzip2/> |
-| xz | <https://github.com/tukaani-project/xz/releases> |
-| zstd | <https://github.com/facebook/zstd/releases> |
-| sqlite3 | no GitHub release notes; changelog: <https://www.sqlite.org/changes.html> |
-| libexpat | <https://github.com/libexpat/libexpat/releases> |
-| libmagic | <https://github.com/file/file/releases> |
-| Lua | no GitHub releases; upstream page: <https://www.lua.org/versions.html> |
-| curl | <https://github.com/curl/curl/releases> |
-| OpenSSL | <https://github.com/openssl/openssl/releases> |
-| protobuf | <https://github.com/protocolbuffers/protobuf/releases> |
+The PR's `advisories` job then fails if the bump introduces an advisory, and
+the daily scan drops the finding once it is merged.
 
 ## Tag release CI/CD
 

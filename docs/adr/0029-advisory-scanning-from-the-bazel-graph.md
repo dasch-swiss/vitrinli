@@ -21,11 +21,9 @@ PR job (`.github/workflows/ci.yml`) runs `tools/advisories/diff.py`
 against the last release whose image reached Docker Hub, before the image
 push, and uploads the release SBOM. The daily `.github/workflows/advisories.yml`
 runs the full scan and keeps its findings in one rolling issue, rendered by
-`tools/advisories/report.py`, and opens the crate fix PRs through
+`tools/advisories/report.py`, and opens the fix PRs for crates, BCR
+modules, the base digest and the Debian snapshot through
 `tools/advisories/fix.py`.
-
-Not yet in code: the fix PRs for BCR modules, the base digest and the Debian
-snapshot date.
 
 ## Context
 
@@ -136,8 +134,8 @@ These stay alert-only, listed in the daily issue:
 
 - `http_archive` libraries and FFmpeg: ADR-0015 makes every native bump a
   re-derivation of `defines`, and exiv2 carries a patch.
-- A BCR module held by a `single_version_override` with `patches`, for the
-  same reason.
+- A BCR module held by a `single_version_override` with `patches` or
+  `patch_cmds`, for the same reason.
 - GitHub Actions: a SHA bump changes code that runs with the workflows'
   secrets, so a person reviews it.
 - A crate that only a semver-major bump of a dependent can fix.
@@ -199,8 +197,9 @@ inventory does not.
 
 ## Consequences
 
-- Two scanner pins move together: one composite action installs both, so
-  the PR job, the release gate and the daily job run the same versions.
+- The scanner pins, and crane's for the base-image fix, move together: one
+  composite action installs them, so the PR job, the release gate and the
+  daily scan and fix jobs run the same versions.
 - Grype needs its database (about 200 MB to download, 3.4 GB unpacked, under 120h old) in every job;
   OSV-Scanner needs network to the OSV API.
 - A deb lock entry without a `pool/` URL stops the inventory (exit 3).
