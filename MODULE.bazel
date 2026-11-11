@@ -629,6 +629,11 @@ crate.spec(package = "rustls-webpki", version = "0.103.16", default_features = F
 crate.spec(package = "webpki-roots", version = "1.0.10", default_features = False)
 crate.spec(package = "webpki-root-certs", version = "1.0.10", default_features = False)
 
+# rustix: RUSTSEC-2026-0486, xattr functions mark unwritten bytes as initialized
+# when given a zero-length buffer, fixed in 1.1.6. Reaches the graph via
+# `tempfile` and `polling`.
+crate.spec(package = "rustix", version = "1.1.6", default_features = False)
+
 # `cargo_lockfile` materializes a Cargo-format lock alongside the Bazel-native
 # resolution — cargo-audit/OSV-Scanner read Cargo.lock syntax, not
 # MODULE.bazel.lock's JSON. Repin with:
