@@ -20,6 +20,7 @@ nav:
   - Building with Bazel: development/bazel.md
   - Nix dev shell: development/nix.md
   - CI and Release: development/ci.md
+  - Remote Build Execution: development/rbe.md
   - RBE Write Pressure: development/rbe-write-pressure.md
   - Developing: development/developing.md
   - Error Model: development/error-model.md
@@ -91,6 +92,7 @@ plugins:
           - development/bazel.md: "Bazel build system: MODULE.bazel, BUILD.bazel, common commands, --config flags, query"
           - development/nix.md: "Nix dev shell: setup, what's on PATH, direnv"
           - development/ci.md: "CI and release pipeline guide"
+          - development/rbe.md: "Remote build execution: NativeLink backend, cross-compile pattern, local use from macOS"
           - development/developing.md: "Development guide"
           - development/error-model.md: "Error model: SipiValueError, the ErrorCode/policy table, and the three seam mappings"
           - development/downstream-dependencies.md: "Runtime packages and downstream consumers"

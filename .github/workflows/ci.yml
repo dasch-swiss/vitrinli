@@ -175,8 +175,9 @@ jobs:
       # REMOTEBUILD_*) outside the checkout and emits the Bazel flag string
       # via its `flags` output. Compiles fan out to the x86_64 worker — cross-
       # compiling the arm64/darwin legs — while tests run on the native
-      # runner (--strategy=TestRunner=local). A down backend degrades to a
-      # local build (--remote_local_fallback, the .bazelrc default). Fork PRs
+      # runner (--config=rbe-cross). On the amd64 leg a down backend degrades
+      # to a local build (--remote_local_fallback, the .bazelrc default); cross
+      # legs turn the fallback off. Fork PRs
       # get empty flags (no secrets) and build cold.
       - name: Build + run all tests
         env:
