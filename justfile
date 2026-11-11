@@ -51,8 +51,8 @@ default:
 bazel-build *FLAGS='':
     bazel build --stamp //src/cli:sipi {{FLAGS}}
 
-# Build the Rust HTTP shell (strangler-fig rewrite). Additive — the C++ server
-# still owns the production socket until the cutover; this is for local testing.
+# Build the production `sipi` binary: the Rust HTTP shell plus the offline
+# verbs. `bazel-build` builds the C++ `//src/cli:sipi` (offline verbs only).
 bazel-build-server *FLAGS='':
     bazel build --stamp //src/cli/rust:sipi {{FLAGS}}
 

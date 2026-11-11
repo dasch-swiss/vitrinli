@@ -1,4 +1,4 @@
-"""src/ffi — the narrow C FFI seam (strangler-fig; ADR-0013).
+"""src/ffi — the narrow C FFI seam between the Rust shell and the C++ engine (ADR-0013, ADR-0020).
 
 `sipi_ffi.h` is the durable `extern "C"` contract the Rust shell drives the C++
 image engine through; the response is streamed through `SipiResponse`
