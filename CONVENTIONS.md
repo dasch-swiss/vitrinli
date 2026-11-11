@@ -43,6 +43,11 @@ trivial compiler flags, specialized toolchain), that configuration
 belongs in `.bazelrc` (a `--config=<name>` block) or a new Bazel target
 in `MODULE.bazel` / `BUILD.bazel`, not an imperative shell recipe.
 
+Remote build execution follows the same split. CI gets its RBE connection
+flags from the `bazel-rbe` composite action. `--config=rbe-darwin` is a
+local-only opt-in that CI never uses. The cross-leg flags both share live
+in one place, `.bazelrc` `build:rbe-cross`.
+
 ## Build Completeness Invariant
 
 Every build target must succeed on every supported platform:
