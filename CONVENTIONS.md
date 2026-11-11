@@ -90,7 +90,7 @@ The C++ code mixes styles: legacy classes use `camelCase` methods (`getNx()`, `p
 - **New member in an existing class or file:** match the style already used in that class or file, even where it differs from the style guide. Two styles inside one class are worse than one legacy style.
 - **Do not rename existing identifiers** as part of a behavior change. A rename is its own `refactor` commit that updates every caller (Scope Discipline: no shims).
 - **Rust:** standard Rust naming (`snake_case` items, `PascalCase` types, `SCREAMING_SNAKE_CASE` constants); `rustc` and clippy enforce it.
-- **Domain words** come from [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md): use the canonical term and never an alias it lists as *avoid* (for example *Cache key*, not "canonical URL", in cache code).
+- **Domain words** come from [`CONTEXT.md`](CONTEXT.md): use the canonical term and never an alias on its `_Avoid_` lines (for example *Cache key*, not "canonical URL", in cache code).
 
 | Entity | Existing convention | Example |
 |---|---|---|
@@ -167,7 +167,7 @@ Beyond modules, commits use **test-layer scopes** (`e2e`, `approval`, for a
 test layer's own harness or fixtures) and **cross-cutting scopes** (`deps`,
 `bazel`, `ci`, `nix`, `docker`, `docs`). `docs` is for the agent-context /
 domain documentation that is not tied to one module — the root `CLAUDE.md` /
-`CONVENTIONS.md` / `CONTEXT.md` / `UBIQUITOUS_LANGUAGE.md` and the ADRs; a doc
+`CONVENTIONS.md` / `CONTEXT.md` and the ADRs; a doc
 change scoped to one module still takes that module's scope. A test *about* a concern takes that concern's
 scope — `test(observability)`, not `test(e2e)` — since the `test` type already
 says it is a test. If none of the enumerated scopes genuinely fits a change,
@@ -425,7 +425,7 @@ C++ formatting follows `.clang-format`; no CI gate checks it, so format the line
 ## Where to Go for Depth
 
 - Review checklist: [`REVIEW.md`](REVIEW.md); reviewer process: [`docs/src/development/reviewer-guidelines.md`](docs/src/development/reviewer-guidelines.md).
-- Domain vocabulary: [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md); bounded context: [`CONTEXT.md`](CONTEXT.md); topology and blast radius: [`ARCH-MAP.md`](ARCH-MAP.md); decisions: [`docs/adr/`](docs/adr/).
+- Domain vocabulary and bounded context: [`CONTEXT.md`](CONTEXT.md); topology and blast radius: [`ARCH-MAP.md`](ARCH-MAP.md); decisions: [`docs/adr/`](docs/adr/).
 - C++ style: [`docs/src/development/cpp-style-guide.md`](docs/src/development/cpp-style-guide.md); error model: [`docs/src/development/error-model.md`](docs/src/development/error-model.md).
 - Build: [`docs/src/development/building.md`](docs/src/development/building.md), [`docs/src/development/bazel.md`](docs/src/development/bazel.md), [`docs/src/development/rbe.md`](docs/src/development/rbe.md).
 - Testing: [`docs/src/development/testing-strategy.md`](docs/src/development/testing-strategy.md), [`docs/src/development/developing.md`](docs/src/development/developing.md), [`docs/src/development/fuzzing.md`](docs/src/development/fuzzing.md).

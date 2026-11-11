@@ -16,7 +16,7 @@
 //!
 //! Vocabulary is **admission** throughout: the pool is `Admission`, a request's
 //! partition is an [`AdmissionKind`] (`Tile` or `Full`), the mode is an
-//! [`AdmissionMode`]. See `UBIQUITOUS_LANGUAGE.md` (Throttling) and
+//! [`AdmissionMode`]. See `CONTEXT.md` (Throttling) and
 //! `docs/adr/0022-two-lane-admission-control.md`.
 
 use std::fmt;

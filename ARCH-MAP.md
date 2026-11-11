@@ -7,8 +7,8 @@ date: 2026-11-11
 # ARCH-MAP.md — Vitrinli
 
 Pull-on-demand architecture map. Not auto-loaded; open it for blast-radius and
-boundary questions. Vocabulary lives in [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md);
-the bounded-context framing in [`CONTEXT.md`](CONTEXT.md); the module-scope table
+boundary questions. Vocabulary and the bounded-context framing live in
+[`CONTEXT.md`](CONTEXT.md); the module-scope table
 this map lifts in [`CONVENTIONS.md`](CONVENTIONS.md).
 
 ## Overview
@@ -82,7 +82,7 @@ image formats, whose registry fan-out is documented, not mechanized.
 - **Purpose:** File-based LRU of generated representations, keyed by a SHA-256 digest of the *Cache key*, with dual-limit eviction (total size **and** file count) and crash recovery. The on-disk index is fronted by a versioned header; a magic/version/record-size mismatch means "start empty" (ADR-0025).
 - **Key entities:** `Sipi::SipiCache`, `SipiCache::check`/`add`/`purge`/`deblock`, `FileCacheRecord` (on-disk fixed-width; `cache_key` is the SHA-256 hex digest of the Cache key, `source_size` is the freshness gate), `CacheRecord`, `CacheIndexHeader` (magic / `kCacheIndexVersion` / record_size), `sha256_hex`, `subtractClamped` (underflow-guarded byte accounting)
 - **Public interface:** `SipiCache` (via `//src/cache`); the FFI runtime owns one instance.
-- **Local-context kit:** `src/cache/BUILD.bazel`, `src/cache/cpp/SipiCache.h`, `src/cache/cpp/SipiCache.cpp`, `src/ffi/cpp/init.cpp` (constructs it), `src/ffi/cpp/serve_image.cpp` (check/add + the `O_NOFOLLOW` cache-read), `docs/adr/0025-cache-index-header.md`, `UBIQUITOUS_LANGUAGE.md` (Cache / Cache key / Cache pin)
+- **Local-context kit:** `src/cache/BUILD.bazel`, `src/cache/cpp/SipiCache.h`, `src/cache/cpp/SipiCache.cpp`, `src/ffi/cpp/init.cpp` (constructs it), `src/ffi/cpp/serve_image.cpp` (check/add + the `O_NOFOLLOW` cache-read), `docs/adr/0025-cache-index-header.md`, `CONTEXT.md` (Cache / Cache key / Cache pin)
 - **Depends on:** error, logging, observability; openssl (SHA-256 keying)
 - **Used by:** ffi (`init.cpp` owns it, `serve_image.cpp` uses it)
 - **Boundary rules:**
@@ -90,7 +90,7 @@ image formats, whose registry fan-out is documented, not mechanized.
   - The on-disk index is fronted by a fixed `CacheIndexHeader` (magic + version + `sizeof(FileCacheRecord)`); any mismatch → start empty and log once, so a layout change to `FileCacheRecord` MUST bump `kCacheIndexVersion` (ADR-0025). *Enforcement: `structure`* (the load-time header check refuses a mismatched index) + `docs-only` (the version-bump obligation).
   - Cache-hit file reads open with `O_NOFOLLOW` and reject non-regular files (`serve_image.cpp` `full_file_body`), so a symlink planted in the cache dir plus a forged record cannot read arbitrary files (ADR-0025). *Enforcement: `structure`* (the open flag + `S_ISREG` check).
 - **Durable state:** in-memory `cachetable` (keyed by SHA-256 hex) + `blocked_files` + `cache_used_bytes`/`nfiles` (mutex-guarded; byte accounting underflow-clamped via `subtractClamped`); on-disk `.sipicache` index behind the versioned header (rewritten on destruction; version/magic/record-size mismatch → start empty + log once). Single owner = the FFI runtime (`std::unique_ptr`, constructed in `init.cpp`).
-- **Fingerprint:** `bea93e12ba18`
+- **Fingerprint:** `22e58c9f4d7e`
 
 ### throttling
 
@@ -102,7 +102,7 @@ engine-side memory budget under one component. Supersedes the former
 - **Purpose:** Vitrinli's load-driven request-rejection (Throttling). Three sub-policies: **Admission** (the two-partition thread pool — tile floor + full hard cap, pre-dispatch), the **Decode memory budget** (the full partition's decode-RAM cap, post-cache, 503/413 under advanced mode), and the **Decode watchdog** (a per-decode wall-clock deadline, `EngineContext::decode_timeout_ms` default 120000ms; on timeout the wedged worker is detached and counted in the `wedged_threads` gauge — the DEV-7080 unpatchable-Kakadu-hang availability guard, enacted at the `decode_guard.cpp` acquire site via `run_with_deadline`/`run_guarded_decode`).
 - **Key entities:** Rust `admission::{Admission, AdmissionKind, AdmissionMode, AdmissionConfig, AdmissionSnapshot, Permit, default_pool_size}` (`//src/throttling/rust:admission`); C++ `Sipi::SipiMemoryBudget` + `MemoryBudgetGuard` + `enum class AdmissionMode { BASIC, ADVANCED }` + `Sipi::estimate_peak_memory` (`//src/throttling/cpp:memory_budget`).
 - **Public interface:** `Admission` (owned by `server` `AppState`; `classify`/`acquire`/`snapshot`); `SipiMemoryBudget` + `MemoryBudgetGuard` (via `//src/throttling/cpp:memory_budget`).
-- **Local-context kit:** `src/throttling/rust/lib.rs`, `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`, `src/throttling/cpp/SipiPeakMemory.h`, `src/ffi/cpp/decode_guard.{h,cpp}` (the single acquire site: `acquire_full_lane_budget` + `run_guarded_decode`, shared by both decode entry points), `src/ffi/cpp/serve_image.cpp` and `src/ffi/cpp/image_handle.cpp` (the two callers), `src/ffi/cpp/init.cpp` (resolves the config), `src/ffi/cpp/engine_context.h` (`decode_timeout_ms` and the other budget defaults; the offline CLI verbs carry their own `kDecodeTimeoutMs` in `src/cli/cpp/commands/decode_deadline.h`), `src/server/rust/src/routes.rs` (`AppState`, classify/acquire call sites), `UBIQUITOUS_LANGUAGE.md` (Throttling), `docs/adr/0022-two-lane-admission-control.md`.
+- **Local-context kit:** `src/throttling/rust/lib.rs`, `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`, `src/throttling/cpp/SipiPeakMemory.h`, `src/ffi/cpp/decode_guard.{h,cpp}` (the single acquire site: `acquire_full_lane_budget` + `run_guarded_decode`, shared by both decode entry points), `src/ffi/cpp/serve_image.cpp` and `src/ffi/cpp/image_handle.cpp` (the two callers), `src/ffi/cpp/init.cpp` (resolves the config), `src/ffi/cpp/engine_context.h` (`decode_timeout_ms` and the other budget defaults; the offline CLI verbs carry their own `kDecodeTimeoutMs` in `src/cli/cpp/commands/decode_deadline.h`), `src/server/rust/src/routes.rs` (`AppState`, classify/acquire call sites), `CONTEXT.md` (Throttling), `docs/adr/0022-two-lane-admission-control.md`.
 - **Depends on:** admission (Rust) → `tokio` + `//src/iiifparser/rust:iiif_parser` only (FFI-free; no `//src/ffi`, no C++ engine — DUNE-002). memory_budget (C++) → nothing internal (decoupled from observability by design; the acquire site re-publishes gauges).
 - **Used by:** `server` (`AppState` owns the pool; `routes.rs` classify/acquire; `metrics.rs` reads the snapshot); ffi (`init.cpp` constructs the budget; `decode_guard.cpp` acquires for both `serve_image.cpp` and `image_handle.cpp`'s `sipi_image_new`).
 - **Boundary rules:**
@@ -111,7 +111,7 @@ engine-side memory budget under one component. Supersedes the former
   - The shell Semaphore pool (pre-dispatch) and the engine memory budget (post-cache) are two distinct admission layers. *Enforcement: `docs-only`*.
   - `admission_mode`/`tiles_memory_ratio`/`large_decode_threshold_bytes`/`memory_limit` are resolved engine-side and read back over the seam (single authority, DUNE-003). *Enforcement: `docs-only`*.
 - **Durable state:** admission — `Arc<Semaphore>` global + full sub-pool, per-partition `AtomicUsize`/`AtomicU64` wait/shed counters (single writer). memory_budget — `std::atomic<size_t> _used` (CAS-updated). No persistence.
-- **Fingerprint:** `69e3a1231b5c`
+- **Fingerprint:** `01ceedbf78c6`
 
 ### format_handlers
 
@@ -128,7 +128,7 @@ engine-side memory budget under one component. Supersedes the former
   - The JPEG writer owns the one-segment fit policy: a metadata block that `Exif::exifBytes(limit)` or `Xmp::split_extended` cannot fit is left out with a `log_warn` naming block, size and reason, and the write succeeds; those functions only report `kWriteFailed`. *Enforcement: `static-analysis`* (`formats_test` `JpegMetadataSegments.*LeftOutWithAWarning`).
   - Adding a format touches a shared registry + dispatch fan-out (~4 sites across 3 files, listed by `tools/format-handlers-fanout.sh`). *Enforcement: `docs-only`* (DUNE-005 deferred a descriptor table until a real 5th format; ADR-0006 is the prior art to check first).
 - **Durable state:** `SipiImage::io` (single writer here); no runtime state.
-- **Fingerprint:** `bab450d838de`
+- **Fingerprint:** `083836c0785d`
 
 ### iiifparser
 
@@ -231,7 +231,7 @@ engine-side memory budget under one component. Supersedes the former
   - No C++ exception may cross the boundary — every `sipi_*` wraps in a catch-all (`sipi_guard`). *Enforcement: `review`*.
   - The C ABI is hand-mirrored on the Rust side in **two disjoint** files, partitioned by consumer: `src/server/rust/src/ffi.rs` (serve entries + config getters) and `src/scripting/rust/engine_ffi.rs` (the `sipi_image_*` handle family the Lua bindings call). No `sipi_*` function is declared in both. As with every hand-mirrored `extern "C"` fn decl here, the function *signatures* carry no mechanical guard against `sipi_ffi.h` (only the `#[repr(C)]` struct *layouts* are guarded, above), so a C++ signature change must be mirrored by hand in whichever file owns that function. *Enforcement: `docs-only`*.
 - **Durable state:** `EngineContext` (file-static `g_engine`, single sink `set_engine_context`, sole installer `sipi_init`).
-- **Fingerprint:** `59487318f54a`
+- **Fingerprint:** `1ebedd8dc7e1`
 
 ### cli
 
@@ -279,7 +279,7 @@ Files and rules that span components rather than living in one:
 - **The FFI seam** (`src/ffi/cpp/sipi_ffi.h` ↔ `src/server/rust/src/ffi.rs`) is the single contract between the shell and the engine; its layout is locked on both sides (see the `ffi` and `server` entries). A change to any `#[repr(C)]` struct is a two-file edit by construction.
 - **The metrics bridge** flows `observability::Metrics` (engine) → `SipiMetricsSnapshot` (`src/ffi/cpp/metrics_snapshot.h`) → `server/rust/src/metrics.rs` → OTLP. The `metrics_registry_test` seam tripwire is the mechanical guard that a new counter is a conscious bridge-or-not decision.
 - **The Throttling gate** (`src/ffi/cpp/serve_image.cpp`, via `decode_guard.cpp`'s `acquire_full_lane_budget`) is the one post-cache point where the engine-side memory budget fires (ADR-0008); the shell's two-lane `Admission` pool is a separate, earlier (pre-dispatch) admission layer (`server/rust/routes.rs`, `//src/throttling/rust:admission`). See the `throttling` component and ADR-0022.
-- **Ubiquitous language** — identifiers/comments follow `UBIQUITOUS_LANGUAGE.md`; the reviewer checklist (`docs/src/development/reviewer-guidelines.md` § Ubiquitous Language) and the `CONVENTIONS.md` § Production surface rule are the guards (convention-only — no mechanical gate).
+- **Ubiquitous language** — identifiers/comments follow `CONTEXT.md`; the reviewer checklist (`docs/src/development/reviewer-guidelines.md` § Ubiquitous Language) and the `CONVENTIONS.md` § Production surface rule are the guards (convention-only — no mechanical gate).
 
 ## Support areas (completeness coverage)
 
@@ -287,7 +287,7 @@ These carry no component boundary rules but exist so every tracked file maps som
 
 - **Tests** — `:(glob)test/**` (unit under `test/unit/**` — shared fixture generators only (`test/unit/fixtures/`); every per-module unit-test suite is co-located under its own package (ADR-0003) — snapshot regression under `test/approval/**`, Rust reqwest e2e under `test/e2e/**`, fixtures under `test/_test_data/**`). Every unit test links its own module's narrow Bazel target; `//src:sipi_lib` has exactly one test consumer, `//test/approval`'s snapshot-regression binary.
 - **Build & tooling** — `:(glob)MODULE.bazel`, `:(glob)MODULE.bazel.lock`, `:(glob)Cargo.Bazel.lock`, `:(glob).bazelrc` (absent = tracked via workflow), `:(glob)justfile`, `:(glob)bazel/**`, `:(glob)tools/**`, `:(glob)platforms/**`, `:(glob).github/**`, `:(glob)flake.nix`, `:(glob)flake.lock`, `:(glob)rustfmt.toml`, `:(glob)codecov.yml`, `:(glob)version.txt`, `:(glob)osv-scanner.toml`, `:(glob)BUILD.bazel` (root), `:(glob).bazelignore`, `:(glob).bazelversion`, `:(glob).clang-format`, `:(glob).clang-tidy`, `:(glob).clangd` (reads the `compile_commands.json` that `just compile-commands` writes), `:(glob).clang_complete`, `:(glob).cmake-format.yaml`, `:(glob).commitlintrc.yml`, `:(glob).editorconfig`, `:(glob)eng.yaml`, `:(glob).env.example`, `:(glob).envrc`, `:(glob).git-blame-ignore-revs`, `:(glob).gitattributes`, `:(glob).gitignore`, `:(glob).grenrc`, `:(glob).lsan_suppressions.txt`. CI gates: `just bazel-rustfmt-check`, `just bazel-clippy-check`, `just commit-lint`, the approval + e2e + unit suites.
-- **Docs & agent-context** — `:(glob)docs/**`, `:(glob)*.md` (CLAUDE.md, CONTEXT.md, UBIQUITOUS_LANGUAGE.md, CONVENTIONS.md, REVIEW.md, RELEASING.md, README.md, DEPRECATIONS.md, ARCH-MAP.md), ADRs under `docs/adr/**`; `:(glob)LICENSE`, `:(glob)diagrams/**` (the excalidraw/pdf/png architecture diagrams).
+- **Docs & agent-context** — `:(glob)docs/**`, `:(glob)*.md` (CLAUDE.md, CONTEXT.md, CONVENTIONS.md, REVIEW.md, RELEASING.md, README.md, DEPRECATIONS.md, ARCH-MAP.md), ADRs under `docs/adr/**`; `:(glob)LICENSE`, `:(glob)diagrams/**` (the excalidraw/pdf/png architecture diagrams).
 - **Runtime assets** — `:(glob)include/**` (generated headers, ICC profiles, favicon), `:(glob)server/**`, `:(glob)config/**`, `:(glob)scripts/**`, `:(glob)certificate/**`, `:(glob)db/**`, `:(glob)openseadragon.min.js.map`, `:(glob)test_tifs.sh`, `:(glob).claude/**`.
 
 ## Conventions
@@ -297,7 +297,7 @@ These carry no component boundary rules but exist so every tracked file maps som
 - **Top-level dependency direction (one-way):** `cli → server → //src/ffi:sipi_ffi → //src/image → {metadata, iiifparser, format_handlers:output_sink, util, logging, observability}`; `format_handlers` and `image_processing` sit beside/below the engine and depend on `//src/image`, never the reverse; `//src/scripting/rust` is a shell-side Rust crate over the seam. **The engine never links the shell or the seam.** *Enforcement: `structure`* (Bazel dep graph; a back-edge fails analysis).
 - **New work is added by dropping a file / adding a route, not editing a central switch** — a new offline verb is one file in `src/cli/cpp/commands/`; a new axum route is a registration in `server/rust/lib.rs::app()`; a new engine module is a new `cc_library` package. *Enforcement: `docs-only`.*
   - **Exception (banned-construct):** new image format → editing the `SipiImage::io` registry + `read`/`read_shape` switch (~4 shared sites, `tools/format-handlers-fanout.sh`) → *why it couples:* the dispatch is centralized, so a 5th format is a multi-file shared edit → *alternative:* a descriptor-registration table (deferred until a real 5th format; ADR-0006) → *enforcement:* `docs-only`.
-  - **Exception (banned-construct):** new *Permission* type → a hand-mirrored vocabulary across three components: the `sipi_ffi.h` enum + its `static_assert`s, `ffi.rs`'s enum + `const _` value guard, `scripting`'s `entry.rs::valid_permission`, `server`'s `routes.rs::{PERMISSIONS, permission_from_str, permission_str}` and its three dispatch sites (`dispatch_engine`'s auth gate, `file_access`, `restricted_dims`), plus the prose that enumerates the vocabulary (`UBIQUITOUS_LANGUAGE.md`, `CONTEXT.md`, `docs/src/lua/index.md`) → *why it couples:* the enum crosses the seam and is gated on both sides of it, so a locally-obvious edit to one gate is globally wrong → *alternative:* none; the vocabulary is a published contract → *enforcement:* `structure` (`permission_str`'s exhaustive match + the seam value asserts) + `static-analysis` (the both-gates round-trip test) + `docs-only` (the prose).
+  - **Exception (banned-construct):** new *Permission* type → a hand-mirrored vocabulary across three components: the `sipi_ffi.h` enum + its `static_assert`s, `ffi.rs`'s enum + `const _` value guard, `scripting`'s `entry.rs::valid_permission`, `server`'s `routes.rs::{PERMISSIONS, permission_from_str, permission_str}` and its three dispatch sites (`dispatch_engine`'s auth gate, `file_access`, `restricted_dims`), plus the prose that enumerates the vocabulary (`CONTEXT.md`, `CONTEXT.md`, `docs/src/lua/index.md`) → *why it couples:* the enum crosses the seam and is gated on both sides of it, so a locally-obvious edit to one gate is globally wrong → *alternative:* none; the vocabulary is a published contract → *enforcement:* `structure` (`permission_str`'s exhaustive match + the seam value asserts) + `static-analysis` (the both-gates round-trip test) + `docs-only` (the prose).
 - **Test seam** — a helper that must be unit-tested but not publicly callable goes in an `internal/` subpackage with visibility restricted to its parent (`//src/metadata/cpp/internal` is the model); a target may carry a documented per-target grant beyond the parent (`:icc_lcms2` is the instance). *Enforcement: `structure`.*
 - **Colocated docs** — every `cc_library`/`rust_library` package carries a `BUILD.bazel` docstring; invariant banners sit at the file head next to the code they govern (`src/metadata/cpp/icc.h`, the format encoders, `src/observability/cpp/metrics.h`). *Enforcement: `docs-only`.*
 - **C++ libraries reach a Rust target through `link_deps`, never `deps`** — `deps` is for crates; rules_rust (0.74+) deprecates a `cc_library` in `deps` and will drop support. *Enforcement: `docs-only`* (rules_rust prints an analysis-time warning, not an error).
@@ -305,4 +305,4 @@ These carry no component boundary rules but exist so every tracked file maps som
 - **Banned constructs:**
   - oracle-era framing (`oracle`/`shttps`/`cutover`/`parity`/`strangler`/`C++ server`) in production Rust comments → couples the code to a removed transport → describe current behaviour on its own terms → *enforcement:* `docs-only` (the `CONVENTIONS.md` § Production surface rule).
   - a `server` clap flag that is silently dropped → a config option that never reaches the engine → destructure exhaustively in `From<&ServerArgs>` (bind `field: _` to drop deliberately) → *enforcement:* `structure`.
-  - "file" as a domain noun for the served byte stream, "backpressure" for the load-shed policies, "canonical URL" for the cache key → drift from the ubiquitous language → use Bitstream / Throttling / Cache key (`UBIQUITOUS_LANGUAGE.md`) → *enforcement:* `docs-only` (reviewer checklist).
+  - "file" as a domain noun for the served byte stream, "backpressure" for the load-shed policies, "canonical URL" for the cache key → drift from the ubiquitous language → use Bitstream / Throttling / Cache key (`CONTEXT.md`) → *enforcement:* `docs-only` (reviewer checklist).

@@ -287,7 +287,7 @@ static kdu_core::kdu_byte
 // length prefix — the box's own length field encodes it).
 //
 // Documented in `docs/adr/0005-essentials-packet-versioned-binary-serialization.md`
-// and `UBIQUITOUS_LANGUAGE.md`. jpylyzer reports unknown UUIDs as
+// and `CONTEXT.md`. jpylyzer reports unknown UUIDs as
 // informational, so this carrier is preservation-validator-safe.
 static kdu_core::kdu_byte sipi_essentials_uuid[] = { 0x7B, 0x28, 0xA6, 0x46, 0xB9, 0xC3, 0x4F, 0xB2, 0x90, 0x0B, 0xB6,
   0x85, 0x5D, 0xF2, 0x38, 0x82 };

@@ -40,7 +40,7 @@ We accept this because:
 
 ## Consequences
 
-- **`UBIQUITOUS_LANGUAGE.md` is the source of truth for the taxonomy.** Glossary entries `Preservation File`, `Service File`, `Access File`, and `Preservation pipeline` (the architectural umbrella). The existing entries `Service master` and `Archival master` are removed with a brief redirect note in the "Flagged ambiguities" section noting the rename.
+- **`CONTEXT.md` is the source of truth for the taxonomy.** Glossary entries `Preservation File`, `Service File`, `Access File`, and `Preservation pipeline` (the architectural umbrella). The existing entries `Service master` and `Archival master` are removed with a brief redirect note in the "Flagged ambiguities" section noting the rename.
 
 - **CLI subcommand surface uses stage names as verb objects:** `sipi convert service-file <in> <out>` produces a Service File; `sipi convert preservation-file <in> <out>` (future) produces a Preservation File; `sipi convert access-file <in> <out>` produces an Access File from a Service File; bare `sipi convert <in> <out>` is a generic ImageMagick-style conversion producing an Access File. The verb-noun pattern makes the operator's intent explicit. See ADR-0010 for the intentional-creation principle this CLI shape enforces.
 

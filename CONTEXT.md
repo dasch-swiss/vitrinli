@@ -47,13 +47,466 @@ artifacts that coexist, as are a Derivative and a Service File.
 
 Use VRE terms only when describing that seam — the preflight payload and the
 callers on either side of it. Everywhere else in this repo, the Access Area terms
-above and the Vitrinli glossary remain canonical.
+above and the Vitrinli [Language](#language) below remain canonical.
 
-## Subdomain language (Vitrinli-local)
+## Language
 
-The canonical Vitrinli glossary is in [UBIQUITOUS_LANGUAGE.md](./UBIQUITOUS_LANGUAGE.md). It defines: Image vs Bitstream, Identifier (with embedded Page) + Prefix, Image root vs Document root, the IIIF pipeline terms (Region / Size / Rotation / Quality / Format / Decode level / Canonical URL / Cache key), Format handler vs Codec, Preservation metadata (umbrella) over Embedded metadata + Essentials packet, Image / Bitstream Information document, the three Lua entry points (Init script / Preflight script / Route handler), the eight Permission types, and the Throttling umbrella over Admission (the shell-side two-lane pool) + Decode memory budget.
+Vitrinli's own vocabulary. Prefer these canonical terms over the variant spellings in older code; an `_Avoid_` line lists the aliases a term replaces.
 
-Prefer the glossary's canonical terms over the variant spellings in older code.
+> **Current vs. target.** The entries below describe the code **as it exists today** — every path and symbol named resolves in the tree. One *current* ADR commits to a structure that is not yet built: a typed read-path `Input source` (ADR-0006, ADR-0004). It is collected under [Target shape (not yet built)](#target-shape-not-yet-built) at the end, never mixed into the current-state definitions. Note: the deployed server is the Rust shell; the C++ `SipiHttpServer` transport was removed (ADR-0020), and the older ADR-0001 C++-refactor targets for it (a composed `Sipi::Server`, `route_handlers/` / `permission/` packages) never happened — ADR-0013 repointed the rewrite at Rust.
+
+### Resources and identification
+
+**Image**:
+A pixel-bearing artefact processed through the IIIF pipeline (region, size, rotation, quality, format). The domain-level term. The *code-level* class is `Sipi::SipiImage` (`src/image/cpp/SipiImage.h`): a value type carrying geometry + photometric + RAII pixel buffer + metadata composite, with decode/encode orchestration (`read`/`readSource`/`write`) and a pixel/metadata mutator surface. Image-processing behaviour (`crop`, `scale`, `rotate`, `convertToIcc`, `add_watermark`, …) is not on the class — see *Image processing* below (ADR-0007).
+_Avoid_: resource, media, asset
+
+**Bitstream**:
+An opaque byte stream served as-is via the `/file` endpoint, bypassing IIIF processing.
+_Avoid_: file (as a domain noun), blob, payload
+
+**Identifier**:
+The per-resource string carried in the URL between `{prefix}` and the IIIF parameters. Embeds an optional page ordinal for multi-page resources (PDF, multi-page TIFF).
+_Avoid_: id, fileid, file_id
+
+**Prefix**:
+The URL segment in front of the identifier. Routes the request to a directory subtree under the image root and namespaces preflight resolution.
+_Avoid_: path prefix, route
+
+**Image root**:
+The filesystem directory tree that identifiers and `/file` requests resolve into, with traversal validation.
+_Avoid_: imgroot (variable name only), storage root, repository root
+
+**Document root**:
+The filesystem directory the embedded webserver serves static pages from. Distinct from the image root.
+_Avoid_: docroot (variable name only), web root
+
+### IIIF processing pipeline
+
+**Region**:
+The rectangle of the image to be returned, expressed in IIIF form (`full` / `square` / `x,y,w,h` / `pct:x,y,w,h`). The same term covers the parsed form and the form clamped to image bounds.
+_Avoid_: crop, ROI, crop coords
+
+**Size**:
+The output dimensions, expressed in IIIF form (`max` / `pct:n` / `w,` / `,h` / `w,h` / `!w,h`, optionally `^`-prefixed for upscale).
+_Avoid_: scale, dimensions
+
+**Rotation**:
+The IIIF rotation parameter: a non-negative decimal `n`, optionally `!`-prefixed to mirror before rotating.
+_Avoid_: rotate, angle
+
+**Quality**:
+The IIIF quality parameter: `default` / `color` / `gray` / `bitonal`. Independent of format.
+_Avoid_: colorspace
+
+**Format**:
+The IIIF output format: `jpg` / `tif` / `png` / `jp2`. Independent of quality. Also reachable as `jpx` (alias of `jp2`).
+_Avoid_: output type, encoding
+
+**Parsed IIIF parameters**:
+The parsed Region/Size/Rotation/Quality/Format tuple, in two representations that must not be conflated (ADR-0021). The **domain** form is what the parser emits: idiomatic Rust value types `RegionKind` / `SizeKind` / `QualityKind` / `FormatKind` + `IiifParams` (`bool` flags) in the standalone `//src/iiifparser/rust:iiif_parser` crate; the **seam** (wire) form is the `#[repr(C)]` `SipiRegionType` / … / `SipiIiifParams` mirrors in `src/server/rust/src/ffi.rs`, guarded against the C++ header. `server` is the sole place the domain form is flattened into the seam form (the `From<iiif_parser::IiifParams>` impls); nothing else uses the `Sipi*Type` family.
+_Avoid_: `SipiIiifParams` (as the in-process type), IIIF params (unqualified)
+
+**Decode level**:
+The log2 downsampling factor applied at decode time so a smaller output can be produced without decoding full-resolution pixels. Negotiated by the size parser with the codec; meaningful for JPEG2000 and pyramid TIFF.
+_Avoid_: reduce, reduce factor, decimation
+
+**Canonical URL**:
+The IIIF Image API canonical URL for a request. The IIIF spec form.
+_Avoid_: canonical-with-watermark
+
+**Cache key**:
+The string Vitrinli uses to key the cache. Extends the canonical URL with a `/0` or `/1` watermark suffix and, for a size-restricted image, a `/r<RW>x<RH>` restriction suffix, since both affect the bytes but are not in the IIIF spec. The `Link` header carries neither suffix.
+_Avoid_: canonical URL (in cache contexts)
+
+### Image processing
+
+**Image processing**:
+Umbrella term for Vitrinli's pixel operations over an *Image*: crop, scale, rotate, colour conversion, channel ops, bit-depth reduction, dithering, watermark application, comparison, arithmetic. Free functions over `SipiImage &` in `Sipi::processing::` (`src/image_processing/cpp/processing.h`), extracted off the `Sipi::SipiImage` class per ADR-0007. `image_processing` depends one-way on the `image` value type — never the reverse, so a facade method on `SipiImage` is not an option.
+
+**Image shape**:
+The intrinsic shape of a source image: `(img_w, img_h, tile_w, tile_h, clevels, numpages, nc, bps)`. Read by a format handler from a *Service File* via `SipiIO::read_shape()` (`src/image/cpp/SipiIO.h`; the file-based, no-full-decode probe — distinct from `SipiImage::getDim()`, which returns the dims of an already-loaded in-memory image). Stored in the *Essentials packet* so server-mode shape lookup can read at a known offset rather than parsing the codestream / TIFF tags. Per ADR-0004.
+_Avoid_: size record, dimensions
+
+**Watermark**:
+Overlay image applied to an *Image* before serving when a `restrict` *Permission* carries a watermark path. Applied via the free function `Sipi::processing::add_watermark(SipiImage &img, const std::string &wmfilename)` (`src/image_processing/cpp/compose.cpp`), which loads the watermark file through `Sipi::read_watermark`, defined in the TIFF *Format handler* (`src/format_handlers/cpp/SipiIOTiff.cpp`). Watermark presence extends the *Canonical URL* into the *Cache key* (`/0` or `/1` suffix). A watermark-only `restrict` keeps the native dims and native coordinates; with a size cap the watermark is applied to the restricted image after crop, scale and rotation.
+_Avoid_: overlay
+
+### Format handling
+
+**Format handler**:
+A SipiIO subclass that adapts a codec to Vitrinli's read/write contract (SipiIOJ2k, SipiIOTiff, SipiIOPng, SipiIOJpeg). Lives in `src/format_handlers/`.
+_Avoid_: IO backend, format driver
+
+**Codec**:
+A third-party library that performs the actual encode/decode. Vitrinli uses four: Kakadu (JP2), libtiff (TIFF), libpng (PNG), libjpeg (JPEG). A format handler *uses* a codec. (`webp` is in the project's external-deps set but no `SipiIOWebp` class exists today.)
+_Avoid_: library, backend
+
+**Output sink**:
+Typed sum type for write-path I/O destinations: `using OutputSink = std::variant<FilePath, CallbackSink, TeeSink>` in `src/format_handlers/cpp/output_sink.h`. Format-handler `write()` API (`src/image/cpp/SipiIO.h`) takes one, replacing magic-string sentinels (`"-"` for stdout, `"HTTP"` for HTTP server). `CallbackSink` carries opaque write/finalize callbacks, so `src/format_handlers/` does not depend on `shttps/`. Per ADR-0006.
+
+**Tee sink**:
+Composition primitive in the *Output sink* variant: `TeeSink { std::vector<OutputSink> sinks; }` (`src/format_handlers/cpp/output_sink.h`) broadcasts each output chunk to multiple sub-sinks. Preserves Vitrinli's existing dual-write optimization (encoder writes simultaneously to HTTP socket + cache file). Generalises to write-through to S3 / other sinks. Per ADR-0006.
+
+**ICC normalization**:
+The byte-level rewrite of bytes 24-35 (creation date) and 84-99 (Profile ID) inside `Icc::iccBytes()`, gated by the *Reproducibility flag*. Test-only — production iccBytes() is the identity.
+_Avoid_: ICC scrubbing, ICC stripping (those imply removing profiles, not normalizing them)
+
+**Reproducibility flag**:
+The `SOURCE_DATE_EPOCH` environment variable. When set, every ICC profile emitted by Icc::iccBytes() has its creation date overwritten with the supplied epoch and its Profile ID zeroed; codec-bound emissions become byte-deterministic. CMake injects it for `sipi.approvaltests` only.
+_Avoid_: deterministic mode, test-only mode (the env var is the contract; "modes" obscure that)
+
+### Files in the preservation pipeline
+
+The three Files below are stages of the *Preservation pipeline* (see
+that entry below). A file's stage is the outcome of going through the
+corresponding `sipi convert *` subcommand and meeting its
+prerequisites; it is recorded in the file's metadata (Essentials
+packet presence for Service Files; future preservation-metadata
+schema per ADR-0012 for Preservation Files). **Documented exception:**
+the upload Lua route (`SipiImage:write` on an uploaded file) also
+produces a Service File — it stamps the Essentials packet without a
+`sipi convert` invocation. It is the only non-`convert` producer. The stage is orthogonal
+to file format — a JP2 may be a Service File (with packet) or an
+Access File (without).
+
+**Preservation File**:
+The ultimate, authoritative, bit-level data stream used for long-term bit preservation. Plain (non-pyramidal) lossless TIFF per archival policy. Carries rich preservation metadata (rights, provenance, PREMIS-shaped data; specified in future ADR-0012) through the *Embedded metadata* channel per ADR-0011. Stored in the OAIS-compliant external archive. Vitrinli server does not read these. Produced by future `sipi convert preservation-file <in> <out>` subcommand. *Renamed from: Archival master.*
+_Avoid_: archival master, preservation copy, archival copy
+
+**Service File**:
+The high-quality "mezzanine" baseline read by Vitrinli server to fulfill IIIF requests. Pyramidal TIFF or JP2 — formats optimized for random-access IIIF serving. Carries an *Essentials packet* (Vitrinli-internal: identity + image shape + future file-structure offsets per ADR-0004, ADR-0005). Codebase variables `infile` / `origpath`. Derived from a *Preservation File* or directly from an arbitrary source. Produced by `sipi convert service-file <in> <out>` subcommand (per ADR-0010). *Renamed from: Service master.*
+_Avoid_: service master, master file, service copy
+
+**Service File format**:
+The format of *Service Files*: pyramidal TIFF or JP2. Optimized for fast random-access IIIF serving. Currently JP2; pyramidal TIFF is the planned successor. *Renamed from: Service master format.*
+_Avoid_: service master format, master format
+
+**Preservation File format**:
+The format of *Preservation Files*: plain (non-pyramidal) lossless TIFF per archival policy. Pyramids are a service-side optimization rejected for preservation. *Renamed from: Archival master format.*
+_Avoid_: archival master format
+
+**Access File**:
+The highly compressed, end-user-facing derivative produced for web delivery, streaming, or download. Any format the operator or IIIF client requests (JPEG, PNG, plain TIFF, JP2, etc.). **No Essentials packet** (per ADR-0009). Carries the *Embedded metadata* subset propagated from its source *Service File*, plus an IIIF-server-emitted provenance event for the transformation that produced this file (per ADR-0011). Produced either by (a) the IIIF server in response to an Image API request, or (b) the `sipi convert access-file <in> <out>` subcommand (offline batch; input must be a Service File). Bare `sipi convert <in> <out>` also produces an Access File — the generic ImageMagick-style conversion path.
+_Avoid_: IIIF derivative, representation (in generic contexts), output file, access copy
+
+**Pyramidal TIFF**:
+Multi-resolution TIFF variant storing the same image at multiple decode levels in a single file. Supports efficient decode-level selection without full-resolution decoding. **A Service File format only** — pyramids are a service-side optimization rejected by the Preservation File format. Planned successor to JP2 as the sole Service File format.
+
+### Storage and access
+
+**Object storage**:
+The production access model for Service Files: Vitrinli server reads them via S3 range GETs over HTTP. Today's transitional state is NFS-mounted ZFS spinning disk (still network-accessed; round-trip costs already exist). Local-filesystem *Image root* becomes the dev/test scenario only. The *Cache* stays local in both states (performance optimization; cached representations on the hot path can't pay remote-access cost).
+
+**Range GET**:
+An HTTP `GET` on an S3 object with a `Range:` header bounding the byte range to fetch. The unit of S3 access. Each range GET is a network round-trip (~1-10ms typical); minimizing them is the load-bearing perf goal once Vitrinli moves to S3. Per ADR-0004: pre-decode reads aim for *one* range GET to fetch the *Essentials packet* (with shape + file-structure offsets), then *one* targeted range GET for the data Vitrinli actually needs.
+_Avoid_: byte-range read
+
+**Preservation metadata**:
+Umbrella term for all metadata Vitrinli manages across format conversions for long-term preservation. Comprises *Embedded metadata* (the standards-based XMP/IPTC/EXIF channel) and the *Essentials packet* (Vitrinli-internal). Per ADR-0011: rights / provenance / PREMIS-shaped data travel through the Embedded metadata side of the union (XMP), not through the Essentials packet.
+_Avoid_: sidecar metadata, image metadata
+
+**Embedded metadata**:
+Third-party metadata standards Vitrinli carries through unchanged where possible: EXIF, IPTC, XMP, and ICC color profiles. The propagation path for *rights / provenance / PREMIS* fields per ADR-0011 — Vitrinli's format-handler writers emit these via each format's native carrier (JPEG XMP marker, TIFF `XMLPACKET`, JP2 UUID box, PNG iTXt).
+_Avoid_: header metadata
+
+**Essentials packet**:
+The Vitrinli-specific record embedded in *Service File* headers. **Role:** identity + shape + S3-access file-structure index. **Contents:** *Image shape* (8 fields), per-format file-structure offsets (TIFF: per-IFD offset/size; JP2: codestream + per-resolution offsets — future, per ADR-0004), ICC profile (when destination format cannot embed natively), original filename / mimetype / hash type / *Pixel checksum*. **Scope:** Vitrinli-internal — does **not** carry rights / provenance / PREMIS (those ride the *Embedded metadata* channel per ADR-0011). **Wire format:** versioned protobuf per ADR-0005 (legacy: pipe-delimited text, brittle). **Position:** a known fixed prefix offset in the file (TIFF tag in the first IFD; JP2 UUID box near the start) so Vitrinli can fetch with one *Range GET* of the prefix. **Presence:** Service Files only; Access Files do not carry one. C++ class: `Essentials`.
+_Avoid_: preservation packet, sipi metadata
+
+**Pixel checksum**:
+A checksum (e.g. SHA-256) over the *uncompressed* pixel values, stored in the *Essentials packet* to verify that a format conversion did not alter image content. Computed on the post-transformation pixel buffer by the `convert service-file` command (per ADR-0010).
+_Avoid_: data checksum, content hash
+
+**Preservation pipeline**:
+The chain of intentional Vitrinli subcommands that move a file through preservation stages: an arbitrary source → `convert preservation-file` → *Preservation File* (future, ADR-0012); a Preservation File → `convert service-file` → *Service File*; a Service File → `convert access-file` → *Access File*. Each step has documented prerequisites the command checks at entry, and produces a specific output with the metadata appropriate to its stage. The architectural property: each File's stage in the pipeline is the *outcome* of going through the corresponding subcommand and meeting its prerequisites, not a label the file carries. See `docs/preservation-pipeline.md` for the prerequisites + effects matrix. Per ADR-0010.
+_Avoid_: role-creating command, master-creation command, master-creation orchestrator
+
+**Corruption tripwire**:
+The repurposed pixel-hash-verify branch in `SipiImage::readSource`: when a read happens to encounter a file with an existing *Essentials packet*, the recomputed pixel hash is compared against `data_chksum`; on mismatch, log ERROR (and increment `sipi_essentials_hash_mismatch_total{format}`) and continue. Not a hard gate — the operator's deliberate integrity check is `sipi verify service-file <file>`. Per ADR-0010.
+_Avoid_: preservation guard
+
+**`sipi_essentials_uuid`**:
+The fixed RFC 4122 v4 UUID `7B28A646-B9C3-4FB2-900B-B6855DF23882` that identifies Vitrinli's *Essentials packet* inside a JP2 UUID box. Compile-time constant in `src/format_handlers/cpp/SipiIOJ2k.cpp`. JP2 readers walk top-level UUID boxes and pattern-match the first 16 bytes against this constant; JP2 writers emit the UUID followed by the protobuf payload when the in-memory *Essentials packet* is set on the image (the writer's emit gate per ADR-0010; only the `convert service-file` command sets the packet in production). Distinct from JP2's other in-spec UUIDs (XMP, IPTC, EXIF). Per ADR-0005.
+_Avoid_: SIPI UUID
+
+**JP2 UUID-box carrier**:
+The transport mechanism by which Vitrinli's *Essentials packet* rides inside a JP2 Service File: a top-level UUID box at **slot 4** (after JP2 Signature → FTYP → `jp2h`, before the `jp2c` codestream box). Layout = `[sipi_essentials_uuid (16 bytes)][protobuf payload]`. Replaces the pre-DEV-6537 codestream-comment carrier (`SIPI:` 5-byte prefix), which remains read-only via `Essentials::parse_legacy`. The 64 KB-prefix invariant means the UUID box is reachable from a single bounded *Range GET*. Per ADR-0005.
+_Avoid_: SIPI UUID box, JP2 essentials box
+
+**`format_version`**:
+A `uint32` field at proto field number 1 of the *Essentials packet* schema, used as the dispatcher discriminator in `Essentials::parse`. The current writer emits `format_version=1`; readers reject `0` (proto3 default — field never set) as `ParseError::MissingVersion` and `>1` as `ParseError::UnknownVersion`. The format-level evolution lever — additive schema changes don't bump it; breaking semantic redefinitions do. Per ADR-0005 schema discipline.
+_Avoid_: version, schema version
+
+**`read_shape` fast path**:
+The optimisation in *Service File* format handlers (`SipiIOJ2k`, `SipiIOTiff` pyramidal) whereby `read_shape()` reads the *Essentials packet* from a known fixed prefix, parses it, and returns *Image shape* directly when both `img_w` and `img_h` are non-zero — skipping the codestream-create / IFD-walk that would otherwise be needed. Activates incrementally as files are re-processed by `sipi convert service-file`. Falls through to format-native parsing otherwise. Outcomes attributed to `sipi_read_shape_fast_path_total{format, outcome}` where outcome ∈ {`hit`, `miss`, `partial`, `fallback`}. Per ADR-0004.
+_Avoid_: shape fast path, packet shape lookup
+
+### Endpoints and documents
+
+**Image Information document**:
+The IIIF-spec JSON returned at `{prefix}/{identifier}/info.json` for an *Image*. Advertises supported region/size/rotation/quality/format forms via `extraFeatures` and `extraFormats`.
+_Avoid_: info.json (the file name), info doc
+
+**Bitstream Information document**:
+The Vitrinli-specific JSON returned at `{prefix}/{identifier}/info.json` for a *Bitstream*: `@context`, `id`, `internalMimeType`, `fileSize`. Same URL shape as the *Image Information document*, distinct schema (`http://sipi.io/api/file/3/context.json`).
+_Avoid_: file info, bitstream info
+
+**`/file` endpoint**:
+The URL form `{prefix}/{identifier}/file` that streams the underlying *Bitstream* as-is, bypassing IIIF processing.
+_Avoid_: file pass-through, raw endpoint
+
+### Lua extensibility
+
+**Init script**:
+A Lua script (`sipi.init.lua`) executed once at server startup. Sets up global state shared across requests.
+_Avoid_: startup script, bootstrap
+
+**Preflight script**:
+A Lua script invoked per request before serving. Returns a *Permission* and resolves the on-disk path of the resource. Implemented by the Lua function `pre_flight` (Image / IIIF) or `file_pre_flight` (Bitstream).
+_Avoid_: pre-flight script, authorization hook
+
+**Route handler** (umbrella):
+URL-pattern-bound request logic. Built-in endpoints are Rust axum routes on the shell's `Router` (`src/server/rust/src/routes.rs`); scripted endpoints are *Lua route handlers*.
+_Avoid_: route, custom endpoint
+
+**Lua route handler**:
+A Lua script bound to a URL pattern, loaded dynamically. Examples: `upload.lua`, `orientation.lua`. **Role:** request-shaping only — preflight permission decisions, custom content endpoints. **Server-state mutation** (cache management, server lifecycle, config reload) is implemented as a *C++ route handler*, not a Lua script. See *Mutation script* (anti-pattern).
+_Avoid_: route, custom endpoint
+
+**Lua bindings**:
+Umbrella term for the Rust-hosted binding tables the hardened VM exposes to scripts: `server.*` (request/response + helpers), `server.fs`, `helper` (`filename_hash`), the `SipiImage` userdata (backed by the seam's `sipi_image_*` handle family), and the sqlite `server.db` bindings. Live in `src/scripting/rust/bindings/`; every table registers through the `RequestVm::register_binding` chokepoint.
+
+**Permission**:
+The verdict and shaping output returned by a *Preflight script*. Valid types: allow / login / clickthrough / kiosk / external / restrict / stream / deny (see *Permission types*). The Lua-returned permission value is parsed Rust-side (`permission_from_str` in `src/server/rust/src/routes.rs`) into the `SipiPermType` `#[repr(C)]` enum the serve request carries across the seam, and the resolved on-disk path + shaping (`infile`, `watermark`, size caps) travel the preflight reply's key/value list. (A typed `std::variant<AllowPermission, …>` in a `permission/` package was an ADR-0001 target that lapsed under ADR-0013.)
+_Avoid_: access policy, ACL result
+
+**Mutation script** (anti-pattern):
+A *Lua route handler* that mutates **server state** (cache eviction, server lifecycle, filesystem cleanup, config reload, …). **Forbidden in Vitrinli.** The canonical surface for server-state mutation is a *C++ route handler* (or a signal handler for lifecycle). Cache state inspection is exposed exclusively through *Metrics*, never through Lua. Past examples that have been removed: `cache.lua`, `exit.lua`, `clean_temp_dir.lua`, `admin_upload.lua`, `debug.lua`.
+_Avoid_: admin script (when used to mutate state)
+
+**VM profile**:
+The hardened configuration every per-request Lua VM is built to (ADR-0023, `src/scripting/rust/runtime.rs`): stdlib whitelist (`string`/`table`/`math`/`utf8`/`package`; no `io`, no `debug`), scrubbed base escape hatches (`dofile`/`loadfile`/`load`/`collectgarbage`/`package.loadlib`/`package.searchpath`), the *os shim*, script-dir-restricted `require`, a Lua-heap memory cap, and a wall-clock deadline. The startup config-parse VM shares the whitelist but runs without request limits.
+_Avoid_: sandbox (as a noun for the whole config)
+
+**os shim**:
+The Rust-implemented replacement for Lua's `os` table in the *VM profile*: exactly `getenv`, `clock`, `date` — the audited union of what production scripts use. `date` is a strftime subset formatted in Rust, never a passthrough to C `strftime`; `getenv` is deliberately unrestricted.
+_Avoid_: restricted os table
+
+**Kill semantics**:
+What happens when a request VM exceeds its limits (timeout or memory, `KillReason`): before the response head commits, the request becomes a 500 with a generic body; after commit, the body stream is aborted so clients never see a clean EOF; a killed preflight is never written to the *Preflight cache*. Kills are counted in `sipi.lua.kills` (rendered `sipi_lua_kills_total{reason}`) and logged as one structured line.
+_Avoid_: script abort, watchdog
+
+**Bytecode cache**:
+The in-memory compiled-chunk cache (`BytecodeCache`, `src/scripting/rust/runtime.rs`) covering the init script, route scripts, and `require`d modules: compiled once, loaded per VM as binary chunks (debug info kept), invalidated by mtime+size so script edits take effect immediately. Distinct from *Cache* (the file-based LRU of representations) and *Preflight cache* (the permission-decision cache).
+_Avoid_: script cache, chunk cache
+
+#### Permission types
+
+The eight valid permission-type strings a preflight script may return:
+
+**allow**:
+Full access. Serve the requested representation.
+
+**login**:
+Require user authentication, then serve.
+
+**clickthrough**:
+Require an explicit user gesture (e.g. terms acceptance), then serve.
+
+**kiosk**:
+Unauthenticated public-terminal mode.
+
+**external**:
+Defer authorization to an external service.
+
+**restrict**:
+Serve a degraded representation (size cap and/or watermark) instead of the requested one. A size cap makes the image its own image of the restricted dims (RW, RH), decided once in the shell: `info.json` reports (RW, RH) with `maxWidth`/`maxHeight` = (RW, RH), region and size resolve against (RW, RH), every output is cut from one rendering at (RW, RH), and nothing larger than (RW, RH) before rotation is served ([ADR-0028](docs/adr/0028-restricted-view-coordinate-space.md)). Its embedded EXIF/XMP size fields state the delivered size and its embedded previews (EXIF thumbnail, SubIFD and maker-note previews, XMP thumbnails, IPTC preview, the same inside the EXIF's Photoshop image resources) are dropped; all other embedded metadata, rights included, is kept.
+
+**stream**:
+Serve the representation for consumption in place, not as a file to keep. **Expresses intent; it is not a security boundary.** Vitrinli serves a `stream` decision exactly as `allow` — same bytes, same headers — and only counts it (`sipi.preflight.decisions{permission="stream"}`, which carries every permission so the share has a denominator), so the population is observable before any enforcement is chosen. See [ADR-0027](docs/adr/0027-stream-permission-type.md).
+
+**deny**:
+Refuse the request (HTTP 401/403).
+
+### Throttling
+
+**Throttling**:
+Umbrella term for Vitrinli's load-driven request-rejection policies. Comprises two sub-policies: *Admission* (the two-partition thread pool) and *Decode memory budget* (the full partition's decode-RAM cap). Admission is a shell-side pool (`src/throttling/rust`, pre-dispatch); the memory budget is engine-side (`src/throttling/cpp`, post-cache).
+_Avoid_: backpressure (technically denotes upstream feedback flow control, which Vitrinli does not do — it rejects with HTTP 503/400), flow control
+
+**Admission**:
+The shell-side pool that classifies each request into the *Tile partition* or *Full partition* and bounds concurrency with two semaphores: a global pool (sized to the worker count) and a full sub-pool (`full_max = nthreads − tile_min`) that hard-caps concurrent full-image decodes. Tiles take a global permit only and burst into idle capacity; a full takes its sub-pool permit first, then the global permit, so tiles always keep a `≥ tile_min` floor. Shed requests get HTTP 503 + `Retry-After`. `struct Admission` + `AdmissionKind` + `AdmissionMode` in `//src/throttling/rust:admission`; `AppState` owns it, `routes.rs` holds the call sites. Distinct from *Permission* (the Lua access decision) — Admission is load-based capacity, Permission is per-request authorization.
+_Avoid_: admission control (use *Admission*), backpressure
+
+**Tile partition / Full partition**:
+The two request classes *Admission* routes to. **Tile**: cheap requests — viewer tiles, `info.json`/`knora.json`, the `/file` byte stream — guaranteed a thread floor (`tile_min`) and free to burst; they bypass the decode memory budget. **Full**: expensive full-image decodes (estimated peak ≥ `large_decode_threshold_bytes`) plus Lua routes and docroot scripts (a script's cost is unknowable up front), hard-capped in both threads (`full_max`) and decode RAM. Classification is coarse shell-side (from the IIIF params) and precise engine-side (from `estimate_peak_memory`); the two are tracked and their disagreement is observable. *Tile lane / full lane* are accepted informal synonyms (the design is "two-lane"); *partition* is the precise term.
+_Avoid_: tile class / full class
+
+**Admission mode**:
+`basic` | `advanced` (there is no "off"; default `advanced`). A two-tier model: the *basic tier* (the global CPU/thread concurrency cap) is always enforced; the *advanced tier* (the full thread cap plus the memory budget and two-lane load-shedding) is enforced only under `advanced`. `basic` shadow-counts what the advanced tier would shed so the operator can size the full partition before switching; `advanced` applies the full thread cap and the memory budget and sheds with 503/413. An unrecognized value is not a startup error — it falls back to `basic`. Single-sourced: the engine parses it and the shell reads it back over the seam, so both run the same mode. `enum AdmissionMode { Basic, Advanced }` (Rust) / `enum class AdmissionMode { BASIC, ADVANCED }` (C++).
+_Avoid_: shadow mode (use *basic*), monitor / enforce (legacy value strings, use *basic* / *advanced*)
+
+**Decode memory budget**:
+The *Full partition*'s cap on decode RAM: a process-wide, lock-free accounting of memory committed to in-flight full-lane decodes, with an RAII guard. Tile decodes bypass it. The cap is `full_mem = memory_limit × (1 − tiles_memory_ratio)`. Rejects with HTTP 503 + `Retry-After` when currently exhausted, or HTTP 413 (no `Retry-After`) when a single request's estimate alone exceeds the whole budget. `class Sipi::SipiMemoryBudget` + `MemoryBudgetGuard` + `enum class AdmissionMode { BASIC, ADVANCED }` in `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`; the peak-memory helper is `estimate_peak_memory()` in `src/throttling/cpp/SipiPeakMemory.h`. The single acquire site is `acquire_full_lane_budget()` + `run_guarded_decode()` in `src/ffi/cpp/decode_guard.{h,cpp}`, shared by both engine decode entry points — the IIIF serve path (`serve_image.cpp`) and the Lua `SipiImage.new()` path (`image_handle.cpp`) — so both are bounded by the same budget gate and the same DEV-7080 decode deadline. The guard is moved into the decode's worker thread rather than held on the caller's stack frame, so a deadline timeout leaves the charge with the detached (wedged) thread instead of refunding memory it still holds.
+_Avoid_: memory budget, decode budget
+
+**Cache**:
+A file-based LRU of generated representations, keyed by *Cache key*, with dual-limit eviction (total size **and** file count) and crash recovery. `class SipiCache` in `src/cache/cpp/SipiCache.{h,cpp}`. Cache state is exposed exclusively through *Metrics*, not through Lua bindings. Cache-hit responses **bypass the memory-budget and output-size policies entirely** (per ADR-0008): no memory-budget acquire, no output-size check. (A cache hit is still classified and admitted by the shell pre-dispatch, so a "full" cache hit briefly holds a full-partition permit — throttled by class, released fast; accepted.)
+_Avoid_: response cache, output cache
+
+**Preflight cache**:
+A burst-coalescing cache of the Lua `pre_flight` access decision (the *Permission* + resolved path), so a repeated request serves the recorded decision instead of re-running the hook — a deep-zoom viewer fires `pre_flight` once per tile, all sharing one *Identifier*. Distinct from the *Cache* (which stores generated representations, not access decisions). Opt-in (`--preflight-cache-ttl <secs>` / `SIPI_PREFLIGHT_CACHE_TTL`, default 0 = off); the TTL bounds staleness on a permission change. `mod preflight_cache` in `src/server/rust`. Correct **only** for a hook whose decision is a pure function of its **Preflight cache key** = `(prefix, identifier, Cookie, Authorization)`; a hook that reads any unkeyed request field (other headers, host, client IP) may be served a wrong cached decision. The preflight request view is query-free by construction (`uri` is the path only; no get/post/request params) and the key never adds the raw query string — that would make a query-string cache-buster an unbounded amplifier against dsp-api.
+_Avoid_: pre-flight cache, auth cache
+
+**Cache pin**:
+Keeping a cache file in use so it is not evicted while a representation is being served. Today this is manual and non-RAII: `SipiCache::check(origpath, cache_key, /*block_file=*/true)` (`src/cache/cpp/SipiCache.h`) inserts into the `blocked_files` map, and `SipiCache::deblock(res)` removes it — the caller must remember the `deblock`. (Wrapping this in an RAII `BlockedScope` was an ADR-0001 target that lapsed under ADR-0013.)
+_Avoid_: cache lock
+
+**Client abort**:
+An HTTP response write that fails because the peer is gone (FIN, RST, or write timeout). Surfaces in code as `ErrorCode::kClientAbort` (`src/error/cpp/SipiValueError.h`), returned when `shttps::OUTPUT_WRITE_FAIL` is thrown from a socket write. `policy_for(ErrorCode::kClientAbort)` is `SentryPolicy::kSkip` with the `kClientDisconnected` metric hint: logged at info, **not** captured to Sentry — these are peer-side events, not server faults.
+_Avoid_: broken pipe error, peer disconnect error
+
+### Observability
+
+**Observability**:
+Umbrella term for the operational telemetry surface. Comprises two sub-concerns: *Metrics* (atomic-counter instrumentation exported over OTLP) and *Sentry context* (per-image-error capture). Lives in `src/observability/`. Distinct from *Logger* (which handles Vitrinli's structured-log primitives).
+_Avoid_: telemetry
+
+**Logger**:
+Basic logging primitives + level / mode control, used across the codebase. Public API: `log_debug` / `log_info` / `log_warn` / `log_err`, `set_log_level` / `get_log_level`, plus four Vitrinli-only mode flags (`set_cli_mode`, `is_cli_mode`, `set_json_mode`, `is_json_mode`) that route logs to stderr when CLI mode emits a JSON document on stdout. Lives in `src/logging/`, a generic primitive any module may depend on.
+_Avoid_: logging
+
+**Metrics**:
+The instrumentation surface. The engine's singleton in `observability/metrics.{h,cpp}` is plain lock-free atomics (`Counter` / `Gauge`): counters (cache hits/misses/evictions/skips, image-too-large, client-disconnects, memory-alloc-failures, decode-memory decisions, rejected-connections, the label-fanned read-shape-fast-path and essentials-hash-mismatch families, tiff-pyramid-reduced-decodes) and gauges (waiting-connections, cache size/files/limits, decode-memory budget/used). **Production is OTLP:** the 22 scalar fields cross the FFI seam as `SipiMetricsSnapshot` (`ffi/sipi_ffi.cpp`) and re-register as OTel observable instruments in `server/rust/src/metrics.rs`. Distributions are recorded shell-side as OTel histograms (`http.server.request.duration`, `sipi.decode_memory.estimate_bytes`); the build stamp travels as the resource attributes `service.version` + `vcs.ref.head.revision`. The label-fanned read-shape / essentials counters stay engine-internal (not snapshotted).
+_Avoid_: telemetry, snapshot bridge
+
+**Sentry context**:
+The error-capture payload for a handled (non-crash) image error. The engine itself calls no Sentry SDK: it populates an `ImageContext` struct (11 fields: `input_file`, `output_file`, `output_format`, `width`, `height`, `channels`, `bps`, `colorspace`, `icc_profile_type`, `orientation`, `file_size_bytes`; lives in `src/image/cpp/populate_from_image.h`), flattens it into the FFI seam's `SipiImageErrorReport` struct (`ffi/sipi_ffi.h`), and hands it across via the `report_error`/`report_ctx` callback pair on `SipiServeRequest`. `Sipi::ffi::report_image_error` (`server/rust/src/ffi.rs`) is what actually builds and captures the `sentry::Event`, tagged `sipi.phase` (`"read"` / `"convert"` / `"write"`) and `sipi.mode=server`. Only *Server mode* reports handled image errors this way — *CLI mode* stays log-only + the *CLI report* JSON document (D1); native crashes go through a separate out-of-process minidump reporter (`sentry-rust-minidump`), not this seam.
+_Avoid_: error context
+
+### Server architecture
+
+**Server**:
+The production HTTP server is the Rust shell (`//src/cli/rust:sipi` over `//src/server/rust:lib`), axum-based, which drives the C++ image engine over the FFI seam. There is no C++ server: the `SipiHttpServer` class that inherited `shttps::Server` was removed with the oracle ([ADR-0020](docs/adr/0020-oracle-removal.md)).
+
+**Server config**:
+Vitrinli runtime configuration read from the Lua config. Today this is `class SipiConf` (`src/ffi/cpp/SipiConf.h`, impl `src/ffi/cpp/SipiConf.cpp`) — a settings-holder the server reads accessors off. (The FFI CLI/env override channel is a separate `SipiServerConfig` struct, `src/server/rust/src/config.rs` ↔ `src/ffi/cpp/sipi_ffi.h`.)
+_Avoid_: config struct
+
+**Operating mode**:
+Umbrella for the two ways Vitrinli runs: *CLI mode* and *Server mode*. The asymmetry between which format handler dominates read vs. write is architecturally load-bearing for the Service-File-format fast path. Distinguished by the `set_cli_mode`/`is_cli_mode` Logger flag (`src/logging/cpp/logger.{h,cpp}`) — there is no runtime `SipiMode` enum, and no dedicated mode-module pair; the `sipi.mode=server` Sentry tag (see *Sentry context*) is hardcoded on the one path that reports handled image errors at all.
+_Avoid_: mode
+
+**CLI mode**:
+One-shot invocation. Verb-noun subcommand surface (per ADR-0010): generic verbs (`convert`, `verify`, `query`, `compare`) are ImageMagick-style utilities usable by anyone; DSP-specific verbs (`convert service-file`, `convert access-file`, future `convert preservation-file`; `verify service-file`, `verify access-file`, future `verify preservation-file`) enforce preservation-chain semantics. **Characteristics:** optional `--json` *CLI report* on stdout, `set_cli_mode(true)` redirects logs to stderr; handled image errors are not reported to Sentry on this path (D1) — only panics are, via the Rust shell's process-wide panic integration. Code-level boundary: the CLI11 subcommand callbacks in `src/cli/cpp/cli_app.cpp` and the handlers in `src/cli/cpp/commands/`.
+_Avoid_: one-shot mode
+
+**Server mode**:
+Long-running HTTP server. Reads *Service Files* in *Service File format* from *Image root*; writes *Access Files* (via the IIIF pipeline) to the *Cache* and HTTP response. The hot path for *Service File*-format shape reads. Conceptually `convert access-file` over HTTP — the IIIF server applies IIIF Image API parameters to a Service File and emits an Access File response. **Characteristics:** Throttling at the post-cache gate, handled image errors reported to Sentry via the FFI seam (see *Sentry context*). Code-level boundary: the Rust shell's `server` subcommand (`src/cli/rust`) over the axum app in `src/server/rust`.
+_Avoid_: daemon mode, http mode
+
+**CLI report**:
+The structured JSON document `emit_json_report` writes to stdout when the `--json` CLI flag is set. Schema mirrors *Sentry context*'s `ImageContext` so environments without a Sentry DSN still get the full diagnostic payload. Top-level keys: `status` (`"ok"` / `"error"`), `phase` (`"cli_args"` / `"read"` / `"convert"` / `"write"`), `error_message`, and an `image` object populated from `ImageContext`. On `phase == "cli_args"` the `image` object is omitted (no image was loaded yet). Declared in `src/cli/cpp/SipiReport.h`, implemented in `src/cli/cpp/SipiReport.cpp`; the mirrored struct is `observability::ImageContext` (`src/image/cpp/populate_from_image.h`).
+_Avoid_: json output, json report
+
+### Code organization
+
+**Test seam**:
+A header deliberately kept in a module's `internal/` subdirectory with `visibility` restricted to that module + that module's tests. Used to expose pure helpers for explicit testing without broadening production coupling. Canonical example: `metadata/internal/icc_normalization.h`. The pattern replaces comment-as-policy ("No production code outside X should include this header") with a build-graph invariant.
+_Avoid_: test backdoor, friend header
+
+### Platform context
+
+**IIIF**:
+International Image Interoperability Framework. Vitrinli implements IIIF Image API 3.0 at conformance Level 2.
+
+**Vitrinli**:
+The media server this repository builds (formerly SIPI). The name is for prose. Code-level identifiers (`Sipi::`, `SipiImage`), the `sipi` binary, the `daschswiss/sipi` image, the `SIPI_*` environment variables and the `sipi.*` metrics keep the old name, and new code follows the surrounding `Sipi`/`sipi` names (see `CONVENTIONS.md` § Naming Conventions); never introduce a `Vitrinli*`/`VITRINLI_*` identifier. Renaming those is a separate cross-repo change.
+_Avoid_: SIPI, Sipi (in prose only)
+
+**DaSCH**:
+The Swiss National Data and Service Center for the Humanities. The organisation that develops and maintains Vitrinli.
+_Avoid_: DASCH
+
+**DSP**:
+DaSCH Service Platform. The broader platform Vitrinli is a component of.
+_Avoid_: DaSCH platform
+
+### Deprecated / legacy
+
+These terms still appear in shipping surface but are not intended for new use.
+
+**Knora**:
+Deprecated. Legacy name for the data layer. Replaced by DSP. Do not coin new uses.
+
+**knora.json document**:
+Deprecated. Legacy DSP-specific information document at `{prefix}/{identifier}/knora.json`. New consumers should use the *Image Information document*.
+
+**`--knorapath` / `--knoraport`**:
+Deprecated. CLI flags / config keys (`knora_path`, `knora_port`) retained for compatibility.
+
+### Target shape (not yet built)
+
+Shapes a **current** ADR commits to but which do not exist in the tree yet. The
+current-state definitions above describe how each concept is implemented **today**;
+these entries describe where the cited ADR intends it to go. Superseded-ADR targets
+(the ADR-0001 C++-server refactors — a composed `Sipi::Server`, `route_handlers/`,
+`permission/`, `ServerContext`, `BlockedScope`) are **not** listed here: ADR-0013
+repointed the rewrite at Rust and the C++ transport has since been removed
+(ADR-0020), so those refactors are no longer intended.
+
+**Input source** (typed read-path):
+Not yet built (ADR-0006, ADR-0004). A read-path sum type `using InputSource = std::variant<FilePath, RangeSource>`, symmetric to the built *Output sink*, taken by `SipiIO::read()` / `read_shape()` so the S3 transition (ADR-0004) needs no handler-signature change. **Range source** is its variant alternative for any byte-range-read backend (S3, Azure Blob, GCS, in-memory) — names the *capability*, not the location. Today: `read()`/`read_shape()` take a plain `const std::string& filepath`; no read-path variant exists.
+
+## Relationships
+
+- An **Image** is served through the IIIF pipeline; a **Bitstream** is served via the `/file` endpoint.
+- An **Identifier** plus a **Prefix** locates exactly one Image *or* Bitstream under the **Image root**.
+- A request resolves to a **Permission** via the **Preflight script** before any decode happens.
+- A **Format handler** uses exactly one **Codec** to read or write its format.
+- Format handlers read from a filepath and emit to an **Output sink** (write path); the **Tee sink** composes multiple output sinks for Vitrinli's dual-write-to-HTTP-and-cache optimization. (A symmetric typed **Input source** read path is a [target shape](#target-shape-not-yet-built), not yet built.)
+- **Preservation metadata** = **Embedded metadata** ∪ **Essentials packet**; both travel with an Image across format conversions. The Essentials packet additionally indexes file-structure offsets so an **Object storage** read takes one **Range GET** of the prefix. Per ADR-0011, rights / provenance / PREMIS fields travel on the **Embedded metadata** side of the union (via XMP), not in the Essentials packet.
+- The **Preservation pipeline** chains: **Preservation File** (long-term bit-level preservation) → **Service File** (mezzanine baseline read by Vitrinli server) → **Access File** (end-user delivery). Each step is intentional (per ADR-0010): a file's stage is the outcome of the operator's CLI invocation at creation time, never inferred from format. **Service File** ⊂ **Service File format** is what server mode reads; **Preservation File** ⊂ **Preservation File format** is the OAIS preservation copy.
+- The **Cache key** extends the **Canonical URL** with a *Watermark* bit and a size restriction's (RW, RH); the **Cache** is keyed by it.
+- **Throttling** = **Admission** (shell-side two-partition pool, pre-dispatch) + **Decode memory budget** (engine-side at the post-cache gate). The **Cache** short-circuits before the engine-side policy.
+- **Observability** = **Metrics** + **Sentry context**.
+- **Operating mode** = **CLI mode** + **Server mode**; **CLI report** is exclusive to CLI mode.
+
+## Example dialogue
+
+> **Dev:** A request comes in for `/iiif/abc123/full/!500,500/0/default.jpg` — what's the first thing that runs?
+
+> **Maintainer:** The **preflight script**. It receives the **prefix** (`iiif`), the **identifier** (`abc123`), and the request headers, and returns a **permission**. If the type is `restrict`, the permission carries a size cap and possibly a **watermark** path, both of which shape what we eventually serve.
+
+> **Dev:** And the resolved on-disk file?
+
+> **Maintainer:** Same permission — the `infile` field. The preflight script may rewrite it; we then validate the resolved path stays inside the **image root** before any I/O.
+
+> **Dev:** What about `/iiif/abc123/file`?
+
+> **Maintainer:** That's the **bitstream** surface. We treat `abc123` as a **bitstream**, not an **image**: no IIIF pipeline, no **decode level**, no cache. The `file_pre_flight` script runs instead of `pre_flight`, and `info.json` for that resource returns a **bitstream information document**, not an **image information document**.
+
+> **Dev:** When does the **decode memory budget** come in?
+
+> **Maintainer:** Two places, actually. Before dispatch the shell's **Admission** pool classifies the request tile-or-full and admits it (or sheds 503). Then, if the cache misses, the engine's **decode memory budget** fires at the post-cache gate: it returns 503 if admitting the decode would push us over, or 413 if the request's estimate alone exceeds the whole budget. If the cache hits, we serve and the gate never runs. Only after the budget passes does the request reach the **format handler** and the **codec**.
+
+> **Dev:** And the **essentials packet** — that's only on write?
+
+> **Maintainer:** Only on intentional write — specifically `sipi convert service-file`. Plain `sipi convert` (the generic ImageMagick-style verb) doesn't emit one, even if the output happens to be a *Service File format* like JP2 — that output would be an *Access File* by intent. On read, we extract any existing essentials packet — that's how we recover an ICC profile when a JPEG2000 source couldn't natively embed one, and how server mode answers shape queries with one **range GET** instead of parsing the full codestream. The **corruption tripwire** in `readSource` logs ERROR if the packet's checksum doesn't match the recomputed pixel hash — that's the passive integrity signal; the active deliberate check is `sipi verify service-file <file>`.
+
+## Flagged ambiguities
+
+- **"canonical URL"** was used in code for two different things: the IIIF-spec form and the Vitrinli cache-keying string with a watermark suffix. Resolved: **Canonical URL** = IIIF spec form only; **Cache key** = the Vitrinli extension. Code variables like `cannonical_watermark` (sic) are implementation; not part of the language.
+- **"info.json"** is a single URL shape with two distinct response schemas depending on whether the resource is an Image or a Bitstream. Resolved by introducing two domain terms: **Image Information document** vs **Bitstream Information document**. Refer to them by their domain term, not the file name.
+- **"preservation metadata"** was sometimes used narrowly (the Essentials packet) and sometimes broadly (everything embedded). Resolved: **Preservation metadata** is the umbrella; **Essentials packet** is the Vitrinli-specific subset; **Embedded metadata** is the third-party-standards subset.
+- **"file"** is overloaded between the URL endpoint (`/file`), the on-disk artefact (`infile`, `imgroot`), and the served byte stream. Resolved: as a domain noun, **Bitstream** names the served byte stream; *file* survives only in URL paths and filesystem-level discussion.
+- **"reduce"** appears as both a JPEG2000 codestream parameter and a TIFF resolution-level concept. Resolved: **Decode level** is the canonical domain term; *reduce* survives only as a codec-API parameter name.
+- **"backpressure"** was used as the umbrella for Vitrinli's load-driven rejection policies. Resolved: technically denotes upstream feedback flow control (TCP windows, Reactive Streams), which Vitrinli does not do — Vitrinli rejects with HTTP 503/400. Renamed to **Throttling** to describe the rejection-style mechanism accurately and avoid colliding with **Permission** (the identity-driven authorization decision, also a form of admission control).
+- **"master"** was used unqualified for both the Vitrinli-served file and the preservation copy, and the IIIF-derivative concept was left implicit. **Resolved** (per ADR-0009): three-tier *Preservation pipeline* — **Preservation File** (long-term bit-level preservation; was: Archival master), **Service File** (mezzanine baseline read by Vitrinli server; was: Service master), **Access File** (end-user delivery; previously implicit). Each stage has its own format set; the stage discriminator is the *Essentials packet*'s presence (Service File) or the future preservation-metadata schema (Preservation File), not the file format. A file's stage is the outcome of the operator's intentional CLI invocation (per ADR-0010), never inferred. The "master" terminology is retired with this rename.
+- **"preservation metadata channel"** was ambiguous about whether rights / provenance / PREMIS-shaped data belongs in the *Essentials packet* (Vitrinli-internal) or in *Embedded metadata* (standards-based XMP/IPTC/EXIF). **Resolved** (per ADR-0011): preservation metadata propagates via the *Embedded metadata* channel — specifically XMP, using established schemas (XMP-Rights, XMP-PLUS, XMP-PROV / C2PA, PREMIS-XMP). The *Essentials packet* stays scoped to Vitrinli-internal concerns (technical identity, image shape, future file-structure offsets) and does not grow to carry preservation-metadata fields.
+- **"route handler"** was overloaded between Lua scripts bound to URL patterns and `shttps::RequestHandler` C++ callbacks. Resolved: **Route handler** is the umbrella; **Lua route handler** and **C++ route handler** are the sub-types.
+- **Knora** terms still ship in CLI flags, config, and the `knora.json` endpoint. Resolved: kept under the *Deprecated / legacy* section. Do not coin new uses.
 
 ## The HTTP server: Rust shell over the C++ engine
 
@@ -85,7 +538,7 @@ a deleted HTTP transport. `src/shttps/` no longer exists.
 
 ### Naming clarification
 
-Vitrinli's **Route handler** (in `UBIQUITOUS_LANGUAGE.md`) is a *Lua script* bound to a
+Vitrinli's **Route handler** (see [Lua extensibility](#lua-extensibility)) is a *Lua script* bound to a
 URL pattern, run inside a request-scoped hardened VM of the Rust mlua runtime. Vitrinli's IIIF `/file`
 endpoint (the **Bitstream** path-through) is the `FILE_DOWNLOAD` case of the Rust
 IIIF classifier (`//src/iiifparser/rust:iiif_parser`), which reads from the **image root**.
