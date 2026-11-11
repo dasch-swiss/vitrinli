@@ -480,7 +480,7 @@ namespace {
   // embedded size fields must state that size, not the original's, and the
   // embedded previews (pixels that can exceed the restriction) go. Nothing
   // else is removed: rights and other descriptive metadata are always
-  // returned (UBIQUITOUS_LANGUAGE.md, restrict). False if a size field kept
+  // returned (CONTEXT.md, restrict). False if a size field kept
   // its native value, or an XMP preview or the EXIF's Photoshop resources
   // could not be rewritten.
   [[nodiscard]] bool rewrite_restricted_metadata(SipiImage &img)

@@ -95,7 +95,7 @@ to risks breaking working access for a corpus nobody has sized.
 
 ## Consequences
 
-- The permission vocabulary is eight strings, not seven. `UBIQUITOUS_LANGUAGE.md`,
+- The permission vocabulary is eight strings, not seven. `CONTEXT.md`,
   `CONTEXT.md` and the Lua reference all say so, and all three state that
   `stream` enforces nothing.
 - A hook that returns `stream` against an older SIPI gets a **500**, not an auth

@@ -57,7 +57,7 @@ Checklist for human and AI reviewers. Not every item applies to every PR — use
 
 ## Ubiquitous Language
 
-Identifiers, comments, commit messages, and PR text use the canonical terms in [`UBIQUITOUS_LANGUAGE.md`](../../../UBIQUITOUS_LANGUAGE.md), not the aliases that column flags as "avoid". Common slips to reject:
+Identifiers, comments, commit messages, and PR text use the canonical terms in [`CONTEXT.md`](../../../CONTEXT.md), not the aliases its `_Avoid_` lines list. Common slips to reject:
 
 - [ ] **Bitstream**, not "file" as a domain noun for the served byte stream (*file* survives only in URL paths and filesystem discussion)
 - [ ] **Region**, not "ROI" / "crop" / "crop coords"

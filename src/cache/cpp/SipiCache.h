@@ -172,7 +172,7 @@ public:
    * entry.
    *
    * \param[in] origpath_p The path to the Service File
-   * \param[in] cache_key_p The Cache key (see UBIQUITOUS_LANGUAGE.md)
+   * \param[in] cache_key_p The Cache key (see CONTEXT.md)
    *
    * \returns Returns an empty string if the file is not in the cache or if the file needs to be replaced.
    *          Otherwise returns tha path to the cached file.

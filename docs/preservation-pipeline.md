@@ -171,7 +171,7 @@ layer.
 
 ## See also
 
-* [`UBIQUITOUS_LANGUAGE.md`](../UBIQUITOUS_LANGUAGE.md) — canonical
+* [`CONTEXT.md`](../CONTEXT.md) — canonical
   glossary, including the `Preservation pipeline` entry.
 * [`docs/adr/0009-file-taxonomy.md`](adr/0009-file-taxonomy.md) — preservation-pipeline taxonomy.
 * [`docs/adr/0010-file-creation-is-intentional.md`](adr/0010-file-creation-is-intentional.md) — intentional-creation principle.

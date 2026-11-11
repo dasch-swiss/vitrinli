@@ -44,7 +44,7 @@ We accept this because:
 
 - **DEV-6537's implementation phases do not add new metadata-propagation code.** The existing format-handler writers' XMP emission paths are sufficient. The `convert service-file` command explicitly verifies that `SipiImage`'s XMP is not stripped between read and write; nothing more.
 
-- **`UBIQUITOUS_LANGUAGE.md`'s existing entries remain accurate.** `Preservation metadata = Embedded metadata ∪ Essentials packet` continues to hold, with this ADR clarifying that *rights / provenance / PREMIS* fields are in the **Embedded metadata** side of the union, not the Essentials packet side. The relationships diagram (line 167) is unchanged.
+- **`CONTEXT.md`'s existing entries remain accurate.** `Preservation metadata = Embedded metadata ∪ Essentials packet` continues to hold, with this ADR clarifying that *rights / provenance / PREMIS* fields are in the **Embedded metadata** side of the union, not the Essentials packet side. The relationships diagram (line 167) is unchanged.
 
 - **The IIIF server emits its own provenance event into Access File XMP.** Conceptually: "this Access File was produced by SIPI version X from Service File Y on date Z by applying region R, size S, rotation θ, quality Q." This is a SIPI-side enrichment of the propagated XMP, written into XMP-PROV before the format-handler writer serializes XMP for the output format. Implementation is a DEV-6537 follow-up (under the `convert access-file` / IIIF-server shared-command work).
 

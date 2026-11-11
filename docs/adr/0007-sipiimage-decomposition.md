@@ -108,4 +108,4 @@ The new topology must satisfy these `bazel query` invariants (same style as [ARC
 
 - **No facade methods on `Image`.** See "Free-function-style image processing" above — the FFI/Lua binding layer (`image_handle.cpp` + `bindings/image.rs`) is the sole translator; this is a closed decision, not an open question.
 
-- **Glossary deltas land in [`UBIQUITOUS_LANGUAGE.md`](../../UBIQUITOUS_LANGUAGE.md)** in the batched edit pass: add **Image processing** (umbrella for the free-function module). Sharpen **Image** (the code-level class becomes a narrow value type; domain term stays correct).
+- **Glossary deltas land in [`CONTEXT.md`](../../CONTEXT.md)** in the batched edit pass: add **Image processing** (umbrella for the free-function module). Sharpen **Image** (the code-level class becomes a narrow value type; domain term stays correct).
