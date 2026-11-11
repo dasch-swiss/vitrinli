@@ -59,7 +59,7 @@ namespace {
   constexpr std::uint32_t kCacheIndexVersion = 1;
 
   // SHA-256 hex digest of `s` (64 hex chars = 256 bits, well past the >=128-bit
-  // floor): the persisted and in-memory key for a cache entry's canonical URL
+  // floor): the persisted and in-memory index key derived from an entry's Cache key
   // (S2-26). A short/truncated key is forgeable and becomes a
   // content-substitution primitive on a restricted image.
   std::string sha256_hex(const std::string &s)
@@ -67,7 +67,7 @@ namespace {
     unsigned char digest[EVP_MAX_MD_SIZE];
     unsigned int len = 0;
     if (EVP_Digest(s.data(), s.size(), digest, &len, EVP_sha256(), nullptr) != 1) {
-      throw SipiError("SHA-256 digest of cache canonical key failed");
+      throw SipiError("SHA-256 digest of cache key failed");
     }
     std::ostringstream oss;
     for (unsigned int i = 0; i < len; ++i) {
@@ -128,7 +128,7 @@ static int clearCacheDir(const std::string &dir)
 
 typedef struct _AListEle
 {
-  std::string canonical;
+  std::string cache_key;
   time_t access_time;
   off_t fsize;
 
@@ -211,25 +211,25 @@ SipiCache::SipiCache(const std::string &cachedir_p,
 
         // Bound every char[] field before constructing a std::string — a
         // record without a NUL within its field is corrupt, not "long".
-        size_t canonical_len = strnlen(fr.canonical, sizeof(fr.canonical));
+        size_t cache_key_len = strnlen(fr.cache_key, sizeof(fr.cache_key));
         size_t origpath_len = strnlen(fr.origpath, sizeof(fr.origpath));
         size_t cachepath_len = strnlen(fr.cachepath, sizeof(fr.cachepath));
-        if (canonical_len == sizeof(fr.canonical) || origpath_len == sizeof(fr.origpath)
+        if (cache_key_len == sizeof(fr.cache_key) || origpath_len == sizeof(fr.origpath)
             || cachepath_len == sizeof(fr.cachepath)) {
           log_debug("Cache index record %d has an unterminated field, skipping", i);
           skipped++;
           continue;
         }
 
-        std::string canonical(fr.canonical, canonical_len);
+        std::string cache_key(fr.cache_key, cache_key_len);
         std::string origpath(fr.origpath, origpath_len);
         std::string cachepath(fr.cachepath, cachepath_len);
 
         // Reject forged records: an empty key, or a cachepath escaping the
         // cache directory (a path separator has no business in a basename
         // produced by getNewCacheFileName()).
-        if (canonical.empty() || cachepath.find('/') != std::string::npos) {
-          log_debug("Cache index record %d has an invalid canonical/cachepath, skipping", i);
+        if (cache_key.empty() || cachepath.find('/') != std::string::npos) {
+          log_debug("Cache index record %d has an invalid cache key/cachepath, skipping", i);
           skipped++;
           continue;
         }
@@ -261,7 +261,7 @@ SipiCache::SipiCache(const std::string &cachedir_p,
         cr.source_size = fr.source_size;
         cache_used_bytes += cr.fsize;
         nfiles++;
-        cachetable[canonical] = cr;
+        cachetable[cache_key] = cr;
         log_debug("Cache loaded file \"%s\"", cr.cachepath.c_str());
       }
 
@@ -334,8 +334,8 @@ SipiCache::~SipiCache()
       fr.clevels = ele.second.clevels;
       fr.numpages = ele.second.numpages;
       // ele.first is already the SHA-256 digest (S2-26): computed once by
-      // check()/add() on the raw canonical URL, never re-hashed here.
-      (void)snprintf(fr.canonical, 256, "%s", ele.first.c_str());
+      // check()/add() on the raw Cache key, never re-hashed here.
+      (void)snprintf(fr.cache_key, 256, "%s", ele.first.c_str());
       (void)snprintf(fr.origpath, 256, "%s", ele.second.origpath.c_str());
       (void)snprintf(fr.cachepath, 256, "%s", ele.second.cachepath.c_str());
       fr.mtime = ele.second.mtime;
@@ -449,14 +449,14 @@ int SipiCache::purge(bool use_lock)
     bool nfiles_ok = (max_nfiles == 0) || (nfiles <= nfiles_low);
     if (size_ok && nfiles_ok) break;
 
-    auto ct_it = cachetable.find(ele.canonical);
+    auto ct_it = cachetable.find(ele.cache_key);
     if (ct_it == cachetable.end()) continue;// already erased
 
     std::string delpath = _cachedir + "/" + ct_it->second.cachepath;
 
     auto blocked_it = blocked_files.find(delpath);
     if (blocked_it != blocked_files.end() && blocked_it->second > 0) {
-      log_debug("Skipping blocked cache file for %s", ele.canonical.c_str());
+      log_debug("Skipping blocked cache file for %s", ele.cache_key.c_str());
       continue;
     }
 
@@ -489,7 +489,7 @@ int SipiCache::purge(bool use_lock)
 
 //============================================================================
 
-std::string SipiCache::check(const std::string &origpath_p, const std::string &canonical_p, bool block_file)
+std::string SipiCache::check(const std::string &origpath_p, const std::string &cache_key_p, bool block_file)
 {
   SIPI_ZONE_N("SipiCache::check");
   struct stat fileinfo;
@@ -506,7 +506,7 @@ std::string SipiCache::check(const std::string &origpath_p, const std::string &c
   const off_t source_size = fileinfo.st_size;
 
   std::string res;
-  const std::string digest = sha256_hex(canonical_p);
+  const std::string digest = sha256_hex(cache_key_p);
 
   std::lock_guard<std::mutex> locking_mutex_guard(locking);
   auto it = cachetable.find(digest);
@@ -572,7 +572,7 @@ std::string SipiCache::getNewCacheFileName(void)
 //============================================================================
 
 void SipiCache::add(const std::string &origpath_p,
-  const std::string &canonical_p,
+  const std::string &cache_key_p,
   const std::string &cachepath_p,
   size_t img_w_p,
   size_t img_h_p,
@@ -628,10 +628,10 @@ void SipiCache::add(const std::string &origpath_p,
   fr.access_time = at;
   fr.fsize = fileinfo.st_size;
 
-  const std::string digest = sha256_hex(canonical_p);
+  const std::string digest = sha256_hex(cache_key_p);
 
   //
-  // we check if there is already a file with the same canonical name. If so,
+  // we check if there is already a file with the same cache key. If so,
   // we remove it
   //
   std::lock_guard<std::mutex> locking_mutex_guard(locking);
@@ -664,20 +664,20 @@ void SipiCache::add(const std::string &origpath_p,
 
 //============================================================================
 
-bool SipiCache::remove(const std::string &canonical_p)
+bool SipiCache::remove(const std::string &cache_key_p)
 {
   std::lock_guard<std::mutex> locking_mutex_guard(locking);
 
-  auto it = cachetable.find(sha256_hex(canonical_p));
+  auto it = cachetable.find(sha256_hex(cache_key_p));
   if (it == cachetable.end()) {
-    log_warn("Couldn't remove cache for %s: not existing!", canonical_p.c_str());
+    log_warn("Couldn't remove cache for %s: not existing!", cache_key_p.c_str());
     return false;
   }
 
   std::string delpath = _cachedir + "/" + it->second.cachepath;
   auto blocked_it = blocked_files.find(delpath);
   if (blocked_it != blocked_files.end() && blocked_it->second > 0) {
-    log_warn("Couldn't remove cache for %s: file in use (%d)!", canonical_p.c_str(), blocked_it->second);
+    log_warn("Couldn't remove cache for %s: file in use (%d)!", cache_key_p.c_str(), blocked_it->second);
     return false;
   }
   log_debug("Delete from cache \"%s\"...", it->second.cachepath.c_str());
@@ -726,7 +726,7 @@ void SipiCache::loop(ProcessOneCacheFile worker, void *userdata, SortMethod sm)
   int i = 1;
 
   for (const auto &ele : alist) {
-    worker(i, ele.canonical, cachetable[ele.canonical], userdata);
+    worker(i, ele.cache_key, cachetable[ele.cache_key], userdata);
     i++;
   }
 }

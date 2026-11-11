@@ -2,6 +2,8 @@
 status: accepted
 ---
 
+> Later rename: the `FileCacheRecord::canonical` field and the `canonical_p` parameters are now named `cache_key` and `cache_key_p`, after the glossary term *Cache key*. This record keeps the names it was written with.
+
 # Cache index gets a fixed header, a SHA-256 canonical key, and a size-aware freshness gate
 
 The `.sipicache` index (`src/cache/cpp/SipiCache.{h,cpp}`) — the on-disk serialization of `SipiCache`'s in-memory `cachetable` — changes in three ways, landing together as one atomic format change because they all touch the same on-disk `FileCacheRecord` layout:
