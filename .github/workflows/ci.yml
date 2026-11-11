@@ -12,7 +12,8 @@
 #      RBE worker — no cross-compile). amd64 carries the heaviest downstream
 #      work (Docker smoke, Scout, SARIF), so short-circuiting it on a lint
 #      finding saves the most. Linux legs additionally build the Docker image,
-#      run the Bazel-built smoke test against it, and feed Docker Scout; amd64
+#      run the Bazel-built smoke test against it, gate it on fixed High/Critical
+#      OS-package CVEs (`just image-scan`), and feed Docker Scout; amd64
 #      alone uploads the SARIF CVE scan. Every leg writes its
 #      `just bazel-test` invocation's Build Event Protocol JSON and uploads it
 #      as a `bep-<platform>` artifact for offline cache-hit-rate analysis.
@@ -223,6 +224,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}
         run: just bazel-test-smoke ${{ steps.setup.outputs.flags }}
+
+      # Both Linux legs: the Debian packages resolve per arch. grype has no
+      # BCR/cargo distribution — install the pinned release, verified by sha256.
+      - name: Install grype
+        if: runner.os == 'Linux'
+        run: |
+          case "${{ matrix.arch }}" in
+            amd64) sum=a5a1218dce63acdac152a6b3b5bb366e7267e36f4069848cf455543b3fa5700e ;;
+            arm64) sum=bc0e52b1a0de37e2ff021c4924d689dce7dcff2e7d74b39aea16c0453e69be18 ;;
+          esac
+          curl -fsSLo grype.tar.gz "https://github.com/anchore/grype/releases/download/v0.120.0/grype_0.120.0_linux_${{ matrix.arch }}.tar.gz"
+          echo "$sum  grype.tar.gz" | sha256sum -c -
+          tar -xzf grype.tar.gz grype
+          sudo mv grype /usr/local/bin/grype
+          rm grype.tar.gz
+      - name: Image CVE gate (fixed High/Critical)
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}
+        run: just image-scan ${{ steps.setup.outputs.flags }}
 
       # amd64-only: arm64 and amd64 build the same image contents from the
       # same source, so a second Scout comparison adds no signal — and one

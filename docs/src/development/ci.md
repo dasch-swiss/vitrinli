@@ -70,8 +70,14 @@ none of them wait on a separate lint gate. Every leg runs:
    `:docker_smoke` rust_test, the test loads the OCI tarball into
    the local Docker daemon, and runs the smoke suite against the
    loaded container.
-3. **Docker Scout** (linux-amd64 PRs only, one leg — a single PR
-   comment): `Docker Scout — compare to production`,
+3. **Image CVE gate (Linux only)** — `just image-scan` runs grype
+   (pinned release, installed in-job) over the image tarball the smoke
+   step built, and fails on any High/Critical CVE with a fixed version
+   in the OS packages (distroless base + `bookworm.lock.json`).
+   `.grype.yaml` documents the false positives it ignores.
+4. **Docker Scout** (linux-amd64 PRs only, one leg — a single PR
+   comment, informational, never fails the job):
+   `Docker Scout — compare to production`,
    `Docker Scout — CVE report (SARIF)`, and
    `Upload SARIF to GitHub Security`.
 
@@ -203,10 +209,13 @@ the Nix flake inputs and the BCR `bazel_dep`s are bumped by hand.
 
 This closes one gap, not the whole dependency surface: `dependency-audit`
 does not see the native `http_archive` / `cc_library` pins below —
-they have no lockfile-based advisory feed. Docker Scout (`ci.yml`'s PR-time
-CVE scan and `publish.yml`'s release-time Critical gate) covers OS/runtime
-packages in the *image layers*, which also does not reach these
-statically-linked libraries.
+they have no lockfile-based advisory feed. The OS/runtime packages in the
+*image layers* are gated by `just image-scan` in the `test` job (grype, fails on
+fixed High/Critical) and reported by Docker Scout (`ci.yml`'s PR-time report and
+`publish.yml`'s release-time Critical gate). Neither reaches these
+statically-linked libraries. A failing `image-scan` is fixed by bumping the
+snapshot in `bazel/distroless/bookworm.yaml` (then `bazel run @bookworm//:lock`)
+or the `distroless_base` digest in `MODULE.bazel`.
 
 ### Quarterly native-pin review
 

@@ -129,6 +129,7 @@ groups:
 | `bazel-test-approval` | `bazel test //test/approval:approvaltests` |
 | `bazel-test-e2e [*FLAGS]` | All Rust e2e `rust_test` targets |
 | `bazel-test-smoke [*FLAGS]` | Docker smoke test (consumes Bazel-built image tarball) |
+| `image-scan [*FLAGS]` | grype gate: fail on fixed High/Critical CVEs in the image's OS packages (needs `grype`; on macOS pass `--platforms=//platforms:linux_*`) |
 | `bazel-build-sanitized [*FLAGS]` | `bazel build --config=asan --config=ubsan //src/cli:sipi` |
 | `bazel-cross-build-image {amd64,arm64}` | Cross-build `//src:sipi_image` for the Linux target arch (build-only; darwin→linux gate) |
 | `bazel-docker-build-{amd64,arm64}` | Build + load per-arch image as `daschswiss/sipi:latest` |

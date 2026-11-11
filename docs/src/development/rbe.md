@@ -482,7 +482,8 @@ would remove the risk; both are infra changes.
 2. Passes `$RBE_FLAGS` to every `just bazel-*` invocation.
 3. Runs `just bazel-test` (unit + approval + e2e).
 4. On Linux: runs `just bazel-test-smoke` (which first calls `bazel run //src:image_load`).
-5. On linux-amd64 PRs: runs Docker Scout.
+5. On Linux: runs `just image-scan` (grype CVE gate over the same image).
+6. On linux-amd64 PRs: runs Docker Scout.
 
 `ci.yml`'s path-gated `sanitizer` job, plus `coverage.yml`,
 `fuzz.yml`, and `publish.yml`, all go

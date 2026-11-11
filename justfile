@@ -601,6 +601,22 @@ bazel-docker-build-amd64 *FLAGS='':
 bazel-docker-build-arm64 *FLAGS='':
     bazel run --config=release --stamp --platforms=//platforms:linux_aarch64 --verbose_failures {{FLAGS}} //src:image_load
 
+# CVE gate over the OS packages in the production image (distroless base plus
+# `bazel/distroless/bookworm.lock.json`): fails on any High/Critical finding that
+# has a fixed version. Unfixed findings cannot be cleared by a bump and do not
+# fail. Fix a failure by bumping the snapshot in `bazel/distroless/bookworm.yaml`
+# (then `bazel run @bookworm//:lock`) or the `distroless_base` digest in
+# `MODULE.bazel`; `.grype.yaml` is for false positives only. Same flags as
+# `bazel-test-smoke`, so CI hits the cache. CI pins grype v0.120.0
+# (`.github/workflows/ci.yml`); locally `nix shell nixpkgs#grype`. On macOS pass
+# a Linux platform, e.g. `just image-scan --platforms=//platforms:linux_aarch64`.
+image-scan *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    bazel build --stamp --verbose_failures --remote_download_toplevel {{FLAGS}} --output_groups=tarball //src:image_load
+    tar=$(bazel cquery --stamp {{FLAGS}} --output_groups=tarball --output=files //src:image_load)
+    env -u GH_TOKEN grype "docker-archive:$tar" --config .grype.yaml --only-fixed --fail-on high
+
 # Cross-build the Linux OCI image for `arch` (amd64|arm64) WITHOUT loading it
 # into a Docker daemon. Builds `//src:sipi_image` under
 # `--platforms=//platforms:linux_x86_64` / `:linux_aarch64` so a host of any OS (e.g. a

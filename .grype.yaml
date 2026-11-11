@@ -1,0 +1,28 @@
+# Config for `just image-scan`. Entries here are false positives only. A real
+# fixed finding is cleared by bumping the snapshot in
+# `bazel/distroless/bookworm.yaml` (then `bazel run @bookworm//:lock`) or the
+# `distroless_base` digest in `MODULE.bazel`, never by an ignore.
+ignore:
+  # syft's binary classifier reads the upstream version string from files that
+  # Debian packages own (curl 7.88.1, krb5 1.20.1) and so reports CVEs Debian
+  # already backported. The image's dpkg metadata does not list owned files, so
+  # grype cannot drop these overlaps itself; the deb records for the same
+  # packages are scanned. Scoped to the files the classifier matches today, so a
+  # binary added elsewhere (/sbin/sipi, /usr/local) stays in scope.
+  - package:
+      type: binary
+      location: "/usr/bin/curl"
+  - package:
+      type: binary
+      location: "/usr/lib/*-linux-gnu/libkrb5.so*"
+  # The distroless base records its packages in /var/lib/dpkg/status.d/. Where
+  # bookworm.lock.json installs the same package, the apt layer (last in
+  # `//src:sipi_image`'s tars) overwrites its files and records the newer
+  # version in /var/lib/dpkg/status, which is scanned. Keep this list to
+  # packages that are in both the base and the lock.
+  - package:
+      type: deb
+      location: "/var/lib/dpkg/status.d/libc6"
+  - package:
+      type: deb
+      location: "/var/lib/dpkg/status.d/libssl3"
