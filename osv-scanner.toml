@@ -1,7 +1,8 @@
 # OSV-Scanner ignore list for the `just audit` CI gate (see the `audit` recipe
-# in the justfile). Entries here suppress advisories that have no upstream fix
-# and are provably unreachable in SIPI; each must carry a reason and be revisited
-# when a fix ships.
+# in the justfile). Entries here suppress advisories that are provably
+# unreachable in Vitrinli and either have no upstream fix or sit in a crate that
+# is locked but never compiled; each must carry a reason and be revisited when
+# that changes.
 
 [[IgnoredVulns]]
 id = "RUSTSEC-2023-0071"
@@ -18,3 +19,19 @@ reason = "crypto-bigint 0.5 timing variability; fixed only in 0.7.6+, which need
 [[IgnoredVulns]]
 id = "GHSA-qwgh-2vcv-g2f7"
 reason = "block-buffer 0.10 cursor corruption after a caught panic inside a block-compression callback; fixed only in 0.12.1, which needs the digest 0.11 / sha2 0.11 / hmac 0.13 stack, and jsonwebtoken still requires sha2 0.10. Unreachable in Vitrinli: the callbacks are the RustCrypto compression functions (sha2 for HS256, plus the unused RSA/ECDSA paths), which are pure arithmetic and cannot panic, and no caller catches a panic and reuses the hasher. Revisit when jsonwebtoken moves to sha2 0.11."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0446"
+reason = "actix-http 3.13.5 request smuggling through malformed chunked trailers; fixed in 3.20.2. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0447"
+reason = "actix-web 4.15.0 compressed request bodies exhaust memory before extractor limits apply; fixed in 4.18.2. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0448"
+reason = "actix-http 3.13.5 unbounded decompression exhausts memory and CPU; fixed in 3.20.1. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0455"
+reason = "actix-http 3.13.5 large-window Brotli bodies bypass decompression memory limits; fixed in 3.20.3. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."

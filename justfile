@@ -170,8 +170,13 @@ bazel-clippy-check *FLAGS='':
 # still requires `p256`/`p384` 0.13 on 0.5. Those curves serve ES256/ES384 only;
 # with HS256 pinned no elliptic-curve operation runs, so the timing leak is
 # unreachable. Revisit when `jsonwebtoken` moves to `p256` 0.14.
+# RUSTSEC-2026-0446, -0448, -0455 (`actix-http` 3.13.5) and RUSTSEC-2026-0447
+# (`actix-web` 4.15.0) are in the lockfile only because Cargo locks every
+# optional dependency: `sentry` lists `sentry-actix` behind its `actix` feature,
+# which Vitrinli does not enable, so no actix crate is compiled or linked.
+# Revisit if a `sentry` feature list ever gains `actix`.
 audit:
-    cargo audit --file Cargo.Bazel.lock --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2026-0387
+    cargo audit --file Cargo.Bazel.lock --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2026-0387 --ignore RUSTSEC-2026-0446 --ignore RUSTSEC-2026-0447 --ignore RUSTSEC-2026-0448 --ignore RUSTSEC-2026-0455
     osv-scanner scan source --lockfile=Cargo.lock:Cargo.Bazel.lock --config=osv-scanner.toml
 
 # Lint commit messages with commitlint-rs — the CI `commit-lint` gate. Enforces
