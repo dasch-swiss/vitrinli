@@ -99,7 +99,7 @@ File-based LRU cache with dual-limit eviction (`src/cache/cpp/SipiCache.h`, `src
 | **File count limit** | `cache_nfiles`: 0=no limit |
 | **Crash recovery** | Serialized index on disk; rebuild from directory scan if index missing |
 | **Concurrent access** | Mutex-protected; `blocked_files` map prevents reads during writes |
-| **Canonical key** | Full IIIF URL (with watermark flag) as cache key |
+| **Cache key** | Canonical IIIF URL plus watermark and size-restriction suffixes, hashed with SHA-256 for the index |
 | **Metrics** | hits, misses, evictions, skips, size, file count — the scalar counters cross the FFI seam via `SipiMetricsSnapshot` and export over OTLP (see below) |
 | **API endpoints** | None. There is no `/api/cache` route on the Rust shell; observe cache behaviour via the on-disk cache-dir file count |
 | **Cache metadata** | Image dimensions, tile info, pyramid levels, MIME type, checksum per entry |

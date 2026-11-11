@@ -25,11 +25,11 @@ namespace Sipi {
  * is generated (= decoded) and simultaneously written to the server socket and the chache file.
  * If the file has already been cached, the cached version is sent (but only, if the "original"
  * is older than the cached file. In order to identify the different versions, the
- * canonocal URL according to the IIIF 2.0 standard is used.
+ * Cache key (the IIIF Canonical URL plus watermark and restriction suffixes) is used.
  *
  * The on-disk `.sipicache` index is a fixed header (magic + version +
  * `sizeof(FileCacheRecord)`) followed by an array of `FileCacheRecord`s keyed
- * by a SHA-256 digest of the canonical URL (not the raw URL — a short or
+ * by a SHA-256 digest of the Cache key (not the raw key — a short or
  * truncated key is a forgery/collision primitive on a restricted image), and
  * every record is re-validated on load (bounded strings, no path separators,
  * `fsize` recomputed from the actual cache file). See
@@ -57,7 +57,7 @@ public:
     size_t tile_w, tile_h;
     int clevels;
     int numpages;
-    char canonical[256];//!< hex SHA-256 digest of the canonical URL (ADR-0025), not the raw URL
+    char cache_key[256];//!< hex SHA-256 digest of the Cache key (ADR-0025), not the raw key
     char origpath[256];
     char cachepath[256];
 #if defined(HAVE_ST_ATIMESPEC)
@@ -172,12 +172,12 @@ public:
    * entry.
    *
    * \param[in] origpath_p The path to the Service File
-   * \param[in] canonical_p The canonical URL according to the IIIF standard
+   * \param[in] cache_key_p The Cache key (see UBIQUITOUS_LANGUAGE.md)
    *
    * \returns Returns an empty string if the file is not in the cache or if the file needs to be replaced.
    *          Otherwise returns tha path to the cached file.
    */
-  std::string check(const std::string &origpath_p, const std::string &canonical_p, bool block_file = false);
+  std::string check(const std::string &origpath_p, const std::string &cache_key_p, bool block_file = false);
 
   void deblock(const std::string &res);
 
@@ -193,11 +193,11 @@ public:
    * Add (or replace) a file to the cache.
    *
    * \param[in] origpath_p Path to the Service File
-   * \param[in] canonical_p Canonical IIIF URL
+   * \param[in] cache_key_p The Cache key
    * \param[in] cachepath_p Path of the cache file
    */
   void add(const std::string &origpath_p,
-    const std::string &canonical_p,
+    const std::string &cache_key_p,
     const std::string &cachepath_p,
     size_t img_w_p,
     size_t img_h_p,
@@ -209,9 +209,9 @@ public:
   /*!
    * Remove one file from the cache
    *
-   * \param[in] canonical_p IIIF canonical URL of the file to remove from the cache
+   * \param[in] cache_key_p Cache key of the entry to remove
    */
-  bool remove(const std::string &canonical_p);
+  bool remove(const std::string &cache_key_p);
 
   /*!
    * Get the current size of the cache in bytes

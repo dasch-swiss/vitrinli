@@ -252,28 +252,28 @@ TEST_F(SipiCacheTest, AddCheckRemove)
   std::string origpath = createOrigFile(origdir, "img.tif", 100);
   Sipi::SipiCache cache(cachedir, 10 * 1024 * 1024, 100);
 
-  std::string canonical = "/iiif/img/full/max/0/default.jpg";
+  std::string cache_key = "/iiif/img/full/max/0/default.jpg";
 
   // Check: not in cache
-  std::string result = cache.check(origpath, canonical);
+  std::string result = cache.check(origpath, cache_key);
   EXPECT_TRUE(result.empty());
 
   // Add
   std::string cachefile = cache.getNewCacheFileName();
   createDummyFile(cachefile, 2048);
-  cache.add(origpath, canonical, cachefile, 640, 480);
+  cache.add(origpath, cache_key, cachefile, 640, 480);
   EXPECT_EQ(cache.getNfiles(), 1u);
 
   // Check: now in cache
-  result = cache.check(origpath, canonical);
+  result = cache.check(origpath, cache_key);
   EXPECT_FALSE(result.empty());
 
   // Remove
-  EXPECT_TRUE(cache.remove(canonical));
+  EXPECT_TRUE(cache.remove(cache_key));
   EXPECT_EQ(cache.getNfiles(), 0u);
 
   // Check: gone
-  result = cache.check(origpath, canonical);
+  result = cache.check(origpath, cache_key);
   EXPECT_TRUE(result.empty());
 }
 
@@ -299,8 +299,8 @@ TEST_F(SipiCacheTest, EvictionByFileCount)
     std::string origpath = createOrigFile(origdir, name, 100);
     std::string cachefile = cache.getNewCacheFileName();
     createDummyFile(cachefile, 100);
-    std::string canonical = "/iiif/" + name + "/full/max/0/default.jpg";
-    cache.add(origpath, canonical, cachefile, 100, 100);
+    std::string cache_key = "/iiif/" + name + "/full/max/0/default.jpg";
+    cache.add(origpath, cache_key, cachefile, 100, 100);
     // Small sleep to ensure different access_time for LRU ordering
     sleep(1);// ensure different time_t for LRU ordering
   }
@@ -332,8 +332,8 @@ TEST_F(SipiCacheTest, EvictionBySize)
     std::string origpath = createOrigFile(origdir, name, 50);
     std::string cachefile = cache.getNewCacheFileName();
     createDummyFile(cachefile, 100);
-    std::string canonical = "/iiif/" + name + "/full/max/0/default.jpg";
-    cache.add(origpath, canonical, cachefile, 100, 100);
+    std::string cache_key = "/iiif/" + name + "/full/max/0/default.jpg";
+    cache.add(origpath, cache_key, cachefile, 100, 100);
     sleep(1);
   }
 
@@ -365,8 +365,8 @@ TEST_F(SipiCacheTest, EvictionDualLimit)
     std::string origpath = createOrigFile(origdir, name, 50);
     std::string cachefile = cache.getNewCacheFileName();
     createDummyFile(cachefile, 100);
-    std::string canonical = "/iiif/" + name + "/full/max/0/default.jpg";
-    cache.add(origpath, canonical, cachefile, 100, 100);
+    std::string cache_key = "/iiif/" + name + "/full/max/0/default.jpg";
+    cache.add(origpath, cache_key, cachefile, 100, 100);
     sleep(1);
   }
 
@@ -470,21 +470,21 @@ TEST_F(SipiCacheTest, BlockAndDeblock)
 // Replacing existing entry
 // -------------------------------------------------------------------
 
-TEST_F(SipiCacheTest, AddDuplicateCanonicalReplacesEntry)
+TEST_F(SipiCacheTest, AddDuplicateCacheKeyReplacesEntry)
 {
   std::string origpath = createOrigFile(origdir, "img.tif", 100);
   Sipi::SipiCache cache(cachedir, 10 * 1024 * 1024, 100);
-  std::string canonical = "/iiif/img/full/max/0/default.jpg";
+  std::string cache_key = "/iiif/img/full/max/0/default.jpg";
 
   // Add first version
   std::string cachefile1 = cache.getNewCacheFileName();
   createDummyFile(cachefile1, 500);
-  cache.add(origpath, canonical, cachefile1, 100, 100);
+  cache.add(origpath, cache_key, cachefile1, 100, 100);
   EXPECT_EQ(cache.getNfiles(), 1u);
-  // Add second version with same canonical
+  // Add second version with same cache key
   std::string cachefile2 = cache.getNewCacheFileName();
   createDummyFile(cachefile2, 800);
-  cache.add(origpath, canonical, cachefile2, 200, 200);
+  cache.add(origpath, cache_key, cachefile2, 200, 200);
   EXPECT_EQ(cache.getNfiles(), 1u);
 
   // Old file removed from disk
@@ -539,18 +539,18 @@ TEST_F(SipiCacheTest, ReplacedSourceOlderOrEqualMtimeDifferentSizeIsMiss)
   ASSERT_EQ(utime(origpath.c_str(), &old_time), 0);
 
   Sipi::SipiCache cache(cachedir, 10 * 1024 * 1024, 100);
-  std::string canonical = "/iiif/img/full/max/0/default.jpg";
+  std::string cache_key = "/iiif/img/full/max/0/default.jpg";
 
   std::string cachefile = cache.getNewCacheFileName();
   createDummyFile(cachefile, 500);
-  cache.add(origpath, canonical, cachefile, 100, 100);
-  ASSERT_FALSE(cache.check(origpath, canonical).empty());
+  cache.add(origpath, cache_key, cachefile, 100, 100);
+  ASSERT_FALSE(cache.check(origpath, cache_key).empty());
 
   // Replace with a DIFFERENT size, keeping the SAME (still older) mtime.
   createDummyFile(origpath, 250);
   ASSERT_EQ(utime(origpath.c_str(), &old_time), 0);
 
-  EXPECT_TRUE(cache.check(origpath, canonical).empty());
+  EXPECT_TRUE(cache.check(origpath, cache_key).empty());
 }
 
 TEST_F(SipiCacheTest, SameSizeSameMtimeReplacementIsHit)
@@ -563,16 +563,16 @@ TEST_F(SipiCacheTest, SameSizeSameMtimeReplacementIsHit)
   ASSERT_EQ(utime(origpath.c_str(), &old_time), 0);
 
   Sipi::SipiCache cache(cachedir, 10 * 1024 * 1024, 100);
-  std::string canonical = "/iiif/img/full/max/0/default.jpg";
+  std::string cache_key = "/iiif/img/full/max/0/default.jpg";
   std::string cachefile = cache.getNewCacheFileName();
   createDummyFile(cachefile, 500);
-  cache.add(origpath, canonical, cachefile, 100, 100);
+  cache.add(origpath, cache_key, cachefile, 100, 100);
 
   // Replace with SAME size (different content) and SAME mtime.
   createDummyFile(origpath, 100);
   ASSERT_EQ(utime(origpath.c_str(), &old_time), 0);
 
-  EXPECT_FALSE(cache.check(origpath, canonical).empty());
+  EXPECT_FALSE(cache.check(origpath, cache_key).empty());
 }
 
 
@@ -617,7 +617,7 @@ TEST_F(SipiCacheTest, ForgedRecordCachepathWithSlashIsRejected)
   Sipi::SipiCache::FileCacheRecord fr{};
   fr.img_w = 100;
   fr.img_h = 100;
-  std::snprintf(fr.canonical, sizeof(fr.canonical), "%s", "deadbeef");
+  std::snprintf(fr.cache_key, sizeof(fr.cache_key), "%s", "deadbeef");
   std::snprintf(fr.origpath, sizeof(fr.origpath), "%s", "/tmp/orig.tif");
   // A legitimate cachepath is always a getNewCacheFileName() basename with
   // no directory component — this one tries to escape the cache directory.
@@ -633,30 +633,30 @@ TEST_F(SipiCacheTest, ForgedRecordCachepathWithSlashIsRejected)
 
 
 // -------------------------------------------------------------------
-// S2-26: long canonical keys don't collide (SHA-256, not truncation)
+// S2-26: long cache keys don't collide (SHA-256, not truncation)
 // -------------------------------------------------------------------
 
-TEST_F(SipiCacheTest, LongCanonicalKeysRoundTripWithoutCollision)
+TEST_F(SipiCacheTest, LongCacheKeysRoundTripWithoutCollision)
 {
   std::string origpath1 = createOrigFile(origdir, "img1.tif", 100);
   std::string origpath2 = createOrigFile(origdir, "img2.tif", 100);
 
-  // Two canonicals sharing a prefix well past the old 255-byte truncation
+  // Two cache keys sharing a prefix well past the old 255-byte truncation
   // boundary, differing only past it — these used to collide once persisted
-  // through the raw-truncation `canonical[256]` field.
+  // through the raw-truncation `cache_key[256]` field.
   std::string shared_prefix(280, 'a');
-  std::string canonical1 = "/iiif/" + shared_prefix + "/suffix-one/full/max/0/default.jpg";
-  std::string canonical2 = "/iiif/" + shared_prefix + "/suffix-two/full/max/0/default.jpg";
+  std::string cache_key1 = "/iiif/" + shared_prefix + "/suffix-one/full/max/0/default.jpg";
+  std::string cache_key2 = "/iiif/" + shared_prefix + "/suffix-two/full/max/0/default.jpg";
 
   {
     Sipi::SipiCache cache(cachedir, 10 * 1024 * 1024, 100);
     std::string cachefile1 = cache.getNewCacheFileName();
     createDummyFile(cachefile1, 500);
-    cache.add(origpath1, canonical1, cachefile1, 100, 100);
+    cache.add(origpath1, cache_key1, cachefile1, 100, 100);
 
     std::string cachefile2 = cache.getNewCacheFileName();
     createDummyFile(cachefile2, 600);
-    cache.add(origpath2, canonical2, cachefile2, 100, 100);
+    cache.add(origpath2, cache_key2, cachefile2, 100, 100);
 
     EXPECT_EQ(cache.getNfiles(), 2u);
     // destructor persists the index
@@ -666,8 +666,8 @@ TEST_F(SipiCacheTest, LongCanonicalKeysRoundTripWithoutCollision)
   {
     Sipi::SipiCache cache(cachedir, 10 * 1024 * 1024, 100);
     EXPECT_EQ(cache.getNfiles(), 2u);
-    EXPECT_FALSE(cache.check(origpath1, canonical1).empty());
-    EXPECT_FALSE(cache.check(origpath2, canonical2).empty());
+    EXPECT_FALSE(cache.check(origpath1, cache_key1).empty());
+    EXPECT_FALSE(cache.check(origpath2, cache_key2).empty());
   }
 }
 
@@ -678,8 +678,8 @@ TEST_F(SipiCacheTest, LongCanonicalKeysRoundTripWithoutCollision)
 
 TEST_F(SipiCacheTest, DuplicateAddDuringEvictionClampsUsedBytesInsteadOfUnderflowing)
 {
-  const std::string canonicalSmall = "/iiif/small/full/max/0/default.jpg";
-  const std::string canonicalBig = "/iiif/big/full/max/0/default.jpg";
+  const std::string cacheKeySmall = "/iiif/small/full/max/0/default.jpg";
+  const std::string cacheKeyBig = "/iiif/big/full/max/0/default.jpg";
 
   std::string origSmall = createOrigFile(origdir, "small.tif", 50);
   std::string origBig = createOrigFile(origdir, "big.tif", 50);
@@ -692,17 +692,17 @@ TEST_F(SipiCacheTest, DuplicateAddDuringEvictionClampsUsedBytesInsteadOfUnderflo
 
   std::string smallCachefile = cache.getNewCacheFileName();
   createDummyFile(smallCachefile, 90);
-  cache.add(origSmall, canonicalSmall, smallCachefile, 100, 100);
+  cache.add(origSmall, cacheKeySmall, smallCachefile, 100, 100);
   sleep(1);// ensure "small" keeps the older access_time for LRU ordering
 
   std::string bigCachefile = cache.getNewCacheFileName();
   createDummyFile(bigCachefile, 200);
-  cache.add(origBig, canonicalBig, bigCachefile, 100, 100);
+  cache.add(origBig, cacheKeyBig, bigCachefile, 100, 100);
 
   // Cache is now 290 bytes, well over the 100-byte limit, uncorrected until
   // the next add() call.
 
-  // Re-adding "small"'s canonical first subtracts its own 90 bytes as part
+  // Re-adding "small"'s cache key first subtracts its own 90 bytes as part
   // of the duplicate-replace bookkeeping (leaving 200, still over limit),
   // then calls purge() — whose LRU scan still finds the same
   // not-yet-overwritten cachetable entry and subtracts its 90 bytes a SECOND
@@ -713,7 +713,7 @@ TEST_F(SipiCacheTest, DuplicateAddDuringEvictionClampsUsedBytesInsteadOfUnderflo
   // added back.
   std::string newSmallCachefile = cache.getNewCacheFileName();
   createDummyFile(newSmallCachefile, 15);
-  cache.add(origSmall, canonicalSmall, newSmallCachefile, 100, 100);
+  cache.add(origSmall, cacheKeySmall, newSmallCachefile, 100, 100);
 
   EXPECT_EQ(cache.getCacheUsedBytes(), 15ull);
 }

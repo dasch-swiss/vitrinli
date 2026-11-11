@@ -29,7 +29,7 @@ cc_library(
         "//src/logging:logging",
         "//src/observability:observability",
         "//src/util",
-        # SHA-256 digest of the canonical URL used as the cache index key (ADR-0025).
+        # SHA-256 digest of the Cache key, used as the cache index key (ADR-0025).
         "@openssl//:crypto",
     ],
 )
