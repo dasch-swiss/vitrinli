@@ -1,0 +1,11 @@
+# Mass-reformat commits, skipped by `git blame`. Git reads this file only when
+# blame.ignoreRevsFile names it; run once per clone:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# Add a commit here only when it changes formatting and nothing else.
+
+# Reformat C++ code (#135)
+685a3956e8fac7bf5615d685e08b6d8401b16b52
+# style: rustfmt the Rust crates
+bff840a4ba4e02d053c567de93144fc53604272f
+# style: clang-format the decode/encode benchmark sources
+21fa77b9bb2632cbd0956d9a4b83be4562f8450e

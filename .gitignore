@@ -21,6 +21,7 @@ sipi
 sipi.log*
 /extsrcs/
 .direnv/
+.env
 
 target
 __pycache__/

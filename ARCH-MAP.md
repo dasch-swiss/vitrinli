@@ -1,8 +1,7 @@
 ---
 dune_map: true
-schema_version: 1
-last_verified_commit: none   # not SHA-tracked: rebase-merge rewrites branch SHAs, so a pre-merge SHA is unknowable. Use `date` for freshness.
-date: 2026-09-12
+schema_version: 2
+date: 2026-11-11
 ---
 
 # ARCH-MAP.md — Vitrinli
@@ -46,6 +45,7 @@ image formats, whose registry fan-out is documented, not mechanized.
   - The four codec handlers mutate `SipiImage` only through its public mutator surface (`pixels_writable()` plus the metadata/geometry setters) — no `friend` declarations remain; the sole surviving friend is `operator<<`. *Enforcement: `structure`* (the mutator surface is a normal public API, not a language reach-in).
   - `image_processing` depends one-way on `//src/image`; `//src/image` never depends back — a facade method forwarding to a free function in `image_processing` would reintroduce the cycle the extraction removes. *Enforcement: `structure`* (`bazel query 'somepath(//src/image, //src/image_processing)'` is empty; see the `image_processing` entry for the CI-only caveat on running this locally).
 - **Durable state:** `SipiImage::io` (static registry, single writer = `format_registry.cpp`).
+- **Fingerprint:** `067b68bce255`
 
 ### image_processing
 
@@ -61,6 +61,7 @@ image formats, whose registry fan-out is documented, not mechanized.
   - `deps(//src/image_processing/...)` resolves only to `{image, error, util, logging, observability, metadata}` (plus the vendored `@highway`/`@lcms2` externals) — no `format_handlers`, no `ffi`, no Kakadu/libtiff. *Enforcement: `structure`* — `bazel query 'deps(//src/image_processing/...)'`. Both queries above are CI-verifiable, not locally runnable in every environment: a `bazel query` whose universe reaches `@google_benchmark` needs to fetch `@libpfm`, which fails without DNS — treat a local failure-to-fetch as inconclusive, not as a passing or failing check.
   - `Sipi::read_watermark` is *declared* here and *called* from `add_watermark`, but *defined* in `format_handlers` (`SipiIOTiff.cpp`) — resolved at link time, the same declare-here/define-there asymmetry `//src/image` documents for `SipiImage::io`. This package must never gain a dependency on `format_handlers` (the reverse edge — since `format_handlers` already depends on `image_processing` for the pixel operators — would cycle). *Enforcement: `docs-only`* (a Bazel dep would fail analysis, but the link-time resolution itself isn't mechanically checked).
 - **Durable state:** none.
+- **Fingerprint:** `c184c38e3afe`
 
 ### error
 
@@ -73,12 +74,13 @@ image formats, whose registry fan-out is documented, not mechanized.
 - **Used by:** image, metadata, format_handlers, iiifparser, cache
 - **Boundary rules:** a leaf — no internal deps beyond `util`; `deps(//src/error/...)` matches this minimal set — nothing pulls `image` back in through `error`. *Enforcement: `structure`* — `bazel query 'deps(//src/error/...)'` (CI-verifiable; see the `image_processing` entry's caveat on running `bazel query` locally in this sandbox).
 - **Durable state:** none.
+- **Fingerprint:** `53f0c7ee8857`
 
 ### cache
 
 - **Paths:** `:(glob)src/cache/**`
 - **Purpose:** File-based LRU of generated representations, keyed by a SHA-256 digest of the *Cache key*, with dual-limit eviction (total size **and** file count) and crash recovery. The on-disk index is fronted by a versioned header; a magic/version/record-size mismatch means "start empty" (ADR-0025).
-- **Key entities:** `Sipi::SipiCache`, `SipiCache::check`/`add`/`purge`/`deblock`, `FileCacheRecord` (on-disk fixed-width; `canonical` is a SHA-256 hex digest, `source_size` is the freshness gate), `CacheRecord`, `CacheIndexHeader` (magic / `kCacheIndexVersion` / record_size), `sha256_hex`, `subtractClamped` (underflow-guarded byte accounting)
+- **Key entities:** `Sipi::SipiCache`, `SipiCache::check`/`add`/`purge`/`deblock`, `FileCacheRecord` (on-disk fixed-width; `cache_key` is the SHA-256 hex digest of the Cache key, `source_size` is the freshness gate), `CacheRecord`, `CacheIndexHeader` (magic / `kCacheIndexVersion` / record_size), `sha256_hex`, `subtractClamped` (underflow-guarded byte accounting)
 - **Public interface:** `SipiCache` (via `//src/cache`); the FFI runtime owns one instance.
 - **Local-context kit:** `src/cache/BUILD.bazel`, `src/cache/cpp/SipiCache.h`, `src/cache/cpp/SipiCache.cpp`, `src/ffi/cpp/init.cpp` (constructs it), `src/ffi/cpp/serve_image.cpp` (check/add + the `O_NOFOLLOW` cache-read), `docs/adr/0025-cache-index-header.md`, `UBIQUITOUS_LANGUAGE.md` (Cache / Cache key / Cache pin)
 - **Depends on:** error, logging, observability; openssl (SHA-256 keying)
@@ -88,6 +90,7 @@ image formats, whose registry fan-out is documented, not mechanized.
   - The on-disk index is fronted by a fixed `CacheIndexHeader` (magic + version + `sizeof(FileCacheRecord)`); any mismatch → start empty and log once, so a layout change to `FileCacheRecord` MUST bump `kCacheIndexVersion` (ADR-0025). *Enforcement: `structure`* (the load-time header check refuses a mismatched index) + `docs-only` (the version-bump obligation).
   - Cache-hit file reads open with `O_NOFOLLOW` and reject non-regular files (`serve_image.cpp` `full_file_body`), so a symlink planted in the cache dir plus a forged record cannot read arbitrary files (ADR-0025). *Enforcement: `structure`* (the open flag + `S_ISREG` check).
 - **Durable state:** in-memory `cachetable` (keyed by SHA-256 hex) + `blocked_files` + `cache_used_bytes`/`nfiles` (mutex-guarded; byte accounting underflow-clamped via `subtractClamped`); on-disk `.sipicache` index behind the versioned header (rewritten on destruction; version/magic/record-size mismatch → start empty + log once). Single owner = the FFI runtime (`std::unique_ptr`, constructed in `init.cpp`).
+- **Fingerprint:** `bea93e12ba18`
 
 ### throttling
 
@@ -99,7 +102,7 @@ engine-side memory budget under one component. Supersedes the former
 - **Purpose:** Vitrinli's load-driven request-rejection (Throttling). Three sub-policies: **Admission** (the two-partition thread pool — tile floor + full hard cap, pre-dispatch), the **Decode memory budget** (the full partition's decode-RAM cap, post-cache, 503/413 under advanced mode), and the **Decode watchdog** (a per-decode wall-clock deadline, `EngineContext::decode_timeout_ms` default 120000ms; on timeout the wedged worker is detached and counted in the `wedged_threads` gauge — the DEV-7080 unpatchable-Kakadu-hang availability guard, enacted at the `decode_guard.cpp` acquire site via `run_with_deadline`/`run_guarded_decode`).
 - **Key entities:** Rust `admission::{Admission, AdmissionKind, AdmissionMode, AdmissionConfig, AdmissionSnapshot, Permit, default_pool_size}` (`//src/throttling/rust:admission`); C++ `Sipi::SipiMemoryBudget` + `MemoryBudgetGuard` + `enum class AdmissionMode { BASIC, ADVANCED }` + `Sipi::estimate_peak_memory` (`//src/throttling/cpp:memory_budget`).
 - **Public interface:** `Admission` (owned by `server` `AppState`; `classify`/`acquire`/`snapshot`); `SipiMemoryBudget` + `MemoryBudgetGuard` (via `//src/throttling/cpp:memory_budget`).
-- **Local-context kit:** `src/throttling/rust/lib.rs`, `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`, `src/throttling/cpp/SipiPeakMemory.h`, `src/ffi/cpp/decode_guard.{h,cpp}` (the single acquire site: `acquire_full_lane_budget` + `run_guarded_decode`, shared by both decode entry points), `src/ffi/cpp/serve_image.cpp` and `src/ffi/cpp/image_handle.cpp` (the two callers), `src/ffi/cpp/init.cpp` (resolves the config), `src/server/rust/src/routes.rs` (`AppState`, classify/acquire call sites), `UBIQUITOUS_LANGUAGE.md` (Throttling), `docs/adr/0022-two-lane-admission-control.md`.
+- **Local-context kit:** `src/throttling/rust/lib.rs`, `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`, `src/throttling/cpp/SipiPeakMemory.h`, `src/ffi/cpp/decode_guard.{h,cpp}` (the single acquire site: `acquire_full_lane_budget` + `run_guarded_decode`, shared by both decode entry points), `src/ffi/cpp/serve_image.cpp` and `src/ffi/cpp/image_handle.cpp` (the two callers), `src/ffi/cpp/init.cpp` (resolves the config), `src/ffi/cpp/engine_context.h` (`decode_timeout_ms` and the other budget defaults; the offline CLI verbs carry their own `kDecodeTimeoutMs` in `src/cli/cpp/commands/decode_deadline.h`), `src/server/rust/src/routes.rs` (`AppState`, classify/acquire call sites), `UBIQUITOUS_LANGUAGE.md` (Throttling), `docs/adr/0022-two-lane-admission-control.md`.
 - **Depends on:** admission (Rust) → `tokio` + `//src/iiifparser/rust:iiif_parser` only (FFI-free; no `//src/ffi`, no C++ engine — DUNE-002). memory_budget (C++) → nothing internal (decoupled from observability by design; the acquire site re-publishes gauges).
 - **Used by:** `server` (`AppState` owns the pool; `routes.rs` classify/acquire; `metrics.rs` reads the snapshot); ffi (`init.cpp` constructs the budget; `decode_guard.cpp` acquires for both `serve_image.cpp` and `image_handle.cpp`'s `sipi_image_new`).
 - **Boundary rules:**
@@ -108,6 +111,7 @@ engine-side memory budget under one component. Supersedes the former
   - The shell Semaphore pool (pre-dispatch) and the engine memory budget (post-cache) are two distinct admission layers. *Enforcement: `docs-only`*.
   - `admission_mode`/`tiles_memory_ratio`/`large_decode_threshold_bytes`/`memory_limit` are resolved engine-side and read back over the seam (single authority, DUNE-003). *Enforcement: `docs-only`*.
 - **Durable state:** admission — `Arc<Semaphore>` global + full sub-pool, per-partition `AtomicUsize`/`AtomicU64` wait/shed counters (single writer). memory_budget — `std::atomic<size_t> _used` (CAS-updated). No persistence.
+- **Fingerprint:** `69e3a1231b5c`
 
 ### format_handlers
 
@@ -124,6 +128,7 @@ engine-side memory budget under one component. Supersedes the former
   - The JPEG writer owns the one-segment fit policy: a metadata block that `Exif::exifBytes(limit)` or `Xmp::split_extended` cannot fit is left out with a `log_warn` naming block, size and reason, and the write succeeds; those functions only report `kWriteFailed`. *Enforcement: `static-analysis`* (`formats_test` `JpegMetadataSegments.*LeftOutWithAWarning`).
   - Adding a format touches a shared registry + dispatch fan-out (~4 sites across 3 files, listed by `tools/format-handlers-fanout.sh`). *Enforcement: `docs-only`* (DUNE-005 deferred a descriptor table until a real 5th format; ADR-0006 is the prior art to check first).
 - **Durable state:** `SipiImage::io` (single writer here); no runtime state.
+- **Fingerprint:** `bab450d838de`
 
 ### iiifparser
 
@@ -140,6 +145,7 @@ engine-side memory budget under one component. Supersedes the former
   - `rust/iiif_parser` is FFI-free: `bazel query 'deps(...)'` shows no `//src/ffi:sipi_ffi` and no C++ engine, so it needs no `_CPP_STDLIB_LINK` and is sanitizer-eligible (untagged). *Enforcement: `structure`* (Bazel dep set). The domain→FFI `From` impls in `server/rust/ffi.rs` are exhaustive matches, never `as` casts. *Enforcement: `static-analysis`* (a new variant fails to compile; per-variant mapping test).
   - `fuzz/` holds the repo's only **C++→Rust** link (`shim.rs` → `fuzz_target.cc`); every other FFI edge is Rust→C++. It exists because libFuzzer's entry point is C and `rules_fuzzing` is a C++/Java rule set. Nothing outside the package can depend on the shim, so the one-way shell→seam→engine direction still holds for everything that ships. *Enforcement: `structure`* (both targets are `testonly` and the package grants no default visibility, so a dep from outside fails analysis). `--config=fuzz` is Linux-only; the default `replay` engine keeps the target building and corpus-replaying on every platform. *Enforcement: `structure`* (the `//src/...` test sweeps pick up the replay test).
 - **Durable state:** `SipiSize::limitdim` (static compile-time constant, no writer).
+- **Fingerprint:** `08f266514992`
 
 ### metadata
 
@@ -155,6 +161,7 @@ engine-side memory budget under one component. Supersedes the former
   - `Icc::iccBytes()` is the single chokepoint every codec-bound ICC profile funnels through; new format handlers must route through it (bypassing it breaks the approval gate). *Enforcement: `static-analysis`* (approval determinism gate) + `docs-only` (the banner).
   - No `SipiImage` dependency — the one former coupling was inverted via `photometric_interpretation.h`. *Enforcement: `structure`* (dep set).
 - **Durable state:** none in-process; the durable artifact is the Essentials packet embedded in image headers (written by format encoders via `Essentials::serialize`).
+- **Fingerprint:** `3caecbad3cb0`
 
 ### scripting
 
@@ -162,12 +169,13 @@ engine-side memory budget under one component. Supersedes the former
 - **Purpose:** The Rust-hosted mlua Lua runtime (ADR-0023, in `rust/` per the colocated-polyglot layout ADR-0021): hardened per-request VM profile (stdlib whitelist, `os` shim, restricted `require`, memory cap, deadline hook + binding chokepoint), the bytecode cache, the `LuaEnv` entry points (preflight / file preflight / routes / elua), the full binding surface (`server.*`, `server.fs`, `helper`, `SipiImage`, sqlite `server.db`), and the Lua-flavor config-file parse.
 - **Key entities:** `LuaEnv` (preflight/route/config entry), `ScriptRuntime`/`RequestVm` (VM factory + binding chokepoint), `BytecodeCache`, `LimitConfig`/`Deadline`/`KillStats`, `RequestData`/`ResponseWriter`, `LuaImage`, `valid_permission` (the runtime-side *Permission* gate, exported for `server`'s lockstep test), `parse_config_file`
 - **Public interface:** `//src/scripting/rust:scripting` (crate `scripting`), re-exports in `lib.rs`.
-- **Local-context kit:** `src/scripting/rust/BUILD.bazel`, `src/scripting/rust/entry.rs`, `src/scripting/rust/runtime.rs`, `src/scripting/rust/limits.rs`, `src/scripting/rust/bindings/mod.rs`, `src/scripting/rust/engine_ffi.rs` (the Rust mirror of the `sipi_image_*` handle seam the Lua bindings call — disjoint from `server`'s `ffi.rs`; see the `ffi` entry), `docs/adr/0023-rust-hosted-mlua-lua-runtime.md`
+- **Local-context kit:** `src/scripting/rust/BUILD.bazel`, `src/scripting/rust/entry.rs`, `src/scripting/rust/runtime.rs`, `src/scripting/rust/limits.rs`, `src/scripting/rust/bindings/mod.rs` plus the one `src/scripting/rust/bindings/{server,image,sqlite,helpers,config}.rs` file that holds the table the change touches (the binding surface is split one file per table; `mod.rs` alone does not show it), `src/scripting/rust/engine_ffi.rs` (the Rust mirror of the `sipi_image_*` handle seam the Lua bindings call — disjoint from `server`'s `ffi.rs`; see the `ffi` entry), `docs/adr/0023-rust-hosted-mlua-lua-runtime.md`
 - **Depends on:** mlua (`external` link mode against `@lua`), ffi (the `sipi_image_*` handle family + edge probes), sqlite3 (hand-written FFI over `@sqlite3`), jsonwebtoken, reqwest, libc, tracing
 - **Used by:** server (the Rust shell builds one `LuaEnv` and drives every Lua entry through it)
 - **Boundary rules:**
   - Rust side: every script-visible binding registers through the `RequestVm::register_binding` chokepoint (deadline check first); `verify_bindings_checked` enumerates binding tables against the registration record. *Enforcement: `static-analysis`* (the enumeration test).
 - **Durable state:** none intrinsic (a runtime/VM; fresh VM per request). The bytecode cache is in-memory, keyed by path, invalidated by mtime+size. The `server.db` sqlite binding opens caller-controlled sqlite files at script direction.
+- **Fingerprint:** `0fb027b40862`
 
 ### util
 
@@ -180,6 +188,7 @@ engine-side memory budget under one component. Supersedes the former
 - **Used by:** image, format_handlers, iiifparser, metadata, cli, ffi (broadly used leaf)
 - **Boundary rules:** a leaf — deps only `logging` internally; colocated `util_test` links only `:util`, so a forbidden cross-module include is a build error, not a `sipi_lib`-wide slip. *Enforcement: `structure`*.
 - **Durable state:** `Hash::HashType` values are an on-disk contract (mirrored in `essentials.proto`); `Parsing` ships a compiled-in `magic.mgc` blob (read-only); `SipiFilenameHash::__levels` (static, set via `setLevels`/`migrateToLevels`).
+- **Fingerprint:** `f2dfdad333c0`
 
 ### observability
 
@@ -192,6 +201,7 @@ engine-side memory budget under one component. Supersedes the former
 - **Used by:** image, cache (writers), ffi (reader/bridge), format_handlers
 - **Boundary rules:** the singleton is engine-internal; a scalar counter reaches production only if it is also read into `SipiMetricsSnapshot` and mapped in `metrics.rs`. `metrics_registry_test` pins the full field inventory (22 bridged / 13 engine-internal). *Enforcement: `static-analysis`* (the seam-tripwire test + the `SipiMetricsSnapshot` 176-byte layout lock) + `docs-only` (the banner).
 - **Durable state:** the `Metrics` singleton atomics (process-lifetime); writers across image/cache/format_handlers/ffi, reader = `sipi_metrics_snapshot`.
+- **Fingerprint:** `d94958e185b0`
 
 ### logging
 
@@ -204,6 +214,7 @@ engine-side memory budget under one component. Supersedes the former
 - **Used by:** nearly every C++ component
 - **Boundary rules:** the one module whose per-target `layering_check` passes today (no vendored includes). *Enforcement: `static-analysis`* (layering_check enabled on this target only; deferred elsewhere — DEV-6353).
 - **Durable state:** module-level statics (`g_log_level`, `g_json_mode`) + thread-locals (`g_trace_id`/`g_span_id`/`g_outbound_traceparent`); writers are the `set_*` functions.
+- **Fingerprint:** `b70ae38e6109`
 
 ### ffi
 
@@ -220,6 +231,7 @@ engine-side memory budget under one component. Supersedes the former
   - No C++ exception may cross the boundary — every `sipi_*` wraps in a catch-all (`sipi_guard`). *Enforcement: `review`*.
   - The C ABI is hand-mirrored on the Rust side in **two disjoint** files, partitioned by consumer: `src/server/rust/src/ffi.rs` (serve entries + config getters) and `src/scripting/rust/engine_ffi.rs` (the `sipi_image_*` handle family the Lua bindings call). No `sipi_*` function is declared in both. As with every hand-mirrored `extern "C"` fn decl here, the function *signatures* carry no mechanical guard against `sipi_ffi.h` (only the `#[repr(C)]` struct *layouts* are guarded, above), so a C++ signature change must be mirrored by hand in whichever file owns that function. *Enforcement: `docs-only`*.
 - **Durable state:** `EngineContext` (file-static `g_engine`, single sink `set_engine_context`, sole installer `sipi_init`).
+- **Fingerprint:** `59487318f54a`
 
 ### cli
 
@@ -239,6 +251,7 @@ Rust binary entry point under one component.
   - The mimalloc stats `extern "C"` block is deliberately colocated in `main.rs` (drops out with the feature; a version drift is a SIGSEGV, not a build error — read via the `mi_stats_shim.c` C shim). *Enforcement: `docs-only`* (SAFETY comment; decision 4).
   - Same oracle-vocabulary avoidance as `server`. *Enforcement: `docs-only`* (the `CONVENTIONS.md` § Production surface rule).
 - **Durable state:** `LibraryInitialiser` singleton (process-global init, idempotent); the Rust binary owns the process lifecycle, the Sentry client guard, and the minidump reporter guard (none persistent).
+- **Fingerprint:** `4dd2e16983aa`
 
 ### server
 
@@ -257,6 +270,7 @@ Rust binary entry point under one component.
   - Startup fails closed on an unsafe `jwt_secret` (empty, `<32` bytes, or the shipped default) via `jwtkey_is_unsafe` (`lib.rs`); a docroot overlapping a writable/image root and an init-script failure likewise refuse startup. *Enforcement: `static-analysis`* (the `jwtkey_is_unsafe` unit tests + startup boot probes).
   - Request lifetime is edge-bounded by `SIPI_REQUEST_TIMEOUT` (default 60s, to the response head) and `SIPI_BODY_READ_TIMEOUT` (default 10s, request-body read) via tower-http layers; `SIPI_PUBLIC_HOSTS` allowlists `X-Forwarded-Host`/`Host` (empty = reflect verbatim). The header-read timeout and connection cap stay Traefik-side (S2-18). *Enforcement: `docs-only`*.
 - **Durable state:** `AppState` (built once per `serve()`), which owns the two-lane `Admission` pool (`Arc<admission::Admission>`, holding the semaphores + per-partition counters — see the `throttling` component); the opt-in Preflight cache.
+- **Fingerprint:** `9bf74b616fd1`
 
 ## Cross-cutting concerns
 
@@ -272,13 +286,14 @@ Files and rules that span components rather than living in one:
 These carry no component boundary rules but exist so every tracked file maps somewhere:
 
 - **Tests** — `:(glob)test/**` (unit under `test/unit/**` — shared fixture generators only (`test/unit/fixtures/`); every per-module unit-test suite is co-located under its own package (ADR-0003) — snapshot regression under `test/approval/**`, Rust reqwest e2e under `test/e2e/**`, fixtures under `test/_test_data/**`). Every unit test links its own module's narrow Bazel target; `//src:sipi_lib` has exactly one test consumer, `//test/approval`'s snapshot-regression binary.
-- **Build & tooling** — `:(glob)MODULE.bazel`, `:(glob)MODULE.bazel.lock`, `:(glob)Cargo.Bazel.lock`, `:(glob).bazelrc` (absent = tracked via workflow), `:(glob)justfile`, `:(glob)bazel/**`, `:(glob)tools/**`, `:(glob)platforms/**`, `:(glob).github/**`, `:(glob)flake.nix`, `:(glob)flake.lock`, `:(glob)rustfmt.toml`, `:(glob)codecov.yml`, `:(glob)version.txt`, `:(glob)osv-scanner.toml`, `:(glob)BUILD.bazel` (root), `:(glob).bazelignore`, `:(glob).bazelversion`, `:(glob).clang-format`, `:(glob).clang-tidy`, `:(glob).clangd` (reads the `compile_commands.json` that `just compile-commands` writes), `:(glob).clang_complete`, `:(glob).cmake-format.yaml`, `:(glob).commitlintrc.yml`, `:(glob).envrc`, `:(glob).gitattributes`, `:(glob).gitignore`, `:(glob).grenrc`, `:(glob).lsan_suppressions.txt`. CI gates: `just bazel-rustfmt-check`, `just bazel-clippy-check`, `just commit-lint`, the approval + e2e + unit suites.
+- **Build & tooling** — `:(glob)MODULE.bazel`, `:(glob)MODULE.bazel.lock`, `:(glob)Cargo.Bazel.lock`, `:(glob).bazelrc` (absent = tracked via workflow), `:(glob)justfile`, `:(glob)bazel/**`, `:(glob)tools/**`, `:(glob)platforms/**`, `:(glob).github/**`, `:(glob)flake.nix`, `:(glob)flake.lock`, `:(glob)rustfmt.toml`, `:(glob)codecov.yml`, `:(glob)version.txt`, `:(glob)osv-scanner.toml`, `:(glob)BUILD.bazel` (root), `:(glob).bazelignore`, `:(glob).bazelversion`, `:(glob).clang-format`, `:(glob).clang-tidy`, `:(glob).clangd` (reads the `compile_commands.json` that `just compile-commands` writes), `:(glob).clang_complete`, `:(glob).cmake-format.yaml`, `:(glob).commitlintrc.yml`, `:(glob).editorconfig`, `:(glob)eng.yaml`, `:(glob).env.example`, `:(glob).envrc`, `:(glob).git-blame-ignore-revs`, `:(glob).gitattributes`, `:(glob).gitignore`, `:(glob).grenrc`, `:(glob).lsan_suppressions.txt`. CI gates: `just bazel-rustfmt-check`, `just bazel-clippy-check`, `just commit-lint`, the approval + e2e + unit suites.
 - **Docs & agent-context** — `:(glob)docs/**`, `:(glob)*.md` (CLAUDE.md, CONTEXT.md, UBIQUITOUS_LANGUAGE.md, CONVENTIONS.md, REVIEW.md, RELEASING.md, README.md, DEPRECATIONS.md, ARCH-MAP.md), ADRs under `docs/adr/**`; `:(glob)LICENSE`, `:(glob)diagrams/**` (the excalidraw/pdf/png architecture diagrams).
 - **Runtime assets** — `:(glob)include/**` (generated headers, ICC profiles, favicon), `:(glob)server/**`, `:(glob)config/**`, `:(glob)scripts/**`, `:(glob)certificate/**`, `:(glob)db/**`, `:(glob)openseadragon.min.js.map`, `:(glob)test_tifs.sh`, `:(glob).claude/**`.
 
 ## Conventions
 
-- **Module granularity** — one Bazel `cc_library` per concern under `src/<mod>/`, source + header + `*_test.cpp` colocated (ADR-0003). Local-context-kit budget **≤7 files**.
+- **Module granularity** — one Bazel `cc_library` per concern under `src/<mod>/`, source + header + `*_test.cpp` colocated (ADR-0003). Local-context-kit budget **≤7 files**. *Enforcement: `review`.*
+  - **Recorded overrides.** These kits exceed 7 because a correct change in them needs both sides of a seam (FFI, Rust shell ↔ C++ engine) or a cross-module registry open: `throttling` 14 (admission in Rust, memory budget and watchdog in C++, the acquire site and its callers in `ffi`), `cli` 14 (Rust entry point, C++ offline verbs, and three ADRs that bind the binary), `ffi` 11 (each `#[repr(C)]` struct is a two-file edit, plus the config apply chain), `format_handlers` 9 and `metadata` 9 (the format registry fan-out and the ICC chokepoint each span modules), `image` 8, `scripting` 8 (`mod.rs` plus the one binding file a change touches). A new component starts at ≤7; growing an override needs an argument in review, and trimming one is welcome.
 - **Top-level dependency direction (one-way):** `cli → server → //src/ffi:sipi_ffi → //src/image → {metadata, iiifparser, format_handlers:output_sink, util, logging, observability}`; `format_handlers` and `image_processing` sit beside/below the engine and depend on `//src/image`, never the reverse; `//src/scripting/rust` is a shell-side Rust crate over the seam. **The engine never links the shell or the seam.** *Enforcement: `structure`* (Bazel dep graph; a back-edge fails analysis).
 - **New work is added by dropping a file / adding a route, not editing a central switch** — a new offline verb is one file in `src/cli/cpp/commands/`; a new axum route is a registration in `server/rust/lib.rs::app()`; a new engine module is a new `cc_library` package. *Enforcement: `docs-only`.*
   - **Exception (banned-construct):** new image format → editing the `SipiImage::io` registry + `read`/`read_shape` switch (~4 shared sites, `tools/format-handlers-fanout.sh`) → *why it couples:* the dispatch is centralized, so a 5th format is a multi-file shared edit → *alternative:* a descriptor-registration table (deferred until a real 5th format; ADR-0006) → *enforcement:* `docs-only`.
@@ -290,4 +305,4 @@ These carry no component boundary rules but exist so every tracked file maps som
 - **Banned constructs:**
   - oracle-era framing (`oracle`/`shttps`/`cutover`/`parity`/`strangler`/`C++ server`) in production Rust comments → couples the code to a removed transport → describe current behaviour on its own terms → *enforcement:* `docs-only` (the `CONVENTIONS.md` § Production surface rule).
   - a `server` clap flag that is silently dropped → a config option that never reaches the engine → destructure exhaustively in `From<&ServerArgs>` (bind `field: _` to drop deliberately) → *enforcement:* `structure`.
-  - "file" as a domain noun for the served byte stream, "backpressure" for the load-shed policies, "canonical URL" for the cache key → drift from the ubiquitous language → use Bitstream / Throttling / Cache key (`UBIQUITOUS_LANGUAGE.md`) → *enforcement:* `docs-only` (reviewer checklist) + `static-analysis` for the oracle subset.
+  - "file" as a domain noun for the served byte stream, "backpressure" for the load-shed policies, "canonical URL" for the cache key → drift from the ubiquitous language → use Bitstream / Throttling / Cache key (`UBIQUITOUS_LANGUAGE.md`) → *enforcement:* `docs-only` (reviewer checklist).
