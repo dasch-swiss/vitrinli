@@ -111,6 +111,7 @@ Defined in `.bazelrc`. Each flag composes with `bazel build` /
 | `-c dbg` | `-O0 -g`. Full debug symbols; what `bazel-build-sanitized` consumes. |
 | `--config=asan` | AddressSanitizer + DWARF inline; consults `.lsan_suppressions.txt` at e2e time. |
 | `--config=ubsan` | UndefinedBehaviorSanitizer. Composes with `--config=asan`. |
+| `--config=rbe-darwin` | Opt-in: compile on the NativeLink worker from an Apple Silicon Mac, tests run locally. See [Local use from macOS](rbe.md#local-use-from-macos). |
 
 ## Querying the build graph
 

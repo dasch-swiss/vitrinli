@@ -1,8 +1,8 @@
 name: bazel-rbe
 description: >
   Set up mTLS material for the self-hosted RBE backend and emit the Bazel flag
-  string: remote cache + executor (the runner endpoint). Tests are forced
-  local (--strategy=TestRunner=local) so compiles cross-compile on the x86_64
+  string: remote cache + executor (the runner endpoint). Cross legs add
+  --config=rbe-cross (.bazelrc), so compiles cross-compile on the x86_64
   worker while target-arch test binaries run on the native runner. No
   --experimental_remote_downloader: Bazel fetches a FetchBlob digest's bytes
   from the --remote_cache CAS (GrpcRemoteDownloader.java), so a gRPC
@@ -12,7 +12,7 @@ description: >
 
 inputs:
   runner-endpoint:
-    description: RE-API endpoint, e.g. grpcs://<host>:50051 — serves the remote cache (AC+CAS) and the remote executor.
+    description: RE-API endpoint, e.g. grpcs://<host>:443 (the proxy in front of NativeLink) — serves the remote cache (AC+CAS) and the remote executor.
     required: true
   ca-cert:
     description: NativeLink server CA (PEM). Bazel verifies both services' server certs against it.
@@ -82,6 +82,7 @@ runs:
         #     mismatch ships an arm64/darwin tool to the x86_64 worker → it can't run).
         #   --platforms sets the TARGET arch this runner builds for.
         FLAGS="$FLAGS --remote_executor=$RBE_RUNNER_ENDPOINT --remote_default_exec_properties=cpu_arch=x86_64"
+        # `build:rbe-darwin` in .bazelrc mirrors the darwin pair below; change both together.
         # Exec platforms: the x86_64 worker FIRST (compiles/exec tools prefer it). For
         # cross legs the target platform is appended so Bazel's test toolchain can
         # resolve an exec platform matching the target arch and run tests on the native
@@ -94,13 +95,10 @@ runs:
         fi
         FLAGS="$FLAGS --extra_execution_platforms=$EXEC_PLATFORMS --platforms=$RBE_TARGET_PLATFORM"
         if [ "$RBE_TARGET_PLATFORM" != "//platforms:linux_x86_64" ]; then
-          # Cross legs (arm64/darwin runner → x86_64 worker): run tests on the native
-          # runner (`--strategy=TestRunner=local`) — the cross-built binary can't run on
-          # the x86_64 worker. Pin the host config to x86_64 so rules_rust exec-config
-          # tools (process_wrapper, build scripts, proc-macros) build for the worker, not
-          # the local host (rules_rust #327). And disable local fallback — a fallback to
-          # the arm64/darwin host would run x86_64 exec tools there and crash.
-          FLAGS="$FLAGS --strategy=TestRunner=local --host_platform=//platforms:linux_x86_64 --noremote_local_fallback"
+          # Cross legs (arm64/darwin runner → x86_64 worker): `rbe-cross` in .bazelrc
+          # runs tests on the native runner, pins the host config to x86_64 for the
+          # rules_rust exec tools (rules_rust #327) and disables local fallback.
+          FLAGS="$FLAGS --config=rbe-cross"
         fi
         # Native x86_64 leg (amd64 `test` + `sanitizer`): tests EXECUTE on the worker
         # (exec == target == x86_64), so results cache remotely and the runner skips the

@@ -689,7 +689,7 @@ bazel-docker-extract-debug arch *FLAGS='':
     # `--remote_download_toplevel` overrides the .bazelrc BwoB default
     # (`--remote_download_minimal`): the genrule runs on RBE, so without this
     # the tarball stays in the CAS and the `tar -xf` below can't open it. A
-    # no-op in local dev (no remote configured).
+    # no-op without a remote configured.
     bazel build --config=release --stamp --platforms="$PLATFORM" --verbose_failures --remote_download_toplevel {{FLAGS}} //src:sipi_debug_layout
 
     # Find the single `.debug` file inside the tar. The tarball is

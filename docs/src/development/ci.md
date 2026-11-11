@@ -294,15 +294,15 @@ Gate model:
 CI builds run on a self-hosted **NativeLink Remote Build Execution** backend: a
 single x86_64 worker that cross-compiles all three target arches
 (`linux-amd64`, `linux-aarch64`, `darwin-aarch64`), fronting a remote cache
-(AC + CAS, `:50051`, mTLS) and a `bazel-remote` download cache (`:50052`) for
-`http_archive` source tarballs. The connection, mTLS, and
+(AC + CAS, mTLS). Clients reach it through the proxy on
+`rbe-01.ops.dasch.swiss:443`, the only externally reachable port. The connection, mTLS, and
 cross-compile flags are assembled by the
 [`bazel-rbe`](../../../.github/actions/bazel-rbe) composite action and injected
 per workflow step — Bazel does not expand env vars in `.bazelrc`, so they live
 in the workflow, not the rc file. The backend-agnostic tuning flags
 (`--remote_download_minimal`, `--remote_local_fallback`, `--remote_timeout`,
-`--remote_max_connections`) live in `.bazelrc` and are safe no-ops without a
-remote configured.
+`--remote_max_connections`) live in `.bazelrc` and are no-ops without a remote
+configured; the cross-leg flags live in `.bazelrc` `build:rbe-cross`.
 
 See **[Remote build execution](./rbe.md)** for the full topology, the
 cross-compile flag rationale, and the developer-facing workflow, and the
@@ -316,7 +316,9 @@ Every CI step invokes `just <recipe>` — there are no inline
 `bazel ...` calls in any workflow. CI itself runs Nix-free (see
 "Pull request CI" above); locally, Nix still provisions the dev
 shell. To reproduce any CI job locally, run the same recipe inside
-`nix develop`:
+`nix develop`. With a personal client certificate, add `--config=rbe-darwin`
+on a Mac to compile on the worker (see
+[Local use from macOS](./rbe.md#local-use-from-macos)):
 
 ```bash
 nix develop

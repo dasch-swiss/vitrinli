@@ -150,7 +150,7 @@ build:linux --copt=-fstack-clash-protection
 # Pin the deployment target so Bazel-built binaries are portable across macOS
 # releases. The hermetic `llvm` toolchain fetches the MacOSX26.5 SDK from
 # Apple's CDN; a recent SDK otherwise defaults the deployment target high, so
-# pin the floor explicitly. macOS builds serve development and the macos-14 CI
+# pin the floor explicitly. macOS builds serve development and the macos-15 CI
 # leg only; production is Linux. Keep the floor at or above the deployment
 # target hermetic-llvm gives cc-rs build-script objects (`ring`, 14.0), which
 # `MACOSX_DEPLOYMENT_TARGET` below does not reach, or ld64.lld warns on every
@@ -461,10 +461,12 @@ test --flaky_test_attempts=//test/e2e:upload@3
 
 # ── Remote build execution (NativeLink VM) ──────────────────────────────────
 # The self-hosted NativeLink VM is the Bazel backend: Remote Cache + Remote
-# Execution (:50051, mTLS). The connection + mTLS flags are built by the
-# `bazel-rbe` composite action and injected per CI step (Bazel does NOT expand
-# env vars in .bazelrc, so they live in the workflow, not here):
-#   --remote_cache / --remote_executor=grpcs://<vm>:50051
+# Execution (mTLS). Clients reach it through the proxy on
+# grpcs://rbe-01.ops.dasch.swiss:443, in front of NativeLink's internal :50051.
+# In CI the connection + mTLS flags are built by the `bazel-rbe` composite
+# action and injected per step (Bazel does NOT expand env vars in .bazelrc, so
+# they live in the workflow, not here):
+#   --remote_cache / --remote_executor=grpcs://<host>:443
 #   --tls_certificate / --tls_client_certificate / --tls_client_key
 # No --experimental_remote_downloader: Bazel fetches the FetchBlob digest's
 # bytes from the --remote_cache CAS (GrpcRemoteDownloader.java hands the
@@ -472,12 +474,14 @@ test --flaky_test_attempts=//test/e2e:upload@3
 # it shares a CAS with the remote cache; NativeLink has no fetch-on-miss
 # asset service. External archives are cached by --repository_cache below +
 # a per-runner actions/cache step in CI.
-# Local dev never sets the connection flags, so the tuning flags below are
-# safe no-ops without a remote configured.
+# The connection flags come from the `bazel-rbe` action in CI and from the
+# opt-in --config=rbe-darwin locally; the tuning flags below are no-ops without
+# a remote configured.
 #   --remote_download_minimal: only fetch outputs of explicitly-built targets;
 #     intermediate action outputs stay in the CAS (build-without-the-bytes).
 #   --remote_local_fallback: if the VM is unreachable, build locally instead of
-#     failing — a VM outage degrades wall-clock, never breaks CI.
+#     failing — a VM outage degrades wall-clock, never breaks CI. Cross legs
+#     turn it off (rbe-cross below).
 #   --remote_timeout=600s: per-request budget sized for cold native-dep compiles
 #     on the worker (far longer than a cache-only round-trip).
 #   --remote_max_connections=200: raises the gRPC parallelism ceiling for fast
@@ -490,6 +494,28 @@ build --remote_download_minimal
 build --remote_local_fallback
 build --remote_timeout=600s
 build --remote_max_connections=200
+
+# Cross legs: the target is not x86_64 Linux, so compiles and exec tools run on the
+# x86_64 worker and the tests run on the client. Used by the bazel-rbe action and by
+# rbe-darwin. --host_platform makes rules_rust exec tools build for the worker, not the
+# client (rules_rust #327).
+build:rbe-cross --host_platform=//platforms:linux_x86_64
+build:rbe-cross --strategy=TestRunner=local
+# Do not remove: a local fallback runs the x86_64 exec tools on the client, which fails
+# with "cannot execute binary file" and hides the remote error.
+build:rbe-cross --noremote_local_fallback
+
+# Opt-in remote build execution from an Apple Silicon Mac. Needs `build:dasch-rbe` in
+# ~/.bazelrc ("Config value 'dasch-rbe' is not defined" means it is missing); see
+# docs/src/development/rbe.md § Local use from macOS. The platform pair mirrors the
+# darwin leg of .github/actions/bazel-rbe; change both together.
+build:rbe-darwin --config=dasch-rbe
+build:rbe-darwin --config=rbe-cross
+# After dasch-rbe so it wins: laptop results never enter the cache CI reads.
+build:rbe-darwin --noremote_upload_local_results
+build:rbe-darwin --platforms=//platforms:darwin_aarch64
+build:rbe-darwin --extra_execution_platforms=//platforms:linux_x86_64,//platforms:darwin_aarch64
+build:rbe-darwin --remote_download_toplevel
 
 # Content-addressed cache of external downloads (http_archive tarballs, bzlmod
 # registry files). Bazel's default repository cache lives under the
