@@ -1,0 +1,43 @@
+# Indentation and encoding for files no formatter owns, and the same settings
+# as the formatters for files they do own (.clang-format, rustfmt.toml).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Matches .clang-format (IndentWidth 2, ColumnLimit 120, UseTab Never).
+[*.{c,cc,cpp,h,hpp}]
+max_line_length = 120
+
+# Matches rustfmt.toml (max_width 100) and rustfmt's 4-space default.
+[*.rs]
+indent_size = 4
+max_line_length = 100
+
+# Starlark follows buildifier's 4-space indent.
+[{*.bazel,*.bzl}]
+indent_size = 4
+
+[*.{lua,elua,py}]
+indent_size = 4
+
+[justfile]
+indent_size = 4
+
+# A trailing double space is a hard line break in Markdown.
+[*.md]
+trim_trailing_whitespace = false
+
+# Fuzz corpora and approval goldens are byte-exact inputs, never edited by hand.
+[{**/corpus/**,test/approval/**/*.approved.*}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

@@ -1,11 +1,8 @@
 # Vitrinli Architectural Conventions
 
-Project-specific architectural context for the vitrinli repository. Used by planning, working, and compounding workflows to understand the codebase structure.
+Agent reference card for the work phase. Pair with `REVIEW.md`. Authoritative detail lives in `docs/`.
 
-For review-specific rules, see `REVIEW.md` in the vitrinli repository root.
-For the full C++23 style guide, see `docs/src/development/cpp-style-guide.md`.
-For commit and PR conventions, see `docs/src/development/commit-conventions.md`.
-For reviewer guidelines, see `docs/src/development/reviewer-guidelines.md`.
+Project-specific architectural context for the vitrinli repository. Used by planning, working, and compounding workflows to understand the codebase structure.
 
 ## Production surface
 
@@ -58,33 +55,49 @@ shipping changes to `flake.nix`, `MODULE.bazel`, `BUILD.bazel`, or a
 justfile build recipe, run `just bazel-build` and `just bazel-coverage`
 locally on macOS at minimum.
 
+## ICC Determinism Invariant
+
+[`Icc::iccBytes()`](src/metadata/cpp/icc.cpp) is the single chokepoint that converts an `cmsHPROFILE` into raw bytes for codec consumption — every TIFF, JPEG, PNG, and JP2 emission funnels through it. This is structurally enforced, not just conventional: [`icc.h`](src/metadata/cpp/icc.h) is lcms2-free (no `cmsHPROFILE` is reachable from the public header), and `@lcms2` visibility is narrowed to `//src/metadata`, `//src/metadata/cpp/internal`, and `//src/image_processing` in [`bazel/lcms2.BUILD.bazel`](bazel/lcms2.BUILD.bazel) — a format handler that tries to add the dep back to reach a typed handle directly fails at Bazel analysis time rather than at approval-test time. The one production consumer that legitimately needs a typed handle (`color.cpp`'s `cmsCreateTransform`) goes through [`icc_lcms2.h`](src/metadata/cpp/internal/icc_lcms2.h)'s `iccProfileHandle()` view. This bar catches accidental dependencies, not a determined author: `layering_check` is deferred repo-wide (DEV-6353), so a translation unit that transitively reaches lcms2 headers can still textually `#include <lcms2.h>` and compile. `cmsSaveProfileToMem` has exactly one caller outside `icc.cpp` — the co-located `icc_parse_test.cpp`, covered by the same `//src/metadata` grant. Approval tests run with `SOURCE_DATE_EPOCH=946684800` and `SIPI_WORKSPACE_ROOT="."` injected by `test/approval/BUILD.bazel` so the wall-clock-stamped ICC creation date is overwritten with a fixed value and goldens stay byte-deterministic. Production never sets the env var; deployed binaries continue to embed wall-clock-stamped ICC headers. See [`docs/adr/0002-icc-profile-determinism-test-only.md`](docs/adr/0002-icc-profile-determinism-test-only.md).
+
 ## Scope Discipline
 
-These rules govern *what* to build (mirrored from CLAUDE.md so
-contributors and Claude share the same contract):
+These rules govern *what* to build. They are a contract with the
+maintainer, not style preferences; follow them unless the maintainer
+explicitly overrides one for a task.
 
 - **No backwards-compatibility shims.** Update every caller in the same
   change. Rebase-merge preserves history; deprecated aliases,
   re-exports, and "kept for now" pointers are not needed.
 - **No defense-in-depth.** Validate at system boundaries only — HTTP
-  request handlers, FFI boundaries, CLI parsers. See
-  `REVIEW.md` § "Security (input validation)" for what qualifies.
+  request handlers, FFI boundaries (C library calls), CLI parsers. See
+  `REVIEW.md` § "Security (input validation)" for what qualifies. No
+  redundant null checks, double validation, or `try`/`catch` around code
+  that cannot fail under the current contract.
 - **No enterprise abstractions — KISS.** Three similar lines beat one
-  parameterised helper. Introduce an abstraction only for a *second
+  parameterised helper. Prefer a concrete type over a trait/interface with
+  a single implementation. Introduce an abstraction only for a *second
   real* caller, not a hypothetical one.
-- **Ask when in doubt.** Surface ambiguous decisions to the maintainer
-  before acting. "Suggest, don't decide" is the default.
+- **Ask when in doubt.** If a task is ambiguous, two reasonable approaches
+  exist, or a new pattern, file or dependency feels load-bearing, surface
+  the decision to the maintainer before acting. "Suggest, don't decide" is
+  the default; autonomy is granted explicitly per task.
 
 ## Naming Conventions
 
-The codebase has mixed naming styles. For new code, prefer the C++23 style guide (`camelCase` functions, `trailing_underscore_` members). When modifying existing code, match the surrounding style.
+The C++ code mixes styles: legacy classes use `camelCase` methods (`getNx()`, `parseSizeString()`) next to `snake_case` ones (`essential_metadata()`, `is_set()`). One rule decides which to write:
 
-| Entity | Existing Convention | Example |
+- **New C++ file or new class:** the [C++23 style guide § 3.1](docs/src/development/cpp-style-guide.md) — `camelCase` functions, `snake_case` locals and parameters, `trailing_underscore_` private members, `kPascalCase` constants.
+- **New member in an existing class or file:** match the style already used in that class or file, even where it differs from the style guide. Two styles inside one class are worse than one legacy style.
+- **Do not rename existing identifiers** as part of a behavior change. A rename is its own `refactor` commit that updates every caller (Scope Discipline: no shims).
+- **Rust:** standard Rust naming (`snake_case` items, `PascalCase` types, `SCREAMING_SNAKE_CASE` constants); `rustc` and clippy enforce it.
+- **Domain words** come from [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md): use the canonical term and never an alias it lists as *avoid* (for example *Cache key*, not "canonical URL", in cache code).
+
+| Entity | Existing convention | Example |
 |---|---|---|
 | Types / Classes | `PascalCase` with `Sipi` prefix | `SipiImage`, `SipiCache` |
-| Functions / Methods | Mixed `camelCase` / `snake_case` | `imgroot()`, `send_error()`, `build_canonical_url()` |
-| Private members | `_leading_underscore` | `_imgroot`, `_nthreads` |
-| Namespaces | `PascalCase` | `Sipi::`, `shttps::` |
+| Functions / Methods | Mixed `camelCase` / `snake_case`, per class | `getNx()`, `essential_metadata()`, `build_canonical_url()` |
+| Private members | `_leading_underscore` (legacy) / `trailing_underscore_` (new); in an existing class, match the class | `_cachedir`, `errmsg_` |
+| Namespaces | `Sipi` and `PascalCase` or lowercase sub-namespaces | `Sipi::`, `Sipi::cli::`, `Sipi::observability::` |
 
 ## Comments
 
@@ -366,3 +379,54 @@ Sipi::observability::Metrics::instance().my_counter_total.Increment();
 
 To reach production OTLP, also read the field into `SipiMetricsSnapshot`
 (`src/ffi/cpp/sipi_ffi.cpp`) and map it in `src/server/rust/src/metrics.rs`.
+
+## Testing Conventions
+
+A change is tested when its behavior is covered at the lowest layer that can reach it, and `just bazel-test` is green. The full strategy (pyramid, decision tree, IIIF coverage matrix) is [`docs/src/development/testing-strategy.md`](docs/src/development/testing-strategy.md).
+
+- **HTTP-observable behavior** → Rust e2e in `test/e2e/tests/` (`reqwest`, `insta` snapshots for JSON and headers). Prefer this layer: it tests the contract clients see.
+- **Rust logic** → inline `#[cfg(test)]` modules next to the code, `proptest` for parsers and round-trips.
+- **C++ engine internals** that no HTTP request can reach (cache eviction order, memory-budget accounting, C-library boundaries, RAII and move semantics) → GoogleTest, co-located as `src/<mod>/cpp/<name>_test.cpp` with a `cc_test` in the module's `BUILD.bazel` ([ADR-0003](docs/adr/0003-module-co-located-source-and-tests.md)). Not for behavior an e2e test can observe.
+- **Byte-exact encoder output and metadata fingerprints** → ApprovalTests in `test/approval/`. `test/approval/BUILD.bazel` injects `SOURCE_DATE_EPOCH` and `SIPI_WORKSPACE_ROOT` so goldens stay deterministic ([ADR-0002](docs/adr/0002-icc-profile-determinism-test-only.md)).
+- **Untrusted input** → `proptest` plus the libFuzzer corpus replay under `src/<mod>/fuzz/`.
+- **Test data:** images live in `test/_test_data/images/` (Git LFS); shared C++ fixture generators in `test/unit/fixtures/`. A test that needs its own files writes them to `TEST_TMPDIR`, never into the source tree.
+- **Hot paths:** a change to a decode/encode hot path needs a co-located Google Benchmark and a before/after `just bench-compare` ([`docs/src/development/benchmarking.md`](docs/src/development/benchmarking.md)).
+- Run one target with `bazel test //src/<mod>:<target> --test_output=streamed` or `bazel test //test/e2e:<name> --test_output=streamed`.
+
+## Commit Conventions
+
+The full schema is [`docs/src/development/commit-conventions.md`](docs/src/development/commit-conventions.md). The rules an agent most often gets wrong:
+
+- [Conventional Commits](https://www.conventionalcommits.org/) drive release-please (SemVer bump and changelog). Exactly eight types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `chore`. There is no `ci`, `style` or `revert`: use `chore(ci): …`, fold formatting into the change, and `fix`/`chore` for a revert.
+- A scope is mandatory: `type(scope): subject`, with the scope taken from [Module Layout](#module-layout). Scope by the concern the change serves, not by the directory. If no scope fits, ask the maintainer. Breaking changes use `!` (`feat(scope)!: …`).
+- PRs are rebase-merged, so every branch commit lands on `main` verbatim. Curate the branch to one commit per module per slice, with a body that explains the end state (decisions, rejected alternatives, invariants, gotchas), not the journey. A bug introduced earlier on the same branch is folded into its commit, never a standalone `fix:`.
+- The PR title uses the same `type(scope): subject` form. The PR body follows [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
+
+## Reviewers & Git History
+
+Before opening a PR, read `main`'s `git log` and recent merged PRs. Use them for two things: to confirm the commit-message and PR-title conventions above hold in practice, and to find reviewers — the people who have recently authored or committed changes to the files this PR touches. This repo keeps no `CODEOWNERS`, so git history is the reviewer signal, and it is the ground truth for PR-title format wherever the Commit Conventions section above doesn't cover an edge case.
+
+Useful reads: `git log --format='%h %an %s' -20 -- <path>` for who changed a file and why, and `git blame` for a single line (set up `.git-blame-ignore-revs` first, see its header).
+
+## Before Committing
+
+These must be clean before a commit. CI gates each of them, but the Rust lint gates run as `rules_rust` aspects that no test recipe exercises, so a green local test run can still fail CI.
+
+| Change touches | Run |
+|---|---|
+| Rust (`src/server/rust`, `src/cli/rust`, `src/*/rust`, `test/e2e`) | `just bazel-rustfmt-check` and `just bazel-clippy-check` (`-Dwarnings`); fix formatting with `just bazel-rustfmt` |
+| Any code | `just bazel-test` (or the affected targets), green |
+| `flake.nix`, `MODULE.bazel`, a `BUILD.bazel`, a justfile build recipe | `just bazel-build` and `just bazel-coverage`, on macOS at minimum ([Build Completeness Invariant](#build-completeness-invariant)) |
+| Rust dependencies (`MODULE.bazel` crate specs, `Cargo.Bazel.lock`) | `just audit` |
+| Every commit | `just commit-lint` (lints `origin/main..HEAD`) |
+
+C++ formatting follows `.clang-format`; no CI gate checks it, so format the lines you change.
+
+## Where to Go for Depth
+
+- Review checklist: [`REVIEW.md`](REVIEW.md); reviewer process: [`docs/src/development/reviewer-guidelines.md`](docs/src/development/reviewer-guidelines.md).
+- Domain vocabulary: [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md); bounded context: [`CONTEXT.md`](CONTEXT.md); topology and blast radius: [`ARCH-MAP.md`](ARCH-MAP.md); decisions: [`docs/adr/`](docs/adr/).
+- C++ style: [`docs/src/development/cpp-style-guide.md`](docs/src/development/cpp-style-guide.md); error model: [`docs/src/development/error-model.md`](docs/src/development/error-model.md).
+- Build: [`docs/src/development/building.md`](docs/src/development/building.md), [`docs/src/development/bazel.md`](docs/src/development/bazel.md), [`docs/src/development/rbe.md`](docs/src/development/rbe.md).
+- Testing: [`docs/src/development/testing-strategy.md`](docs/src/development/testing-strategy.md), [`docs/src/development/developing.md`](docs/src/development/developing.md), [`docs/src/development/fuzzing.md`](docs/src/development/fuzzing.md).
+- Commits, PRs and CI: [`docs/src/development/commit-conventions.md`](docs/src/development/commit-conventions.md), [`docs/src/development/ci.md`](docs/src/development/ci.md).

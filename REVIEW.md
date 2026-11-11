@@ -1,5 +1,7 @@
 # Code Review Guidelines
 
+Agent reference card for the review phase. Pair with `CONVENTIONS.md`, which holds the work-phase rules this checklist checks against. Authoritative detail lives in `docs/`.
+
 ## Always check
 
 ### Production surface
@@ -83,6 +85,6 @@
 ## Skip
 
 - Third-party source vendored via `http_archive` (the native `cc_library` deps; review their `bazel/<lib>.BUILD.bazel`, not the upstream source — updates flow from `MODULE.bazel`'s pins)
-- Formatting-only changes (enforced by clang-format)
+- Formatting-only changes (`.clang-format` and `rustfmt.toml` are the reference; rustfmt is CI-gated)
 - Lua script changes in `scripts/` that only modify response text (not logic)
 - Changes to `CHANGELOG.md`, `version.txt`, or `manifest.json` (managed by release-please)

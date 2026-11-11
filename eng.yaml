@@ -1,0 +1,53 @@
+# Bindings for the eng plugin: conventions, commands and reviewers.
+# Schema and matching: the eng plugin's references/eng-yaml.md.
+version: 1
+
+defaults:
+  conventions: [CLAUDE.md, CONVENTIONS.md]
+  commands:
+    test: just bazel-test
+    lint: just bazel-rustfmt-check && just bazel-clippy-check
+    gate: just commit-lint && just bazel-rustfmt-check && just bazel-clippy-check && just bazel-test
+  reviewers:
+    - eng:review:consistency-reviewer
+    - eng:review:code-simplicity-reviewer
+    - eng:review:dune-reviewer
+
+overrides:
+  - when: "src/**/*.cpp"
+    conventions: [docs/src/development/cpp-style-guide.md]
+    reviewers: [eng:review:cpp-reviewer]
+  - when: "src/**/*.h"
+    conventions: [docs/src/development/cpp-style-guide.md]
+    reviewers: [eng:review:cpp-reviewer]
+  - when: "**/*.rs"
+    reviewers: [eng:review:rust-reviewer]
+  # The HTTP request boundary and the FFI seam: input validation lives here.
+  - when: "src/server/rust/**"
+    reviewers: [eng:review:security-reviewer]
+  - when: "src/ffi/**"
+    reviewers: [eng:review:security-reviewer]
+  - when: "src/scripting/**"
+    reviewers: [eng:review:security-reviewer]
+  - when: "src/iiifparser/**"
+    reviewers: [eng:review:security-reviewer]
+  - when: "src/observability/**"
+    reviewers: [eng:review:observability-reviewer]
+  - when: "src/server/rust/src/metrics.rs"
+    reviewers: [eng:review:observability-reviewer]
+  - when: "src/server/rust/src/telemetry.rs"
+    reviewers: [eng:review:observability-reviewer]
+  - when: "src/format_handlers/**"
+    reviewers: [eng:review:performance-reviewer]
+  - when: "src/image_processing/**"
+    reviewers: [eng:review:performance-reviewer]
+  - when: "flake.nix"
+    reviewers: [eng:review:nix-reviewer]
+  - when: ".github/**"
+    reviewers: [eng:review:devops-reviewer]
+  - when: "justfile"
+    reviewers: [eng:review:devops-reviewer]
+  - when: "**/BUILD.bazel"
+    reviewers: [eng:review:devops-reviewer]
+  - when: "MODULE.bazel"
+    reviewers: [eng:review:devops-reviewer]
