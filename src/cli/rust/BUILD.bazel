@@ -1,4 +1,4 @@
-"""src/cli/rust — the default `sipi` binary (strangler-fig entrypoint).
+"""src/cli/rust — the default `sipi` binary, the production entry point.
 
 `//src/cli/rust:sipi` is the stock binary that wraps the `sipi` library
 (`//src/server/rust:lib`): it owns `main` + the verb dispatch (`server` →
@@ -12,10 +12,6 @@ seam stays in `//src/server/rust`. Dependencies resolve from the single `@crates
 crate_universe `from_specs` hub (direct deps in `MODULE.bazel`, no `Cargo.toml`)
 as `@crates//:<crate>` labels. Repin via:
 `CARGO_BAZEL_REPIN=1 bazelisk fetch @crates//:all`.
-
-Additive: this binary runs in parallel with `//src/cli:sipi` (the C++ server),
-which keeps the production socket until the cutover renames this to the stock
-`sipi` entry point and switches the Docker entrypoint.
 """
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")

@@ -1,4 +1,4 @@
-"""src/server/rust — the `sipi` HTTP-server library (strangler-fig rewrite; ADR-0013).
+"""src/server/rust — the `sipi` HTTP-server library, the production server (ADR-0020).
 
 The `sipi` `rust_library` (`//src/server/rust:lib`, crate `sipi`) owns the axum +
 tokio server and statically links the C++ image engine through the FFI seam
@@ -17,9 +17,6 @@ Dependencies resolve from the single `@crates` crate_universe `from_specs` hub
 (direct deps declared in `MODULE.bazel`, no `Cargo.toml`); this library
 references the subset it needs as `@crates//:<crate>` labels. Repin via:
 `CARGO_BAZEL_REPIN=1 bazelisk fetch @crates//:all`.
-
-The shell is additive: it runs in parallel with `//src/cli:sipi`, which keeps
-the production socket until the cutover.
 """
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
@@ -76,7 +73,7 @@ rust_library(
         # the `From<iiif_parser::IiifParams> for SipiIiifParams` flattening.
         "//src/iiifparser/rust:iiif_parser",
         # The Rust-hosted Lua runtime (ADR-0023): config-VM parse of the Lua
-        # config; the request-VM entry points arrive with the cutover.
+        # config and the per-request VM that runs Lua routes and preflight.
         "//src/scripting/rust:scripting",
         # The FFI-free two-lane admission pool (classify + acquire + per-partition
         # counters). Owned by `AppState`; `routes.rs` keeps only the call sites.
