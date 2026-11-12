@@ -28,13 +28,14 @@ Read these before reasoning about names, boundaries, or architectural decisions:
 
 ## Specs
 
-Vitrinli specs (PRDs, implementation plans, design docs) live directly in [`docs/specs/`](docs/specs/) as flat, date-prefixed files. Platform-wide specs that span several repos stay in [`dasch-specs`](https://github.com/dasch-swiss/dasch-specs); a spec whose primary subject is Vitrinli belongs here even when it touches deploy config or another repo.
+Vitrinli specs (project briefs, PRDs, implementation plans, design docs) live in [`docs/specs/`](docs/specs/), one folder per effort. Platform-wide specs that span several repos stay in [`dasch-specs`](https://github.com/dasch-swiss/dasch-specs); a spec whose primary subject is Vitrinli belongs here even when it touches deploy config or another repo.
 
-- **File:** each spec is a flat file directly in `docs/specs/`, named `YYYY-MM-DD-NN-{topic}-{type}.md` — `NN` a 2-digit daily sequence (`01`, `02`, … so more than one spec can share a date), `{topic}` lowercase alphanumeric + hyphens (≤60 chars), `{type}` ∈ `PRD` / `plan` / `design` / `journal`. The artifacts of one piece of work share the same `YYYY-MM-DD-NN-{topic}-` stem (e.g. `…-plan.md` alongside its `…-journal.md`).
-- **Assets:** any images go in a sibling `docs/specs/YYYY-MM-DD-NN-{topic}-assets/` directory, referenced relatively (`![…](YYYY-MM-DD-NN-{topic}-assets/file.png)`).
-- **Existing subfolders:** older `docs/specs/YYYY-MM-DD-{slug}/` folders predate this convention and stay as-is; only new specs are flat.
+- **Folder:** `docs/specs/YYYY-MM-DD-{slug}/`, `{slug}` lowercase alphanumeric + hyphens (≤60 chars). A new document for an effort that already has a folder joins that folder.
+- **Files:** `00-project-brief.md` (`00` is reserved for the brief; at most one per folder), `NN-{topic}-PRD.md`, `NN-{type}-{topic}-plan.md` and `NN-{topic}-design.md`, `NN` a per-folder sequence from `01`. A plan's journal sits next to it under the name the eng plugin's execution journal gives it.
+- **Assets:** any images go in the folder's `assets/` directory, referenced relatively (`![…](assets/file.png)`).
+- **Older specs:** flat `YYYY-MM-DD-NN-{topic}-{type}.md` files and their `-assets/` directories predate this layout and stay as they are; only new specs use folders.
 - **Frontmatter** (YAML, all spec files): `title`, `date`, `author`, `status: draft | reviewed | approved | implemented`, and `repositories:` listing the *other* code repos the feature modifies — never list `vitrinli` itself (the spec's home repo carries no signal).
-- **Reference direction is one-way — specs are a sink.** A spec may reference *out* (code, docs, ADRs, `CONTEXT.md`), but **nothing outside `docs/specs/` may reference into a spec**, and a new spec should reference durable artifacts (an ADR, code, the glossary), not another spec. This is what lets any spec be renamed, flattened, or deleted without breaking the tree — the flatten test: a `grep -rn "docs/specs/"` over everything except `docs/specs/` itself returns nothing. *Enforcement: `review`* (promotable to a `static-analysis` grep gate). Pre-existing cross-spec links in historical plans are tolerated; do not add new ones.
+- **Reference direction is one-way — specs are a sink.** A spec may reference *out* (code, docs, ADRs, `CONTEXT.md`), but **nothing outside `docs/specs/` may reference into a spec**, and a new spec should reference durable artifacts (an ADR, code, the glossary), not another spec. This is what lets any spec be renamed, moved, or deleted without breaking the tree — the flatten test: a `grep -rn "docs/specs/"` over everything except `docs/specs/` itself returns nothing. *Enforcement: `review`* (promotable to a `static-analysis` grep gate). Pre-existing cross-spec links in historical plans are tolerated; do not add new ones.
 - `docs/specs/` is outside the mkdocs site (`docs_dir: src`); specs are repo context, not published documentation.
 
 ## Build System and Common Commands
@@ -158,6 +159,7 @@ Follow [`docs/src/development/cpp-style-guide.md`](docs/src/development/cpp-styl
 - NEVER run `tofu apply` / `tofu destroy` / `tofu import` / state edits, Ansible plays, or any command that mutates deployed infrastructure or its state — the RBE backend VM (`dasch-remotebuild-prod-01`, defined in the `ops-tf` / `infra` repos), buckets, IAM, firewall, secrets. This includes SSH-and-mutate (an `ssh … --command` that installs/restarts/writes), cloud-CLI create/update/delete, `kubectl apply`, and remote `docker` mutations.
 - Read-only analysis IS allowed and expected: `tofu plan`/`validate`, Grafana/Loki queries, describe/list-style CLI reads, and read-only SSH diagnostics (probing service status, reading logs/configs).
 - Workflow: diagnose, read state, and propose the exact change (the file diff and/or the precise command/apply plan). The maintainer applies it. Verify afterwards read-only. Authoring commits/PRs in the ops repos is fine; *deploying* them is not.
+- The eng plugin's `PreToolUse` hook (`stack_guard.py`) enforces this: it refuses `tofu`/`terraform` apply, destroy and import, Ansible plays, `kubectl` mutations, cloud-CLI create/delete, and any `ssh` remote command that is not a read-only diagnostic (status, logs, file reads).
 
 ## Scope discipline
 

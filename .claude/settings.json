@@ -21,8 +21,18 @@
     "deny": []
   },
   "enabledPlugins": {
+    "bdd@dasch-claude-plugins": true,
+    "dune@dasch-claude-plugins": true,
     "eng@dasch-claude-plugins": true,
     "linear@claude-plugins-official": true,
     "misc@dasch-claude-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "dasch-claude-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "dasch-swiss/dasch-claude-plugins"
+      }
+    }
   }
 }

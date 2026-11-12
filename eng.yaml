@@ -12,6 +12,7 @@ defaults:
     - eng:review:consistency-reviewer
     - eng:review:code-simplicity-reviewer
     - eng:review:dune-reviewer
+    - eng:review:reference-reviewer
 
 overrides:
   - when: "src/**/*.cpp"
