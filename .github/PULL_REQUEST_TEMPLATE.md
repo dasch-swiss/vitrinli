@@ -1,27 +1,30 @@
 Fixes LINEAR-ID, LINEAR-ID, ...
 
 ## Motivation
-Why this work was needed. What problem it solves for users.
+Why the change exists. What problem it solves for users.
 
 ## Summary
-1-3 bullet points of user-visible changes.
+What it does, in a few sentences.
 
 ## Key Changes
 ### [Topic]
-- change details
+- what changed and where
 
-## Challenges and Decisions
-What was tried, what failed, and key architecture decisions.
-Structure as sub-sections when multiple challenges exist:
+## Review Guide
+One section per phase in this PR.
 
-### [Challenge title]
-**Problem:** description of the issue encountered
-**Tried:** approaches that didn't work and why
-**Solution:** what worked and why it's the right approach
+### [Phase]
+What to review, the key files, how it was verified, the decisions taken.
+
+## Decisions
+What was tried and why the choice. The maintainer's answers to deviations.
 
 ## Gotchas
-Things future developers should know. Each gotcha should be
-actionable — not just "this is hard" but "do X instead of Y".
+What a later change would trip over. Each gotcha is actionable:
+"do X instead of Y", not "this is hard".
+
+## Learnings
+The files added to the learnings directory, or why there are none.
 
 ## Test Plan
-- [ ] verification steps
+- [ ] how each verification step was met, or why it does not apply
