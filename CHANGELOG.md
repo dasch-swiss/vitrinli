@@ -1,5 +1,42 @@
 # Changelog
 
+## [10.1.0](https://github.com/dasch-swiss/vitrinli/compare/v10.0.1...v10.1.0) (2026-11-12)
+
+
+### Features
+
+* **bazel:** Run local macOS builds on the NativeLink RBE backend ([2f8e221](https://github.com/dasch-swiss/vitrinli/commit/2f8e221e1559816539ab43b7f87cd22e210ae951))
+
+
+### Bug Fixes
+
+* **deps:** Raise rustix to 1.1.6 past RUSTSEC-2026-0486 ([1ff668e](https://github.com/dasch-swiss/vitrinli/commit/1ff668eedc0eeef453b331b98760bd1a914d2dcd))
+* **docker:** Ship patched Debian packages in the production image ([d4b8cb9](https://github.com/dasch-swiss/vitrinli/commit/d4b8cb9f85ac9111b79df23086753384546b07c6))
+
+
+### Code Refactoring
+
+* **cache:** Name the cache index key after the glossary's Cache key ([1ae30ba](https://github.com/dasch-swiss/vitrinli/commit/1ae30bacb4b7b6c4502654a359ba6efb0fb1eb81))
+
+
+### Documentation
+
+* **docs:** Align the spec layout, citation rule and PR template with the eng plugin ([e38b028](https://github.com/dasch-swiss/vitrinli/commit/e38b028c00dfd9a6026e26ea027da911ef1216cf))
+* **docs:** Close the agent-readiness documentation gaps ([4f12f6e](https://github.com/dasch-swiss/vitrinli/commit/4f12f6e98d8b34b88267cc7aca7210d9101f048e))
+* **docs:** Fold UBIQUITOUS_LANGUAGE.md into CONTEXT.md ([64025dd](https://github.com/dasch-swiss/vitrinli/commit/64025dd4af8d74cf786e2480e4fc8eeb20a7b3d0))
+* **docs:** State that local RBE use is opt-in through rbe-darwin ([352484b](https://github.com/dasch-swiss/vitrinli/commit/352484b9159361394161fed61d657e0fe3c55e78))
+* **server,cli,ffi:** Describe the Rust shell as the production server ([3ee6bbf](https://github.com/dasch-swiss/vitrinli/commit/3ee6bbf4b1207ba4cc8760a4a4a4cd33e98cc3ae))
+* **specs:** Add the DEV-7645 agent-readiness journal ([022c949](https://github.com/dasch-swiss/vitrinli/commit/022c94961d68554274008941ab95daf2af61837e))
+* **specs:** Plan and journal local macOS builds on the NativeLink RBE backend ([74255a2](https://github.com/dasch-swiss/vitrinli/commit/74255a2396ecffec7029e2e505293fbdb95d137b))
+
+
+### Miscellaneous Chores
+
+* **ci:** Add the readiness regression check ([484e94e](https://github.com/dasch-swiss/vitrinli/commit/484e94e98a9383e40b9c45e7dd49e0a6ea1f9d6b))
+* **ci:** Gate the image on fixed High/Critical CVEs in its OS packages ([8d71101](https://github.com/dasch-swiss/vitrinli/commit/8d71101d755743ba8f7dad933c2db8b66ef59596))
+* **ci:** Run the darwin-arm64 test leg on macos-15 ([2a1c681](https://github.com/dasch-swiss/vitrinli/commit/2a1c6814d3e91066192d73257f2185e7c672f810))
+* **deps:** Ignore the actix advisories from the uncompiled sentry-actix ([2bbde42](https://github.com/dasch-swiss/vitrinli/commit/2bbde42f858c499a7334147a3ce1a8f2dec743db))
+
 ## [10.0.1](https://github.com/dasch-swiss/vitrinli/compare/v10.0.0...v10.0.1) (2026-11-03)
 
 
