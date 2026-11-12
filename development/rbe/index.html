@@ -1,0 +1,1936 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/rbe/">
+      
+      
+        <link rel="prev" href="../ci/">
+      
+      
+        <link rel="next" href="../rbe-write-pressure/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Remote Build Execution - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#remote-build-execution" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Remote Build Execution
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-vitrinli-uses-rbe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Vitrinli uses RBE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-a-separate-bazel-remote-not-just-nativelink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why a separate bazel-remote, not just NativeLink
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#github-actions-wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub Actions wiring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-cross-compile-test-local-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The cross-compile + test-local pattern
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The cross-compile + test-local pattern">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-tests-execute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where tests execute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-exclusive-if-local-and-no-sandbox-tags-on-e2e-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The exclusive-if-local and no-sandbox tags on e2e tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-hermetic-llvm-headers-glob-patch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The hermetic-llvm headers glob patch
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The hermetic-llvm headers glob patch">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-the-numbers-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the numbers mean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#measured-latency-warm-vs-cold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measured latency (warm vs cold)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-graph-parallelism-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build-graph parallelism analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warm-cache-action-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warm-cache action distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-scout-warm-cache-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Scout warm-cache fix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-use-from-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local use from macOS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local use from macOS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-dasch-rbe-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The dasch-rbe contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-client-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The client certificate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-accepted-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security: accepted risk
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI topology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="remote-build-execution">Remote Build Execution<a class="headerlink" href="#remote-build-execution" title="Permanent link">&para;</a></h1>
+<p>This page documents Vitrinli's Remote Build Execution (RBE) setup: its purpose, how the
+cross-compilation pattern works, the key correctness fix in the hermetic-llvm toolchain,
+measured performance characteristics, and how CI wires everything together.</p>
+<p>The backend (<code>dasch-remotebuild-prod-01</code>) is DaSCH-hosted and defined outside
+this repo: the libvirt VM in <a href="https://github.com/dasch-swiss/ops-tf"><code>ops-tf</code></a>
+(<code>live/virt-03/prod/vms/</code>), the NativeLink/bazel-remote service configuration
+in <a href="https://github.com/dasch-swiss/infra"><code>infra</code></a>
+(<code>OS/ansible/roles/dasch.nativelink</code>, including its README and store-topology
+notes).</p>
+<h2 id="why-vitrinli-uses-rbe">Why Vitrinli uses RBE<a class="headerlink" href="#why-vitrinli-uses-rbe" title="Permanent link">&para;</a></h2>
+<p>The goal is <strong>cross-compilation</strong>: building all three supported targets — <code>linux-amd64</code>,
+<code>linux-aarch64</code>, and <code>darwin-aarch64</code> — on a single x86_64 worker, so each GitHub Actions
+runner does not need a native matching toolchain.</p>
+<p>Without RBE each platform leg runs its full compile on the runner that matches its arch.
+The hermetic-llvm toolchain (see <a href="../bazel/">Building with Bazel</a>) can cross-compile
+end-to-end (bundled per-target glibc + libc++; no sysroot), so it can build all three
+targets on a single x86_64 machine. RBE is the mechanism that routes those compiles to
+a shared x86_64 worker regardless of which runner triggered the build.</p>
+<p>Speed is not the justification. On a warm cache, RBE and the previous cache-only setup
+have essentially identical per-PR wall-clock latency (see <a href="#performance">Performance</a>).</p>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<h3 id="backend">Backend<a class="headerlink" href="#backend" title="Permanent link">&para;</a></h3>
+<p>A self-hosted NativeLink VM acts as the single Bazel backend. It runs two services:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Port</th>
+<th>Protocol</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NativeLink</td>
+<td><code>:50051</code></td>
+<td>gRPC + mTLS</td>
+<td>Remote Cache (AC + CAS) + Remote Executor</td>
+</tr>
+<tr>
+<td>bazel-remote</td>
+<td><code>:50052</code></td>
+<td>gRPC + mTLS</td>
+<td><code>http_archive</code> download cache; no client configures it today (see below)</td>
+</tr>
+</tbody>
+</table>
+<p>Both ports are internal. From outside the DaSCH network the only reachable port is
+<code>rbe-01.ops.dasch.swiss:443</code>, a proxy in front of NativeLink; every client, CI included,
+connects there (<code>grpcs://rbe-01.ops.dasch.swiss:443</code>).</p>
+<p>Both services present a certificate signed by the same NativeLink CA, so a single
+<code>--tls_certificate</code> flag validates both, with no CA bundle.</p>
+<p>No client sets <code>--experimental_remote_downloader</code> today (see the remote section of
+<code>.bazelrc</code>): Bazel fetches a <code>FetchBlob</code> digest's bytes from the <code>--remote_cache</code> CAS, so a
+downloader that does not share that CAS is unusable. External archives are cached
+client-side by <code>--repository_cache</code>.</p>
+<p>When a client does point the downloader at bazel-remote, it caches the source tarballs
+for <code>http_archive</code> rules (jbigkit, the Apple macOS SDK, etc.). On a <code>FetchBlob</code>
+miss bazel-remote fetches the URL itself, verifies the <code>sha256</code> qualifier, stores the blob,
+and every later request for that hash is a permanent hit. The first successful build after
+an upstream is reachable from the VM warms it for good; no manual step is required. See
+<a href="https://github.com/bazelbuild/bazel/issues/14646">Bazel issue #14646</a> for the known
+limitation: when the VM cannot reach an upstream the runner CAN reach, a green
+local-fallback build does not write back to the download cache.</p>
+<h3 id="why-a-separate-bazel-remote-not-just-nativelink">Why a separate bazel-remote, not just NativeLink<a class="headerlink" href="#why-a-separate-bazel-remote-not-just-nativelink" title="Permanent link">&para;</a></h3>
+<p>NativeLink <em>does</em> implement the Remote Asset API (<code>FetchServer</code> / <code>PushServer</code>,
+<code>build.bazel.remote.asset.v1</code>), so the obvious question is why we don't point
+<code>--experimental_remote_downloader</code> at <code>:50051</code> and drop bazel-remote. The reason is
+<em>how</em> each implements <code>FetchBlob</code>:</p>
+<ul>
+<li><strong>NativeLink's Fetch is push-then-serve.</strong> <code>fetch_blob</code> (nativelink-service
+  <code>fetch_server.rs</code>) hashes the URI + qualifiers to a digest, does a single store
+  lookup, and on a miss returns <code>NotFound</code> — it never contacts the upstream. It only
+  serves assets that were <em>explicitly pushed</em> into its <code>fetch_store</code> first. (Its only
+  <code>reqwest</code> HTTP client backs the GCS store, not URL fetching.)</li>
+<li><strong>bazel-remote's Fetch is a transparent proxy.</strong> On a miss it fetches the URL
+  itself, verifies the <code>sha256</code> qualifier, stores the blob, and serves it thereafter.</li>
+</ul>
+<p><code>--experimental_remote_downloader</code> relies on the proxy behavior — it expects the
+endpoint to transparently mirror <code>http_archive</code> tarballs on first use. Replacing
+bazel-remote with NativeLink's FetchServer would mean building a separate warming
+pipeline that fetches every external dependency and pushes it (blob + asset mapping)
+into NativeLink ahead of the build, i.e. reimplementing bazel-remote's proxy logic.
+So the two services are not redundant: NativeLink caches and runs <em>build actions</em>
+(AC/CAS + executor); bazel-remote transparently mirrors <em>source downloads</em>. (Verified
+against NativeLink v1.5.2 — revisit if a later release adds proxy-fetch-on-miss.)</p>
+<h3 id="github-actions-wiring">GitHub Actions wiring<a class="headerlink" href="#github-actions-wiring" title="Permanent link">&para;</a></h3>
+<p>The <code>.github/actions/bazel-rbe</code> composite action encapsulates all RBE wiring:</p>
+<ol>
+<li>It reads the org-level secrets <code>REMOTEBUILD_CA_CERT</code>, <code>REMOTEBUILD_CLIENT_CERT</code>,
+   <code>REMOTEBUILD_CLIENT_KEY</code> and the variable <code>REMOTEBUILD_RUNNER_ENDPOINT</code> (the
+   NativeLink RE-API, through the <code>:443</code> proxy).</li>
+<li>It writes the mTLS material outside the workspace checkout (<code>$RUNNER_TEMP/.nl/</code>)
+   so cert files can never enter a Bazel action's input set.</li>
+<li>It emits a <code>flags</code> output — a single Bazel flag string — that every subsequent
+   <code>just bazel-*</code> invocation appends verbatim.</li>
+</ol>
+<p>Fork PRs do not have access to org secrets; the action emits an empty <code>flags</code> string and
+the build falls through to a cold local build.</p>
+<p><code>ci.yml</code>'s test matrix passes <code>matrix.bazel-platform</code> (<code>//platforms:linux_x86_64</code>,
+<code>//platforms:linux_aarch64</code>, or <code>//platforms:darwin_aarch64</code>) as the <code>target-platform</code>
+input to the composite action, so each leg cross-compiles for its own target on the worker.</p>
+<h2 id="the-cross-compile-test-local-pattern">The cross-compile + test-local pattern<a class="headerlink" href="#the-cross-compile-test-local-pattern" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem">The problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h3>
+<p><code>rules_rust</code> exec-config tools — <code>process_wrapper</code>, build scripts, proc-macros — must
+run on the exec platform (the x86_64 worker). When a cross leg runs on an arm64 or
+darwin runner, these tools would otherwise resolve their exec platform to the LOCAL host
+(per <a href="https://github.com/bazelbuild/rules_rust/issues/327">rules_rust #327</a>), shipping
+an arm64 or darwin binary to the x86_64 worker where it cannot execute.</p>
+<p>C++ was unaffected because hermetic-llvm registers cross toolchains for both
+<code>exec=x86_64 → target=aarch64</code> directions out of the box. Rust did not.</p>
+<h3 id="the-fix">The fix<a class="headerlink" href="#the-fix" title="Permanent link">&para;</a></h3>
+<p>Five changes work together:</p>
+<p><strong>1. Cross Rust toolchains</strong> (<code>MODULE.bazel</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>rust.toolchain(
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    ...
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    extra_target_triples = [&quot;aarch64-unknown-linux-gnu&quot;, &quot;aarch64-apple-darwin&quot;],
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>)
+</code></pre></div>
+<p>This registers the exec=x86_64 → aarch64 cross Rust toolchains so <code>rules_rust</code>
+exec-config tool resolution no longer falls through to the host.</p>
+<p><strong>2. Exec platform declaration</strong> (<code>platforms/BUILD.bazel</code>):</p>
+<p><code>//platforms:linux_x86_64</code> carries <code>exec_properties = {cpu_arch: x86_64}</code>, mirroring
+<code>--remote_default_exec_properties</code>. NativeLink routes actions to the worker on that
+property.</p>
+<p><strong>3. <code>--extra_execution_platforms</code></strong> (composite action, all legs):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>--extra_execution_platforms=//platforms:linux_x86_64[,&lt;target-platform&gt;]
+</code></pre></div>
+<p><code>//platforms:linux_x86_64</code> is listed first so compiles and exec-config tools resolve
+to the worker. The target platform is appended on cross legs so Bazel's default test
+toolchain (<code>default_test_toolchain_type</code>, new in Bazel 9) can resolve an exec platform
+matching the target arch, which the test runner needs.</p>
+<p><strong>4. <code>--host_platform</code></strong> (<code>.bazelrc</code> <code>build:rbe-cross</code>, cross legs only):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>--host_platform=//platforms:linux_x86_64
+</code></pre></div>
+<p>This pins <code>rules_rust</code>'s exec transition to x86_64 per the rules_rust #327 pattern.
+Not applied on the amd64 leg (host and worker already match).</p>
+<p><strong>5. <code>--noremote_local_fallback</code></strong> (<code>.bazelrc</code> <code>build:rbe-cross</code>, cross legs only):</p>
+<p>If the worker is unreachable and the build falls back to the local arm64/darwin runner,
+the x86_64 <code>process_wrapper</code> binary would be dispatched there and crash. Cross legs
+therefore disable local fallback. The amd64 leg retains the <code>.bazelrc</code> graceful fallback.</p>
+<h3 id="where-tests-execute">Where tests execute<a class="headerlink" href="#where-tests-execute" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--strategy=TestRunner=local   # cross legs only (arm64/darwin)
+</code></pre></div>
+<p><strong>Cross legs (arm64/darwin).</strong> Test binaries are cross-compiled on the x86_64 worker but
+executed locally on the native runner — the cross-built binary can't run on the x86_64
+worker, and the runner has the right kernel ABI and filesystem. <code>bazel-rbe</code> emits
+<code>--config=rbe-cross</code>, which sets <code>--strategy=TestRunner=local</code>, only on these legs.</p>
+<p><strong>Native x86_64 legs (amd64 <code>test</code> + <code>sanitizer</code>).</strong> Tests EXECUTE on the worker
+(exec == target == x86_64): results cache remotely and the runner skips the multi-GB
+output download under <code>--remote_download_minimal</code>. The e2e tests are tagged
+<code>exclusive-if-local</code> (see below), so on isolated workers they run in parallel rather than
+serially. Under <code>--config=asan</code> the e2e macro attaches <code>//bazel:llvm-symbolizer</code> as a
+runfile and sets <code>ASAN_SYMBOLIZER_PATH</code> to its runfiles path, so the sanitizer e2e tests
+run remotely too (a runner-side absolute symbolizer path would not exist on the worker).
+<code>docker_smoke</code> is the sole local exception, kept on the runner by its plain <code>exclusive</code>
+tag and its Docker-daemon dependency.</p>
+<h3 id="the-exclusive-if-local-and-no-sandbox-tags-on-e2e-tests">The <code>exclusive-if-local</code> and <code>no-sandbox</code> tags on e2e tests<a class="headerlink" href="#the-exclusive-if-local-and-no-sandbox-tags-on-e2e-tests" title="Permanent link">&para;</a></h3>
+<p>E2E tests are tagged <code>exclusive-if-local</code> and <code>no-sandbox</code> in
+<code>test/e2e/sipi_e2e_test.bzl</code> (<code>docker_smoke</code> keeps plain <code>exclusive</code> in
+<code>test/e2e/BUILD.bazel</code>). Neither is <code>local</code>, and that is permanent and correct.</p>
+<ul>
+<li><code>exclusive-if-local</code> runs the tests serially only when they execute locally (dev, cross
+  legs), preventing port collisions between binaries that all bind <code>11024 + PID % 16384</code>
+  on the shared runner. On the native x86_64 RBE leg each test runs on its own isolated
+  worker, so there is no shared port range and Bazel runs them in parallel. Plain
+  <code>exclusive</code> would disable remote execution entirely — Bazel can't guarantee exclusivity
+  on a machine it doesn't own — which is why <code>docker_smoke</code> (which must stay on the runner
+  for its Docker daemon) keeps <code>exclusive</code>.</li>
+<li><code>local</code> propagates to the test's COMPILE action and pins the compile to the runner.
+  On a cross leg this routes an arm64/darwin process_wrapper to the x86_64 worker —
+  it crashes. <code>local</code> breaks cross-compilation.</li>
+<li><code>no-sandbox</code> disables the Bazel sandbox for the TEST RUN only (the compile is
+  unaffected). It does not prevent cross-compilation.</li>
+</ul>
+<p>The reason e2e tests need <code>no-sandbox</code> at all: Vitrinli's <code>validate_resolved_path</code> guard
+in <code>src/server/rust/src/path.rs</code> canonicalises the request path via <code>realpath(3)</code>
+(Rust's <code>std::fs::canonicalize</code>). Under the Bazel sandbox, path resolution returns the
+writable runfiles path rather than the <code>TEST_TMPDIR</code> copy, so sipi rejects legitimate
+test files with HTTP 400. Disabling the
+sandbox sidesteps this runfiles-symlink interaction. This is also the open question when
+e2e tests execute remotely: the NativeLink executor must honor <code>no-sandbox</code> (materialise
+real files under a stable root) for the guard to pass. The guard itself is correct and
+must not be weakened for testing.</p>
+<h2 id="the-hermetic-llvm-headers-glob-patch">The hermetic-llvm headers glob patch<a class="headerlink" href="#the-hermetic-llvm-headers-glob-patch" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem_1">The problem<a class="headerlink" href="#the-problem_1" title="Permanent link">&para;</a></h3>
+<p>Remote execution requires every action input to be declared as a discrete file so Bazel
+can construct the action's Merkle input tree. If an input is a bare source-directory
+artifact (one opaque directory node), Bazel references the directory but its subtree may
+not be enumerated — the include subdirectory is dropped from the Merkle tree, and the
+remote executor receives an incomplete input set.</p>
+<p>Local sandboxed builds follow the directory symlink and succeed. Remote builds fail with
+<code>fatal error: 'linux/limits.h' file not found</code>. Warm action-cache hits skip the compile
+entirely and mask the gap, so the failure is deterministic only on a cold cache and
+appears intermittent on a warm one.</p>
+<p>hermetic-llvm injects the Linux kernel + glibc system headers through two independent
+paths, both using bare source-directory artifacts:</p>
+<ul>
+<li><strong>Path A</strong> — <code>cc_args(data = [..._directory])</code> in <code>toolchain/args/linux</code>. Feeds the
+  ordinary target-config compiles.</li>
+<li><strong>Path B</strong> — <code>cc_library(name = "kernel_headers" / "gnu_libc_headers", hdrs = ["include"])</code>,
+  consumed via <code>@llvm-project//libcxx,libcxxabi,libunwind implementation_deps</code>. The
+  ONLY header source for exec-config "stage0" runtime compiles, which receive no
+  <code>cc_args</code> kernel headers at all.</li>
+</ul>
+<h3 id="the-fix_1">The fix<a class="headerlink" href="#the-fix_1" title="Permanent link">&para;</a></h3>
+<p><code>bazel/patches/hermetic_llvm_headers_glob.patch</code> applies two coupled changes to
+hermetic-llvm via a <code>single_version_override</code> in <code>MODULE.bazel</code>:</p>
+<ol>
+<li>
+<p><code>directory.bzl</code> gains an <code>expand_files</code> opt-in. When <code>True</code>, <code>DefaultInfo</code> carries the
+   individual header files (a recursive glob minus <code>make headers_install</code> byproducts) rather
+   than one source-directory artifact. This fixes Path A. The macOS SDK sysroot is left
+   unexpanded — globbing it would bloat every darwin compile with unnecessary inputs.</p>
+</li>
+<li>
+<p><code>kernel/extension/kernel-headers.BUILD.bazel</code> and
+   <code>runtimes/glibc/extension/glibc-headers.BUILD.bazel</code> change
+   <code>hdrs = ["include"]</code> to <code>hdrs = glob(["include/**"])</code>. This makes every individual
+   header a declared action input for the stage0 runtime compiles. This fixes Path B —
+   the path the <code>expand_files</code> change does not reach.</p>
+</li>
+</ol>
+<p>The patch targets <code>directory.bzl</code>, <code>kernel/extension/kernel-headers.BUILD.bazel</code>, and
+<code>runtimes/glibc/extension/glibc-headers.BUILD.bazel</code>. Re-check it on every <code>llvm</code> bump
+with the path A and path B <code>aquery</code> commands below, run with this patch taken out of the
+override (the override's other patch, <code>hermetic_llvm_darwin_rtlib.patch</code>, stays): while
+the kernel and glibc header inputs are the two bare <code>include</code> directories, the patch is
+still needed; once both paths list individual header files, drop this patch.</p>
+<p>Local verification (no RBE required):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Sanity-check the patch + MODULE changes on the host toolchain</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>nix<span class="w"> </span>develop<span class="w"> </span>-c<span class="w"> </span>just<span class="w"> </span>bazel-build
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Cross-compile a Linux target from macOS</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>nix<span class="w"> </span>develop<span class="w"> </span>-c<span class="w"> </span>bazel<span class="w"> </span>build<span class="w"> </span>--platforms<span class="o">=</span>//platforms:linux_x86_64<span class="w"> </span>//src/logging:logging
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Path A: confirm no bare source-directory artifact in the action inputs</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>nix<span class="w"> </span>develop<span class="w"> </span>-c<span class="w"> </span>bazel<span class="w"> </span>aquery<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--platforms<span class="o">=</span>//platforms:linux_x86_64<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="s1">&#39;mnemonic(&quot;CppCompile&quot;, //src/logging:logging)&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--include_artifacts
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># Path B: the stage0 runtime compiles</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>nix<span class="w"> </span>develop<span class="w"> </span>-c<span class="w"> </span>bazel<span class="w"> </span>aquery<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span>--platforms<span class="o">=</span>//platforms:linux_x86_64<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="s1">&#39;mnemonic(&quot;CppCompile&quot;, deps(@llvm-project//libcxx:libcxx.static.stage0_non_asan) union deps(@llvm-project//libunwind:libunwind.static))&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">  </span>--include_artifacts
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="c1"># All inputs should be named files, not bare directory nodes.</span>
+</code></pre></div>
+<h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
+<h3 id="what-the-numbers-mean">What the numbers mean<a class="headerlink" href="#what-the-numbers-mean" title="Permanent link">&para;</a></h3>
+<p>The relevant metric is wall-clock time for a build triggered by a <strong>new commit</strong> — every
+PR push is a new commit, and <code>--stamp</code> changes the binary, which causes all tests to
+re-run regardless of cache state. A same-commit re-run (<code>gh run rerun</code>) hits a
+cache-hit floor of ~3–5 minutes (compiles AND test results cached) and is not
+representative. Do not use re-run measurements to compare build backends.</p>
+<h3 id="measured-latency-warm-vs-cold">Measured latency (warm vs cold)<a class="headerlink" href="#measured-latency-warm-vs-cold" title="Permanent link">&para;</a></h3>
+<p>Measured by parsing <code>--profile</code> JSON artifacts. (<code>bazel analyze-profile</code> was removed in
+Bazel 9; parse the JSON directly.)</p>
+<table>
+<thead>
+<tr>
+<th>scenario</th>
+<th>cache-only (Cloud Run + GCS)</th>
+<th>RBE (single worker)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Build + run all tests / leg (warm, new commit)</td>
+<td>~8.6–9.8 min</td>
+<td>~8.8–9.5 min</td>
+</tr>
+<tr>
+<td>Total leg wall-clock (warm)</td>
+<td>~11–13 min</td>
+<td>~11–13 min</td>
+</tr>
+<tr>
+<td>Cold (empty CAS / scale-from-zero)</td>
+<td>~13 min</td>
+<td>23–29 min</td>
+</tr>
+</tbody>
+</table>
+<p>On a warm cache the two approaches are essentially equal. RBE is slower cold because all
+three legs share one worker and each has to rebuild the shared exec-config toolchain from
+scratch concurrently (only ~220–430 cross-leg cache hits on a cold run). The cache-only
+setup has no shared bottleneck. A ~6–9 minute fixed per-leg overhead (<code>ci-setup</code>
+provisioning, LFS pull, Docker Scout) is identical either way and cannot be accelerated
+by RBE.</p>
+<p><strong>RBE buys no per-PR speed on a single worker. Its value is cross-compilation and the
+ability to scale out workers.</strong></p>
+<h3 id="build-graph-parallelism-analysis">Build-graph parallelism analysis<a class="headerlink" href="#build-graph-parallelism-analysis" title="Permanent link">&para;</a></h3>
+<p>The available parallelism of a Bazel build is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>available_parallelism = total_action_work_seconds / critical_path_seconds
+</code></pre></div>
+<p>Measured from the <code>--profile</code> JSON for the regular build (fastbuild):</p>
+<ul>
+<li><strong>I/O-bound, not CPU-bound.</strong> Output download (CAS fetch) is 6.4–9.3× the remote
+  compute time per leg. The worker executes only ~2.3–2.5× actions concurrently despite
+  having 16 vCPUs — it idles. <code>max_inflight_tasks=0</code> (unlimited) so the worker is not
+  slot-limited.</li>
+<li><strong>Available parallelism ≈ 5.8×–17×</strong> (6× counting pure CPU, up to 17× counting I/O
+  overlap). A single regular build keeps roughly 6 cores busy.</li>
+<li><strong>amd64 critical path</strong> is dominated (~87%) by <code>Tar src/ffmpeg_layer_amd64.tar</code>
+  (≈21.6 min cold under <code>--remote_download_toplevel</code>; mitigated by
+  <code>--remote_download_minimal</code>). The slowest translation units are
+  <code>util/Parsing.cpp</code> (65–71s) and <code>protobuf/descriptor.cc</code> (48–59s).</li>
+<li><strong>Toolchain bootstrap</strong> is ~18% of total action-seconds. The exec-config toolchain
+  (exec=linux-x86_64) is shared across all three legs. On a warm CAS all legs reuse it;
+  on a cold run they race.</li>
+</ul>
+<p>The asan/ubsan build is CPU-bound with ~37× available parallelism (683 seconds of compile
+work over an ~18-second critical path). That is the configuration where adding more worker
+cores has the most impact.</p>
+<p><strong>Ranked levers for build latency:</strong></p>
+<ol>
+<li><code>--remote_download_minimal</code> (build-without-the-bytes, already the <code>.bazelrc</code> default):
+   stops fetching intermediate action outputs. The biggest single lever for an I/O-bound
+   build — amd64 warm latency drops ~19%.</li>
+<li>Persistent warm SSD CAS (the everyday PR case): 7–8.6 min amd64, ~2.7–3 min cross.</li>
+<li>More workers. Do not raise <code>--jobs</code> on a single worker — <code>--jobs=64</code> was tested and
+   caused <code>UNAVAILABLE</code> across all legs on a cold cache (the build is I/O-bound; more
+   client fan-out piles up CAS pressure without adding CPU). The documented scaling path
+   is a worker pool, not a higher <code>--jobs</code> value.</li>
+</ol>
+<p><strong>Update:</strong> the backend moved from the 16-vCPU GCP demonstrator to a 250-core / 512 GB
+   box on our own infra. <code>--jobs</code> was raised to 128 (and <code>--remote_max_connections</code> to 200
+   in <code>.bazelrc</code>) as a first-cut bump, not yet re-measured — the CAS-I/O ceiling above was
+   never actually a function of core count, so this assumes (unverified) that the new
+   box's disk/network throughput scaled along with its CPU count. Re-run the
+   <a href="#performance">Performance</a> measurements above on the new backend and revise this
+   section once real numbers exist.</p>
+<h3 id="warm-cache-action-distribution">Warm-cache action distribution<a class="headerlink" href="#warm-cache-action-distribution" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>leg</th>
+<th>cache-hit (warm)</th>
+<th>remote-exec (warm)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amd64</td>
+<td>~3,948</td>
+<td>~751</td>
+</tr>
+<tr>
+<td>arm64 (cross)</td>
+<td>~3,226</td>
+<td>~77</td>
+</tr>
+<tr>
+<td>darwin (cross)</td>
+<td>~3,102</td>
+<td>~50</td>
+</tr>
+</tbody>
+</table>
+<p>Cross legs execute very few actions remotely on a warm cache (almost everything hits the
+shared AC), which is why their warm wall-clock drops to ~2.4–2.9 min.</p>
+<h2 id="docker-scout-warm-cache-fix">Docker Scout warm-cache fix<a class="headerlink" href="#docker-scout-warm-cache-fix" title="Permanent link">&para;</a></h2>
+<p>Docker Scout inspects <code>daschswiss/sipi:latest</code> from the local Docker daemon. The image
+is loaded as a side effect of the <code>:docker_smoke</code> test's own <code>docker load</code> step. On a
+warm cache the smoke test is a cache hit and never runs — the image is absent and Docker
+Scout fails with <code>No such image</code>.</p>
+<p>The fix: <code>bazel-test-smoke</code> in <code>ci.yml</code> runs <code>bazel run //src:image_load</code> explicitly
+before the test. This both loads the image into the daemon and materialises the OCI
+tarball on disk under <code>--remote_download_minimal</code> (where it would otherwise not be
+fetched). The smoke test then finds the image regardless of its cache state.</p>
+<h2 id="local-use-from-macos">Local use from macOS<a class="headerlink" href="#local-use-from-macos" title="Permanent link">&para;</a></h2>
+<p>A developer on an Apple Silicon Mac opts in with <code>--config=rbe-darwin</code>. Compiles run on
+the x86_64 worker and the tests run on the Mac, as on CI's darwin-arm64 leg. Without the
+config, a local build never contacts the backend.</p>
+<h3 id="the-dasch-rbe-contract">The <code>dasch-rbe</code> contract<a class="headerlink" href="#the-dasch-rbe-contract" title="Permanent link">&para;</a></h3>
+<p><code>build:rbe-darwin</code> includes <code>--config=dasch-rbe</code>, which each developer defines in their
+own <code>~/.bazelrc</code>, with absolute paths (Bazel expands neither <code>~</code> nor environment variables
+in the TLS flags):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>build:dasch-rbe --remote_executor=grpcs://rbe-01.ops.dasch.swiss:443
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>build:dasch-rbe --remote_cache=grpcs://rbe-01.ops.dasch.swiss:443
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>build:dasch-rbe --remote_instance_name=main
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>build:dasch-rbe --remote_default_exec_properties=cpu_arch=x86_64
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>build:dasch-rbe --tls_certificate=/absolute/path/to/ca.crt
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>build:dasch-rbe --tls_client_certificate=/absolute/path/to/client.crt
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>build:dasch-rbe --tls_client_key=/absolute/path/to/client.key
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>build:dasch-rbe --experimental_remote_cache_eviction_retries=5
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>build:dasch-rbe --jobs=64
+</code></pre></div>
+<p>It differs from CI's flag string on purpose:</p>
+<ul>
+<li>No <code>--remote_upload_local_results=true</code>: <code>rbe-darwin</code> sets
+  <code>--noremote_upload_local_results</code> after <code>dasch-rbe</code>, so actions that run on the laptop
+  do not write action-cache entries.</li>
+<li><code>--jobs=64</code>, not 192: the worker is shared with CI.</li>
+<li>No <code>--noremote_cache_compression</code>: compression is off by default.</li>
+</ul>
+<p>Without a <code>dasch-rbe</code> definition, Bazel fails with "Config value 'dasch-rbe' is not
+defined".</p>
+<h3 id="the-client-certificate">The client certificate<a class="headerlink" href="#the-client-certificate" title="Permanent link">&para;</a></h3>
+<p>Issue a personal client certificate (<code>extendedKeyUsage=clientAuth</code>, signed by
+<code>dasch-remotebuild-ca</code>) as the <a href="https://github.com/dasch-swiss/infra"><code>infra</code></a> repository
+describes in <code>OS/ansible/roles/dasch.nativelink/README.md</code> § PKI Setup. <code>ca.crt</code> is the
+public <code>dasch-remotebuild-ca</code> certificate.</p>
+<ul>
+<li>Bazel reads only PKCS#8 keys (<code>BEGIN PRIVATE KEY</code>). A PKCS#1 key
+  (<code>BEGIN RSA PRIVATE KEY</code>, from <code>openssl genrsa</code> on LibreSSL) fails with "Unable to
+  decode key". Convert it with
+  <code>openssl pkcs8 -topk8 -nocrypt -in client-rsa.key -out client.key</code>, then delete
+  <code>client-rsa.key</code>.</li>
+<li>Keep the key mode 0600 in a mode 0700 directory, outside any repository and outside
+  synced folders. Ask for a certificate as short-lived as the infra role allows.</li>
+</ul>
+<h3 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>just<span class="w"> </span>bazel-test<span class="w"> </span>--config<span class="o">=</span>rbe-darwin
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>just<span class="w"> </span>bazel-build-server<span class="w"> </span>--config<span class="o">=</span>rbe-darwin<span class="w">   </span><span class="c1"># runnable bazel-bin/src/cli/rust/sipi</span>
+</code></pre></div>
+<p>Supported: <code>bazel-build</code>, <code>bazel-build-server</code>, <code>bazel-test</code>, <code>bazel-test-unit</code>,
+<code>bazel-test-e2e</code>. Not supported: recipes that <code>bazel run</code> an exec-config tool
+(<code>bazel-rustfmt</code>, <code>compile-commands</code>) and <code>bazel-coverage</code>, because <code>--host_platform</code>
+makes those tools x86_64 Linux binaries.</p>
+<p><code>rbe-darwin</code> adds <code>--config=rbe-cross</code> (the cross-leg flags, see <a href="#the-fix">The fix</a>), the
+darwin platforms and <code>--remote_download_toplevel</code>, so that top-level outputs such as the
+<code>sipi</code> binary reach <code>bazel-bin</code>. <code>--noremote_local_fallback</code> matters most here: with
+fallback on, a failed remote action reruns on the Mac with x86_64 exec tools and fails
+with "cannot execute binary file", which hides the real error.</p>
+<p>Expected noise: Rust compiles on the Linux worker print "invoking <code>xcrun --sdk macosx
+--show-sdk-path</code> to find MacOSX.sdk failed", and the Linux exec tools get an unused
+<code>-mmacosx-version-min</code>. Both are harmless.</p>
+<p><code>build --action_env=PATH</code> puts the Nix dev shell's <code>PATH</code> into action keys, so where
+<code>PATH</code> reaches an action, a local build does not reuse CI's entry and executes on the
+worker. This costs worker time and storage only.</p>
+<h3 id="security-accepted-risk">Security: accepted risk<a class="headerlink" href="#security-accepted-risk" title="Permanent link">&para;</a></h3>
+<p>NativeLink authenticates by CA signature only and has no revocation list. Any holder of a
+valid certificate can write the action cache of instance <code>main</code> directly over the
+remote-execution API, whatever their Bazel flags say, and CI and release builds read that
+cache. <code>--noremote_upload_local_results</code> keeps an honest client's local results out; it is
+not an access control. Personal certificates widen the set of holders from the CI
+identity to every opted-in developer.</p>
+<p>If a key leaks: rotate the CA (this also re-issues CI's certificate) and flush the action
+cache. A separate instance or store for developers, or a read-only developer identity,
+would remove the risk; both are infra changes.</p>
+<h2 id="ci-topology">CI topology<a class="headerlink" href="#ci-topology" title="Permanent link">&para;</a></h2>
+<p><code>ci.yml</code>'s <code>test</code> job runs the matrix on all three platforms. Each leg:</p>
+<ol>
+<li>Calls <code>.github/actions/ci-setup</code> with its <code>matrix.bazel-platform</code>, which provisions
+   bazelisk + <code>just</code> on the plain GitHub-hosted runner and internally calls
+   <code>.github/actions/bazel-rbe</code> to obtain the <code>$RBE_FLAGS</code> string — no Nix involved.</li>
+<li>Passes <code>$RBE_FLAGS</code> to every <code>just bazel-*</code> invocation.</li>
+<li>Runs <code>just bazel-test</code> (unit + approval + e2e).</li>
+<li>On Linux: runs <code>just bazel-test-smoke</code> (which first calls <code>bazel run //src:image_load</code>).</li>
+<li>On Linux: runs <code>just image-scan</code> (grype CVE gate over the same image).</li>
+<li>On linux-amd64 PRs: runs Docker Scout.</li>
+</ol>
+<p><code>ci.yml</code>'s path-gated <code>sanitizer</code> job, plus <code>coverage.yml</code>,
+<code>fuzz.yml</code>, and <code>publish.yml</code>, all go
+through the same <code>ci-setup</code> action so every Bazel invocation benefits from the shared
+remote cache.</p>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>.github/actions/bazel-rbe/action.yml</code> — the composite action; source of truth for CI's
+  connection flags and per-leg platforms</li>
+<li><code>.bazelrc</code> <code>build:rbe-cross</code> — source of truth for the cross-leg flags, shared by CI
+  and <code>build:rbe-darwin</code></li>
+<li><code>bazel/patches/hermetic_llvm_headers_glob.patch</code> — the remote-execution safety patch</li>
+<li><code>bazel/patches/hermetic_llvm_darwin_rtlib.patch</code> — drops the unused <code>-rtlib</code> from macOS
+  Rust links; not RBE-related, applied by the same override</li>
+<li><code>MODULE.bazel</code> — <code>single_version_override</code> for the <code>llvm</code> module (patch application)
+  and <code>rust.toolchain(extra_target_triples = ...)</code> (cross toolchain registration)</li>
+<li><code>platforms/BUILD.bazel</code> — <code>//platforms:linux_x86_64</code> exec properties</li>
+<li><code>test/e2e/sipi_e2e_test.bzl</code> and <code>test/e2e/BUILD.bazel</code> — <code>no-sandbox</code> tag on e2e tests</li>
+<li><a href="https://github.com/dasch-swiss/ops-tf"><code>ops-tf</code></a> (<code>live/virt-03/prod/vms/</code>) and
+  <a href="https://github.com/dasch-swiss/infra"><code>infra</code></a>
+  (<code>OS/ansible/roles/dasch.nativelink</code>) — VM provisioning and NativeLink store
+  configuration / operations (private repos)</li>
+<li><a href="../rbe-write-pressure/">RBE Write Pressure</a> — why the store disk writes
+  terabytes/day, and the client-side levers that reduce it (worker
+  materialization, not client uploads)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

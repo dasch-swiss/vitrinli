@@ -1,0 +1,1426 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/building/">
+      
+      
+        <link rel="prev" href="../../lua/sqlite/">
+      
+      
+        <link rel="next" href="../bazel/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Building - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#building-vitrinli-from-source-code" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Building
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kakadu-jpeg-2000" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kakadu (JPEG 2000)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adobe-icc-color-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adobe ICC Color Profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-a-docker-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building a Docker image
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building a Docker image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-arch-builds-used-by-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-arch builds (used by CI)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-platform-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-platform builds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#all-just-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All just targets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="building-vitrinli-from-source-code">Building Vitrinli from Source Code<a class="headerlink" href="#building-vitrinli-from-source-code" title="Permanent link">&para;</a></h1>
+<p>Vitrinli's build system is <strong>Bazel</strong> (orchestrating every C/C++ target,
+the OCI Docker image, and the Rust e2e + smoke tests). Nix's role
+is reduced to <strong>provisioning a dev shell</strong> with bazelisk + the host
+tools the <code>gh_release_archive</code> repository_rule needs on PATH (<code>gh</code>, for
+the Kakadu fetch).</p>
+<p>All build commands are wrapped by recipes in the root <code>justfile</code>.
+Run <code>just</code> to see the full list. Every CI step invokes one of these
+recipes — there are no inline <code>bazel ...</code> calls in any workflow.</p>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>nix<span class="w"> </span>develop<span class="w">                                    </span><span class="c1"># bazelisk + host tools on PATH</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>just<span class="w"> </span>bazel-build-server<span class="w">                        </span><span class="c1"># bazel build --stamp //src/cli/rust:sipi (the Rust server shell)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>./bazel-bin/src/cli/rust/sipi<span class="w"> </span>server<span class="w"> </span>--config<span class="w"> </span>config/sipi.localdev-config.lua
+</code></pre></div>
+<p><code>just run</code> chains the two: it depends on <code>bazel-build</code> and starts
+sipi with the localdev config in one step.</p>
+<p>For Bazel concepts, common commands, <code>--config=</code> flags, and
+querying the build graph, see <strong><a href="../bazel/">Building with Bazel</a></strong>.</p>
+<p>For dev-shell setup (Determinate Nix install, what the shell
+provides), see <strong><a href="../nix/">Nix dev shell</a></strong>.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h3 id="kakadu-jpeg-2000">Kakadu (JPEG 2000)<a class="headerlink" href="#kakadu-jpeg-2000" title="Permanent link">&para;</a></h3>
+<p>Vitrinli uses <a href="http://kakadusoftware.com/">Kakadu</a>, a proprietary JPEG
+2000 toolkit licensed separately. The archive is published as a
+release asset on the private
+<a href="https://github.com/dasch-swiss/dsp-ci-assets"><code>dasch-swiss/dsp-ci-assets</code></a>
+repo and is fetched at build time by a custom Bazel
+<code>gh_release_archive</code> repository_rule (<code>bazel/gh_release.bzl</code>) that shells out
+to <code>gh release download</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>gh<span class="w"> </span>auth<span class="w"> </span>login<span class="w">    </span><span class="c1"># one-time; needs dasch-swiss org membership</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>just<span class="w"> </span>bazel-build<span class="w"> </span><span class="c1"># the repository_rule fetches Kakadu on first build</span>
+</code></pre></div>
+<p>CI passes <code>GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}</code> on every Bazel
+step so the repository_rule resolves there too. See
+<a href="../kakadu/">Kakadu setup</a> for details and the version-bump
+procedure.</p>
+<h3 id="adobe-icc-color-profiles">Adobe ICC Color Profiles<a class="headerlink" href="#adobe-icc-color-profiles" title="Permanent link">&para;</a></h3>
+<p>Vitrinli uses Adobe ICC color profiles, which are downloaded
+automatically by the Bazel build. The user is responsible for
+reading and agreeing with Adobe's license conditions, which are
+specified in <code>Color Profile EULA.pdf</code> at the repo root.</p>
+<h2 id="building-a-docker-image">Building a Docker image<a class="headerlink" href="#building-a-docker-image" title="Permanent link">&para;</a></h2>
+<p>The Docker image is built by Bazel <code>rules_oci</code> (<code>//src:sipi_image</code>).
+There is no <code>Dockerfile</code> — <code>src/BUILD.bazel</code> is the
+single source of truth. A running Docker daemon is still required
+for <code>docker load</code> / <code>docker push</code>, but <code>docker buildx</code> is not used
+(multi-arch manifest assembly happens via <code>crane index append</code> on a
+coordinator job).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>just<span class="w"> </span>bazel-docker-build-arm64<span class="w">  </span><span class="c1"># or -amd64; loads daschswiss/sipi:latest</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>just<span class="w"> </span>bazel-test-smoke<span class="w">          </span><span class="c1"># builds //src:sipi_image and probes the loaded image</span>
+</code></pre></div>
+<h3 id="per-arch-builds-used-by-ci">Per-arch builds (used by CI)<a class="headerlink" href="#per-arch-builds-used-by-ci" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>just<span class="w"> </span>bazel-docker-build-amd64<span class="w">           </span><span class="c1"># build + load amd64 as daschswiss/sipi:latest</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>just<span class="w"> </span>bazel-docker-build-arm64<span class="w">           </span><span class="c1"># build + load arm64</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>just<span class="w"> </span>bazel-docker-extract-debug<span class="w"> </span>amd64<span class="w">   </span><span class="c1"># surface sipi-amd64.debug for sentry-cli</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>just<span class="w"> </span>bazel-docker-push-amd64<span class="w">            </span><span class="c1"># push as :v&lt;version&gt;-amd64 + :latest-amd64</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>just<span class="w"> </span>bazel-docker-push-arm64<span class="w">            </span><span class="c1"># push as :v&lt;version&gt;-arm64 + :latest-arm64</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>just<span class="w"> </span>bazel-docker-publish-manifest<span class="w">      </span><span class="c1"># crane index append → daschswiss/sipi:v&lt;version&gt;</span>
+</code></pre></div>
+<p>Each per-arch CI runner builds + pushes only its matching
+architecture (<code>target_compatible_with</code> rejects cross-arch
+invocations). A coordinator job runs <code>crane index append</code> to stitch
+the two pushed digests into a multi-arch manifest at
+<code>daschswiss/sipi:v&lt;version&gt;</code>.</p>
+<h2 id="cross-platform-builds">Cross-platform builds<a class="headerlink" href="#cross-platform-builds" title="Permanent link">&para;</a></h2>
+<p>The full test matrix runs on macOS-aarch64, linux-x86_64, and
+linux-aarch64. CI exercises every variant on every platform; a
+green CI run verifies macOS as well as Linux.</p>
+<p>A macOS host cross-compiles the Linux OCI image directly — the
+hermetic-llvm toolchain declares every exec×target pair and bundles a
+per-target glibc + libc++ + compiler-rt, so no sysroot, VM, or host
+Linux toolchain is needed. <code>rules_foreign_cc</code> was the only thing that
+host-bound the build; with it gone (ADR-0015), every native
+<code>cc_library</code> (kakadu/libtiff/exiv2/…) compiles through the relocatable
+clang for the target platform:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>just<span class="w"> </span>bazel-cross-build-image<span class="w"> </span>amd64<span class="w">   </span><span class="c1"># build //src:sipi_image for linux-x86_64</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>just<span class="w"> </span>bazel-cross-build-image<span class="w"> </span>arm64<span class="w">   </span><span class="c1"># build //src:sipi_image for linux-aarch64</span>
+</code></pre></div>
+<p>These are build-only (no <code>docker load</code>, since a macOS host has no Linux
+Docker daemon). Cross-compilation is a supported capability but is <strong>not
+currently CI-gated</strong> — verify it locally with the recipes above (a
+CI gate was prototyped and removed for being too slow; the approach is
+being reconsidered). To actually load/run the image, either use a Linux
+host's <code>bazel-docker-build-{amd64,arm64}</code> or a lightweight Linux VM such
+as <a href="https://orbstack.dev/">OrbStack</a> with the dev shell available inside
+it (<code>nix develop</code> from a shared workdir).</p>
+<h2 id="all-just-targets">All <code>just</code> targets<a class="headerlink" href="#all-just-targets" title="Permanent link">&para;</a></h2>
+<p>Run <code>just</code> with no arguments to see the live list. Key target
+groups:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bazel-build [*FLAGS]</code></td>
+<td><code>bazel build --stamp //src/cli:sipi</code> (fastbuild; pass <code>-c opt</code>/<code>--config=asan</code> etc.)</td>
+</tr>
+<tr>
+<td><code>bazel-test [*FLAGS]</code></td>
+<td><code>bazel test //test/unit/... //test/approval/... //test/e2e/...</code> (no coverage)</td>
+</tr>
+<tr>
+<td><code>bazel-coverage [*FLAGS]</code></td>
+<td>Same target set, instrumented; emits combined lcov for Codecov</td>
+</tr>
+<tr>
+<td><code>bazel-test-unit</code></td>
+<td><code>bazel test //test/unit/...</code></td>
+</tr>
+<tr>
+<td><code>bazel-test-approval</code></td>
+<td><code>bazel test //test/approval:approvaltests</code></td>
+</tr>
+<tr>
+<td><code>bazel-test-e2e [*FLAGS]</code></td>
+<td>All Rust e2e <code>rust_test</code> targets</td>
+</tr>
+<tr>
+<td><code>bazel-test-smoke [*FLAGS]</code></td>
+<td>Docker smoke test (consumes Bazel-built image tarball)</td>
+</tr>
+<tr>
+<td><code>image-scan [*FLAGS]</code></td>
+<td>grype gate: fail on fixed High/Critical CVEs in the image's OS packages (needs <code>grype</code>; on macOS pass <code>--platforms=//platforms:linux_*</code>)</td>
+</tr>
+<tr>
+<td><code>bazel-build-sanitized [*FLAGS]</code></td>
+<td><code>bazel build --config=asan --config=ubsan //src/cli:sipi</code></td>
+</tr>
+<tr>
+<td><code>bazel-cross-build-image {amd64,arm64}</code></td>
+<td>Cross-build <code>//src:sipi_image</code> for the Linux target arch (build-only; darwin→linux gate)</td>
+</tr>
+<tr>
+<td><code>bazel-docker-build-{amd64,arm64}</code></td>
+<td>Build + load per-arch image as <code>daschswiss/sipi:latest</code></td>
+</tr>
+<tr>
+<td><code>bazel-docker-push-{amd64,arm64}</code></td>
+<td>Push to <code>daschswiss/sipi:{latest,v&lt;version&gt;}-${arch}</code></td>
+</tr>
+<tr>
+<td><code>bazel-docker-publish-manifest</code></td>
+<td><code>crane index append</code> → multi-arch manifest at <code>daschswiss/sipi:v&lt;version&gt;</code></td>
+</tr>
+<tr>
+<td><code>bazel-docker-extract-debug arch</code></td>
+<td>Build <code>:sipi_debug_layout</code>, surface <code>sipi-&lt;arch&gt;.debug</code></td>
+</tr>
+<tr>
+<td><code>run</code></td>
+<td><code>just bazel-build</code> then run sipi with the dev config</td>
+</tr>
+<tr>
+<td><code>valgrind</code></td>
+<td><code>just bazel-build</code> then run sipi under Valgrind</td>
+</tr>
+<tr>
+<td><code>docs-build</code></td>
+<td>Build documentation site (<code>mkdocs build</code>)</td>
+</tr>
+<tr>
+<td><code>docs-serve</code></td>
+<td>Serve documentation locally for preview</td>
+</tr>
+</tbody>
+</table>
+<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>just<span class="w"> </span>docs-build<span class="w">                </span><span class="c1"># build documentation site</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>just<span class="w"> </span>docs-serve<span class="w">                </span><span class="c1"># serve documentation locally for preview</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

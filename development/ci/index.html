@@ -1,0 +1,1744 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/ci/">
+      
+      
+        <link rel="prev" href="../nix/">
+      
+      
+        <link rel="next" href="../rbe/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>CI and Release - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ci-and-release" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CI and Release
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#release-automation-release-please" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release automation (release-please)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull request CI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pull request CI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        changes gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-gated-sanitizer-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path-gated sanitizer job
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dependency-advisory-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency advisory scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-environment-provisioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI environment provisioning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#forked-pr-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forked PR behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-merge-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-merge coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-advisory-scanning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency advisory scanning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dependency advisory scanning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quarterly-native-pin-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quarterly native-pin review
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tag-release-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag release CI/CD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remote-build-execution-and-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote build execution and caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local reproduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fuzz-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fuzz testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="ci-and-release">CI and Release<a class="headerlink" href="#ci-and-release" title="Permanent link">&para;</a></h1>
+<p>This page documents Vitrinli's CI pipeline and release automation.</p>
+<h2 id="release-automation-release-please">Release automation (release-please)<a class="headerlink" href="#release-automation-release-please" title="Permanent link">&para;</a></h2>
+<p>Releases are fully automated via
+<a href="https://github.com/googleapis/release-please">release-please</a>.
+When commits are merged to <code>main</code>, release-please reads their
+<a href="https://www.conventionalcommits.org/">Conventional Commit</a> prefixes
+to determine the SemVer bump and generate the changelog.</p>
+<p><strong>Configuration files:</strong></p>
+<ul>
+<li><code>.github/release-please/config.json</code> — changelog sections, release type</li>
+<li><code>.github/release-please/manifest.json</code> — current version</li>
+<li><code>.github/workflows/release-please.yml</code> — GitHub Actions workflow</li>
+</ul>
+<p><strong>How commit types map to releases:</strong> the type → changelog-section → SemVer-bump
+table is single-sourced in
+<a href="../commit-conventions/#commit-message-schema">Commit and PR Conventions § Commit message schema</a>.
+The machine source release-please actually reads is
+<a href="../../../.github/release-please/config.json"><code>.github/release-please/config.json</code></a>.</p>
+<p>Every commit appears in the release notes in its own section, and — because the
+scope is mandatory — each line reads <code>concern: subject</code>. A release containing only
+internal-work commits (<code>refactor</code>/<code>docs</code>/<code>test</code>/<code>build</code>/<code>chore</code>) is a patch release:
+release-please keeps a release PR open for it, and the maintainer decides when to
+merge it.</p>
+<div class="admonition warning">
+<p class="admonition-title">Correct type + scope are critical, and enforced</p>
+<p>A commit without a valid type is invisible to release-please — it won't trigger
+a release or appear in the changelog. Both the type (one of the eight allowed)
+and a mandatory scope are enforced in CI by the <code>commit-lint</code> job (<code>commitlint-rs</code>).
+See <a href="../commit-conventions/">Commit and PR Conventions</a> for the full schema, the
+scope vocabulary, what <code>fix:</code> means, and <code>just commit-lint</code>.</p>
+</div>
+<h2 id="pull-request-ci">Pull request CI<a class="headerlink" href="#pull-request-ci" title="Permanent link">&para;</a></h2>
+<p>Workflow: <code>.github/workflows/ci.yml</code>. Trigger: <code>pull_request</code> plus
+manual <code>workflow_dispatch</code>. No Nix anywhere in this workflow — every
+job provisions Bazel and <code>just</code> on a plain GitHub-hosted runner via
+the <code>.github/actions/ci-setup</code> composite action (see "CI environment
+provisioning" below). Nix remains the local dev-shell provisioner only.</p>
+<h3 id="changes-gate"><code>changes</code> gate<a class="headerlink" href="#changes-gate" title="Permanent link">&para;</a></h3>
+<p>A <code>changes</code> job runs first and inspects the diff to decide whether the
+sanitizer job (below) needs to run: it looks for changes under
+<code>src/</code>, <code>include/</code>, <code>test/</code>, <code>bazel/</code>, <code>platforms/</code>, <code>config/</code>,
+<code>scripts/</code>, <code>MODULE.bazel*</code>, <code>.bazelrc</code>, <code>.bazelversion</code>, <code>BUILD.bazel</code>,
+<code>justfile</code>, <code>.lsan_suppressions.txt</code>, <code>ci.yml</code>, and <code>.github/actions/</code>.
+A docs-only PR skips the sanitizer job — a skipped required job still
+satisfies branch rulesets. The <code>test</code> matrix has no <code>needs:</code> on this
+job and starts immediately, in parallel with it. A manual
+<code>workflow_dispatch</code> run bypasses the filter and always runs the
+sanitizer job.</p>
+<h3 id="test-matrix">Test matrix<a class="headerlink" href="#test-matrix" title="Permanent link">&para;</a></h3>
+<p>The <code>test</code> job runs on three platforms — <code>linux-amd64</code>,
+<code>linux-arm64</code>, <code>darwin-arm64</code> — and all three legs start immediately;
+none of them wait on a separate lint gate. Every leg runs:</p>
+<ol>
+<li><strong>Build + test</strong> — <code>just bazel-test</code> (fastbuild, no
+   instrumentation; unit + approval + e2e in a single Bazel
+   invocation).</li>
+<li><strong>Docker smoke tests (Linux only)</strong> — <code>just bazel-test-smoke</code>
+   builds <code>//src:sipi_image</code> as a transitive <code>data</code> dep of the
+   <code>:docker_smoke</code> rust_test, the test loads the OCI tarball into
+   the local Docker daemon, and runs the smoke suite against the
+   loaded container.</li>
+<li><strong>Image CVE gate (Linux only)</strong> — <code>just image-scan</code> runs grype
+   (pinned release, installed in-job) over the image tarball the smoke
+   step built, and fails on any High/Critical CVE with a fixed version
+   in the OS packages (distroless base + <code>bookworm.lock.json</code>).
+   <code>.grype.yaml</code> documents the false positives it ignores.</li>
+<li><strong>Docker Scout</strong> (linux-amd64 PRs only, one leg — a single PR
+   comment, informational, never fails the job):
+   <code>Docker Scout — compare to production</code>,
+   <code>Docker Scout — CVE report (SARIF)</code>, and
+   <code>Upload SARIF to GitHub Security</code>.</li>
+</ol>
+<p>The standalone <code>lint</code> job is gone. Its lint checks —
+<code>bazel-rustfmt-check</code> and <code>bazel-clippy-check</code> — now run as extra
+steps inside the <code>test / linux-arm64</code> leg, the shortest of the three
+legs, instead of gating the matrix from a separate job.</p>
+<p>A separate <code>docs</code> job runs <code>just docs-build</code> (mkdocs strict-mode
+build) on ubuntu-latest. The <code>docs-build</code> job is the gate that
+catches broken cross-links and stale nav entries on every PR.</p>
+<h3 id="path-gated-sanitizer-job">Path-gated sanitizer job<a class="headerlink" href="#path-gated-sanitizer-job" title="Permanent link">&para;</a></h3>
+<p>The <code>sanitizer</code> job (<code>asan-ubsan / amd64</code>) runs ASan+UBSan over the
+unit and e2e suites in a single <code>just bazel-test-sanitized</code> invocation,
+gated by the <code>changes</code> job above. Running both suites in one <code>bazel
+test</code> compiles the instrumented <code>sipi</code> tree exactly once — a single
+action graph shares the ~5500-file compile across both suites (two
+separate jobs would each compile the full tree). Runs on linux-x86_64 only
+(the macOS toolchain args omit the sanitizer header path). ASan/LSan
+symbol resolution uses the hermetic LLVM 23.1.2 <code>//bazel:llvm-symbolizer</code>
+(version-matched to clang 23.1.2), which the e2e macro attaches as a test
+runfile under <code>--config=asan</code> and points <code>ASAN_SYMBOLIZER_PATH</code> at — so the
+tests (unit + e2e) execute on the RBE worker, symbolizer included, rather
+than on the runner.</p>
+<h3 id="dependency-advisory-scan">Dependency advisory scan<a class="headerlink" href="#dependency-advisory-scan" title="Permanent link">&para;</a></h3>
+<p>A <code>dependency-audit</code> job runs <code>just audit</code> against the checked-in
+Cargo-format lockfile — see "Dependency advisory scanning" below for
+what it covers. Self-contained (no Bazel/RBE setup); not currently a
+required branch-protection check.</p>
+<h3 id="ci-environment-provisioning">CI environment provisioning<a class="headerlink" href="#ci-environment-provisioning" title="Permanent link">&para;</a></h3>
+<p>Every Bazel-invoking job in <code>ci.yml</code> (and in <code>publish.yml</code>,
+<code>coverage.yml</code>, <code>fuzz.yml</code>) starts with the <code>.github/actions/ci-setup</code>
+composite action, which wraps:</p>
+<ul>
+<li><code>bazelbuild/setup-bazelisk</code> — bazelisk on PATH (reads
+  <code>.bazelversion</code>).</li>
+<li><code>extractions/setup-just</code> — <code>just</code> on PATH.</li>
+<li>Optional git-LFS restore/pull (test images), when the job needs them.</li>
+<li>The Bazel repository cache (<code>actions/cache</code> over
+  <code>~/.cache/bazel-repo</code>), keyed on <code>MODULE.bazel.lock</code>.</li>
+<li>The existing <code>.github/actions/bazel-rbe</code> composite action, for the
+  RBE mTLS material and cross-compile flags.</li>
+</ul>
+<p><code>gh</code> is preinstalled on GitHub-hosted runners, so no setup step
+provisions it. <code>GH_TOKEN</code> is passed as plain step <code>env:</code> on the
+<code>just bazel-*</code> invocation that needs it (the <code>gh_release_archive</code>
+repository_rule shells out to <code>gh release download</code> for the Kakadu
+fetch) — there is no Nix-impure-env hack involved.</p>
+<h3 id="forked-pr-behavior">Forked PR behavior<a class="headerlink" href="#forked-pr-behavior" title="Permanent link">&para;</a></h3>
+<p>Every Bazel-invoking step sets
+<code>GH_TOKEN: ${{ secrets.DASCHBOT_PAT }}</code> on its <code>env:</code> so the
+<code>gh_release_archive</code> repository_rule can authenticate. Forked PRs
+don't have access to <code>DASCHBOT_PAT</code>, so the Kakadu fetch fails
+and the build short-circuits. Internal PRs are unaffected.</p>
+<h3 id="required-checks">Required checks<a class="headerlink" href="#required-checks" title="Permanent link">&para;</a></h3>
+<p>Branch rulesets require the three <code>test / *</code> legs
+(<code>test / linux-amd64</code>, <code>test / linux-arm64</code>, <code>test / darwin-arm64</code>)
+plus the <code>asan-ubsan / amd64</code> job. The <code>docs</code> job, the <code>dependency-audit</code>
+job and the <code>changes</code> gate itself are not required checks. (The
+asan-ubsan job was previously split into <code>asan-ubsan-unit / amd64</code> +
+<code>asan-ubsan-e2e / amd64</code>; the ruleset must be updated to the merged name.)</p>
+<p><strong><code>main</code> is protected by a <em>ruleset</em>, not by classic branch protection.</strong>
+<code>GET /repos/dasch-swiss/vitrinli/branches/main/protection</code> therefore answers
+<code>404 Branch not protected</code>, which is true only of the classic mechanism and
+says nothing about the ruleset. Read the rules from the rulesets API instead,
+or just read this section:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/dasch-swiss/vitrinli/rulesets<span class="w">                 </span><span class="c1"># find the ruleset id</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/dasch-swiss/vitrinli/rulesets/&lt;id&gt;<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;[.rules[].type]&#39;</span>
+</code></pre></div>
+<p>The same ruleset pins <strong><code>rebase</code> as the only allowed merge method</strong> (alongside
+<code>required_linear_history</code>), so <code>gh pr merge --squash</code> and <code>--merge</code> are
+rejected. This is the mechanism behind the "a PR lands as one commit by
+default" convention in <code>CLAUDE.md</code>: every branch commit reaches <code>main</code>
+verbatim, with no squash to tidy it, which is why branches are cleaned up
+before merge. Note that dsp-api and dsp-app are the opposite — squash-only —
+so the habit does not carry between repos.</p>
+<h2 id="post-merge-coverage">Post-merge coverage<a class="headerlink" href="#post-merge-coverage" title="Permanent link">&para;</a></h2>
+<p>Workflow: <code>.github/workflows/coverage.yml</code>. Trigger:
+<code>workflow_dispatch</code> only (manual runs) — see the workflow's header
+comment for why the <code>push: branches: [main]</code> trigger stays disabled
+under the current hermetic-llvm toolchain.</p>
+<p>A single <code>linux-amd64</code> job runs via <code>ci-setup</code> and calls
+<code>just bazel-coverage</code>. The recipe's <code>collect_cc_coverage.sh</code> needs
+<code>COVERAGE_GCOV_PATH</code>/<code>LLVM_COV</code> on PATH; those resolve from the
+hermetic Bazel toolchain's <code>//bazel:llvm-profdata</code>/<code>//bazel:llvm-cov</code>
+aliases, not from a Nix dev shell — no <code>.#llvm-tools</code> shell is
+involved in CI. The combined lcov report at
+<code>bazel-out/_coverage/_coverage_report.dat</code> is uploaded to Codecov.</p>
+<p><strong>Why split out:</strong> Coverage instrumentation adds 1.5–2× compile
+overhead and slower test runtime; running it on every PR push
+across three platforms wasted CI minutes without commensurate
+signal. Per-PR coverage delta in Codecov is the trade-off — drift
+shows up immediately after merge instead. To restore PR-scoped
+signal selectively, add a <code>pull_request: paths: ['src/**']</code> trigger
+to this workflow.</p>
+<h2 id="dependency-advisory-scanning">Dependency advisory scanning<a class="headerlink" href="#dependency-advisory-scanning" title="Permanent link">&para;</a></h2>
+<p>Workflow: <code>.github/workflows/ci.yml</code>, job <code>dependency-audit</code>. Runs <code>just
+audit</code> — <code>cargo-audit</code> and <code>osv-scanner</code> (installed in-job; neither is in the
+Nix dev shell) scanning <code>Cargo.Bazel.lock</code>, the checked-in Cargo-format
+lockfile materialized by <code>crate.from_specs(cargo_lockfile = ...)</code> in
+<code>MODULE.bazel</code> (<code>crate_universe</code>'s own <code>MODULE.bazel.lock</code> is JSON, which
+neither tool reads). Repin with
+<code>CARGO_BAZEL_REPIN=1 bazel build //src/server/rust:lib</code> after any
+<code>crate.spec()</code> change. Covers the single <code>@crates</code> hub: server, cli,
+scripting and the e2e suite.</p>
+<p>Dependabot is off: no version-update or security-update PRs. GitHub Actions,
+the Nix flake inputs and the BCR <code>bazel_dep</code>s are bumped by hand.</p>
+<p>This closes one gap, not the whole dependency surface: <code>dependency-audit</code>
+does not see the native <code>http_archive</code> / <code>cc_library</code> pins below —
+they have no lockfile-based advisory feed. The OS/runtime packages in the
+<em>image layers</em> are gated by <code>just image-scan</code> in the <code>test</code> job (grype, fails on
+fixed High/Critical) and reported by Docker Scout (<code>ci.yml</code>'s PR-time report and
+<code>publish.yml</code>'s release-time Critical gate). Neither reaches these
+statically-linked libraries. A failing <code>image-scan</code> is fixed by bumping the
+snapshot in <code>bazel/distroless/bookworm.yaml</code> (then <code>bazel run @bookworm//:lock</code>)
+or the <code>distroless_base</code> digest in <code>MODULE.bazel</code>.</p>
+<h3 id="quarterly-native-pin-review">Quarterly native-pin review<a class="headerlink" href="#quarterly-native-pin-review" title="Permanent link">&para;</a></h3>
+<p>Manually check each project's release page against the pinned version in
+<code>MODULE.bazel</code> and CVE feeds (NVD, GitHub Advisory Database) for the pinned
+version. Bump via a normal version-pin PR (update <code>sha256</code>/<code>strip_prefix</code>/<code>url</code>
+or the BCR module version) when a fix is available.</p>
+<p><strong>Native <code>cc_library</code> (<code>http_archive</code>, hand-pinned — see
+<a href="../../adr/0015-native-cc_library-over-foreign_cc.md">ADR-0015</a>):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Pinned via</th>
+<th>Releases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>libtiff</td>
+<td><code>tiff</code> <code>http_archive</code></td>
+<td><a href="https://github.com/libsdl-org/libtiff/releases">https://github.com/libsdl-org/libtiff/releases</a></td>
+</tr>
+<tr>
+<td>exiv2</td>
+<td><code>exiv2</code> <code>http_archive</code></td>
+<td><a href="https://github.com/Exiv2/exiv2/releases">https://github.com/Exiv2/exiv2/releases</a></td>
+</tr>
+<tr>
+<td>lcms2</td>
+<td><code>lcms2</code> <code>http_archive</code></td>
+<td><a href="https://github.com/mm2/Little-CMS/releases">https://github.com/mm2/Little-CMS/releases</a></td>
+</tr>
+<tr>
+<td>jansson</td>
+<td><code>jansson</code> <code>http_archive</code></td>
+<td><a href="https://github.com/akheron/jansson/releases">https://github.com/akheron/jansson/releases</a></td>
+</tr>
+<tr>
+<td>jbigkit</td>
+<td><code>jbigkit</code> <code>http_archive</code></td>
+<td>no GitHub releases; upstream page: <a href="https://www.cl.cam.ac.uk/~mgk25/jbigkit/">https://www.cl.cam.ac.uk/~mgk25/jbigkit/</a></td>
+</tr>
+<tr>
+<td>mimalloc</td>
+<td><code>mimalloc</code> <code>http_archive</code></td>
+<td><a href="https://github.com/microsoft/mimalloc/releases">https://github.com/microsoft/mimalloc/releases</a></td>
+</tr>
+<tr>
+<td>tracy</td>
+<td><code>tracy</code> <code>http_archive</code> (dev-only, <code>--config=tracy</code>-gated)</td>
+<td><a href="https://github.com/wolfpld/tracy/releases">https://github.com/wolfpld/tracy/releases</a></td>
+</tr>
+<tr>
+<td>Kakadu</td>
+<td><code>kakadu_extension</code> (proprietary, license-gated)</td>
+<td><a href="https://github.com/dasch-swiss/dsp-ci-assets/releases">https://github.com/dasch-swiss/dsp-ci-assets/releases</a> (private, org-restricted)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>BCR <code>bazel_dep</code> drop-ins</strong> (image codec / parsing surface — see
+CLAUDE.md's Dependencies table for the full BCR list; excludes pure
+build-tooling deps like <code>rules_cc</code>/<code>rules_rust</code>/<code>rules_python</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Releases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>libpng</td>
+<td><a href="https://github.com/pnggroup/libpng/releases">https://github.com/pnggroup/libpng/releases</a></td>
+</tr>
+<tr>
+<td>libjpeg_turbo</td>
+<td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/releases">https://github.com/libjpeg-turbo/libjpeg-turbo/releases</a></td>
+</tr>
+<tr>
+<td>libwebp</td>
+<td><a href="https://github.com/webmproject/libwebp/releases">https://github.com/webmproject/libwebp/releases</a></td>
+</tr>
+<tr>
+<td>libdeflate</td>
+<td><a href="https://github.com/ebiggers/libdeflate/releases">https://github.com/ebiggers/libdeflate/releases</a></td>
+</tr>
+<tr>
+<td>zlib</td>
+<td><a href="https://github.com/madler/zlib/releases">https://github.com/madler/zlib/releases</a></td>
+</tr>
+<tr>
+<td>bzip2</td>
+<td>no GitHub releases; upstream page: <a href="https://sourceware.org/bzip2/">https://sourceware.org/bzip2/</a></td>
+</tr>
+<tr>
+<td>xz</td>
+<td><a href="https://github.com/tukaani-project/xz/releases">https://github.com/tukaani-project/xz/releases</a></td>
+</tr>
+<tr>
+<td>zstd</td>
+<td><a href="https://github.com/facebook/zstd/releases">https://github.com/facebook/zstd/releases</a></td>
+</tr>
+<tr>
+<td>sqlite3</td>
+<td>no GitHub release notes; changelog: <a href="https://www.sqlite.org/changes.html">https://www.sqlite.org/changes.html</a></td>
+</tr>
+<tr>
+<td>libexpat</td>
+<td><a href="https://github.com/libexpat/libexpat/releases">https://github.com/libexpat/libexpat/releases</a></td>
+</tr>
+<tr>
+<td>libmagic</td>
+<td><a href="https://github.com/file/file/releases">https://github.com/file/file/releases</a></td>
+</tr>
+<tr>
+<td>Lua</td>
+<td>no GitHub releases; upstream page: <a href="https://www.lua.org/versions.html">https://www.lua.org/versions.html</a></td>
+</tr>
+<tr>
+<td>curl</td>
+<td><a href="https://github.com/curl/curl/releases">https://github.com/curl/curl/releases</a></td>
+</tr>
+<tr>
+<td>OpenSSL</td>
+<td><a href="https://github.com/openssl/openssl/releases">https://github.com/openssl/openssl/releases</a></td>
+</tr>
+<tr>
+<td>protobuf</td>
+<td><a href="https://github.com/protocolbuffers/protobuf/releases">https://github.com/protocolbuffers/protobuf/releases</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="tag-release-cicd">Tag release CI/CD<a class="headerlink" href="#tag-release-cicd" title="Permanent link">&para;</a></h2>
+<p>Workflow: <code>.github/workflows/publish.yml</code>. Trigger: tag push
+matching <code>v*</code>.</p>
+<p>Like <code>ci.yml</code>, every Bazel-invoking job provisions its environment via
+the <code>.github/actions/ci-setup</code> composite action — no Nix.</p>
+<p>Gate model:</p>
+<ol>
+<li><code>validate-docker / {amd64, arm64}</code> — each per-arch runner
+   builds the Docker image via
+   <code>just bazel-docker-build-${arch}</code> and runs
+   <code>just bazel-test-smoke</code> against it.</li>
+<li><code>release-gate</code> — fires on <code>validate-docker</code> success.</li>
+<li>Publish jobs run after the gate:</li>
+<li><code>publish-docker / {amd64, arm64}</code> — rebuilds the per-arch
+     image, extracts the <code>.debug</code> file via
+     <code>just bazel-docker-extract-debug ${arch}</code>, pushes via
+     <code>just bazel-docker-push-${arch}</code>, records the image with Docker
+     Scout, runs a Docker Scout CVE gate (<code>only-severities: critical</code>,
+     <code>exit-code: true</code> — fails the job on any Critical finding in the
+     image layers; see "Dependency advisory scanning" above for what
+     this does and doesn't cover), uploads SBOM, pushes debug
+     symbols to Sentry. It does not repeat the smoke test —
+     <code>validate-docker</code> already validated the same commit.</li>
+<li><code>manifest</code> — needs <code>publish-docker</code>; runs
+     <code>just bazel-docker-publish-manifest</code> (<code>crane index append</code>) to
+     assemble the multi-arch manifest at <code>daschswiss/sipi:v&lt;version&gt;</code>
+     from the two pushed per-arch digests, and tags it <code>:latest</code>.
+     Provisioned via <code>imjasonh/setup-crane</code> + <code>extractions/setup-just</code>
+     only — no Bazel/RBE setup, since the recipe only shells out to
+     <code>crane</code>.</li>
+<li><code>sentry</code> — also needs <code>publish-docker</code> directly and runs in
+     parallel with <code>manifest</code> (not after it), finalising the Sentry
+     release.</li>
+<li><code>docs</code> — needs <code>release-gate</code>; mkdocs deploy.</li>
+</ol>
+<h2 id="remote-build-execution-and-caching">Remote build execution and caching<a class="headerlink" href="#remote-build-execution-and-caching" title="Permanent link">&para;</a></h2>
+<p>CI builds run on a self-hosted <strong>NativeLink Remote Build Execution</strong> backend: a
+single x86_64 worker that cross-compiles all three target arches
+(<code>linux-amd64</code>, <code>linux-aarch64</code>, <code>darwin-aarch64</code>), fronting a remote cache
+(AC + CAS, mTLS). Clients reach it through the proxy on
+<code>rbe-01.ops.dasch.swiss:443</code>, the only externally reachable port. The connection, mTLS, and
+cross-compile flags are assembled by the
+<a href="../../../.github/actions/bazel-rbe"><code>bazel-rbe</code></a> composite action and injected
+per workflow step — Bazel does not expand env vars in <code>.bazelrc</code>, so they live
+in the workflow, not the rc file. The backend-agnostic tuning flags
+(<code>--remote_download_minimal</code>, <code>--remote_local_fallback</code>, <code>--remote_timeout</code>,
+<code>--remote_max_connections</code>) live in <code>.bazelrc</code> and are no-ops without a remote
+configured; the cross-leg flags live in <code>.bazelrc</code> <code>build:rbe-cross</code>.</p>
+<p>See <strong><a href="../rbe/">Remote build execution</a></strong> for the full topology, the
+cross-compile flag rationale, and the developer-facing workflow, and the
+<a href="https://github.com/dasch-swiss/ops-tf"><code>ops-tf</code></a> /
+<a href="https://github.com/dasch-swiss/infra"><code>infra</code></a> repos (private) for the
+VM provisioning and the NativeLink service configuration.</p>
+<h2 id="local-reproduction">Local reproduction<a class="headerlink" href="#local-reproduction" title="Permanent link">&para;</a></h2>
+<p>Every CI step invokes <code>just &lt;recipe&gt;</code> — there are no inline
+<code>bazel ...</code> calls in any workflow. CI itself runs Nix-free (see
+"Pull request CI" above); locally, Nix still provisions the dev
+shell. To reproduce any CI job locally, run the same recipe inside
+<code>nix develop</code>. With a personal client certificate, add <code>--config=rbe-darwin</code>
+on a Mac to compile on the worker (see
+<a href="../rbe/#local-use-from-macos">Local use from macOS</a>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>nix<span class="w"> </span>develop
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Full PR test job, one arch (matches `ci.yml test`)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>just<span class="w"> </span>bazel-test
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>just<span class="w"> </span>bazel-test-smoke
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Coverage (matches `coverage.yml`; needs the .#llvm-tools shell locally)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>nix<span class="w"> </span>develop<span class="w"> </span>.#llvm-tools<span class="w"> </span>--command<span class="w"> </span>just<span class="w"> </span>bazel-coverage
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># Sanitizer unit + e2e (matches the `sanitizer` job in ci.yml)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>just<span class="w"> </span>bazel-test-sanitized<span class="w"> </span>--config<span class="o">=</span>asan<span class="w"> </span>--config<span class="o">=</span>ubsan
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1"># Docker image with split debug symbols (what publish.yml does)</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>just<span class="w"> </span>bazel-docker-build-amd64
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>just<span class="w"> </span>bazel-test-smoke
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>just<span class="w"> </span>bazel-docker-extract-debug<span class="w"> </span>amd64
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>just<span class="w"> </span>bazel-docker-push-amd64
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>just<span class="w"> </span>bazel-docker-publish-manifest
+</code></pre></div>
+<p><strong>CI invokes justfile only.</strong> If a CI step is not a <code>just &lt;recipe&gt;</code>
+invocation, that's a drift signal — either the step is non-build
+glue (e.g. artifact upload, Codecov upload, Sentry push) or the
+justfile is missing a recipe and should grow one.</p>
+<h2 id="fuzz-testing">Fuzz testing<a class="headerlink" href="#fuzz-testing" title="Permanent link">&para;</a></h2>
+<p>Workflow: <code>.github/workflows/fuzz.yml</code>. Trigger: <code>schedule</code> at <code>17 3 * * *</code>
+(03:17 UTC) plus manual <code>workflow_dispatch</code> — the repo's only scheduled
+workflow. One job on <code>ubuntu-24.04</code>: it restores the previous nightly's
+working corpus from the <code>fuzz-corpus</code> artifact, builds the instrumented
+libFuzzer binary with <code>just bazel-build-fuzz</code> (RBE-eligible, <code>bep-fuzz</code>
+artifact attached like the other legs), fuzzes
+<code>//src/iiifparser/fuzz:parse_request_fuzz</code> for 600s, minimizes and re-uploads
+the corpus, then runs a 300s ASan-paired pass.</p>
+<p>Linux-amd64 only — <code>--config=fuzz</code> cannot link the libFuzzer runtime on
+darwin, exactly like the sanitizer gate. macOS coverage is the corpus-replay
+mode of the same target, which rides along in the <code>//src/...</code> test sweeps on
+every PR.</p>
+<p>A crash makes libFuzzer exit 77, which fails the job; the reproducers and
+logs upload as a <code>fuzz-crashes</code> artifact and triage is manual. See
+<a href="../fuzzing/">Fuzzing</a> for the harness, the corpus policy, and the recipes.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

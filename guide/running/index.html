@@ -1,0 +1,2569 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/guide/running/">
+      
+      
+        <link rel="prev" href="../json-output/">
+      
+      
+        <link rel="next" href="../../lua/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Running - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#running-vitrinli" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Running
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-with-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start with Docker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-vitrinli-as-a-command-line-image-converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Vitrinli as a Command-line Image Converter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-vitrinli-as-a-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Vitrinli as a Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running Vitrinli as a Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jwt-secret-sipi_jwtkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JWT secret (SIPI_JWTKEY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-file-format-lua-or-toml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration file format (.lua or .toml)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health Check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#log-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log Levels
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command-line Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command-line Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#image-conversion-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image Conversion Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query-and-compare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Query and Compare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decode-deadline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decode deadline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structured-json-output-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured JSON output (CLI)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jpeg2000-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JPEG2000 Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sentry-error-reporting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sentry Error Reporting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deprecated-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deprecated Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-codes-and-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit Codes and Error Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exit Codes and Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit Codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structured-diagnostics-cli-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured Diagnostics (CLI Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-failure-causes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Failure Causes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-notes-for-calling-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Notes for Calling Services
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#https-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTPS Support
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iiif-prefixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IIIF Prefixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/rbe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="running-vitrinli">Running Vitrinli<a class="headerlink" href="#running-vitrinli" title="Permanent link">&para;</a></h1>
+<p>Vitrinli can be run either as a command-line image converter or as an IIIF media server.</p>
+<h2 id="quick-start-with-docker">Quick Start with Docker<a class="headerlink" href="#quick-start-with-docker" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">1024</span>:1024<span class="w"> </span>daschswiss/sipi
+</code></pre></div>
+<h2 id="running-vitrinli-as-a-command-line-image-converter">Running Vitrinli as a Command-line Image Converter<a class="headerlink" href="#running-vitrinli-as-a-command-line-image-converter" title="Permanent link">&para;</a></h2>
+<p>Vitrinli now uses verb-noun subcommands (<code>convert</code>, <code>query</code>, <code>compare</code>,
+<code>verify</code>, <code>server</code>, <code>health</code>) instead of the legacy <code>--convert</code> / <code>--query</code> /
+<code>--compare</code> / <code>--file</code> / <code>--outf</code> flags. A bare <code>sipi</code> invocation
+errors with a usage message — every operation needs an explicit
+subcommand.</p>
+<p>Convert an image file to another format:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sipi<span class="w"> </span>convert<span class="w"> </span>input.tif<span class="w"> </span>output.jpg<span class="w"> </span>--format<span class="w"> </span>jpg
+</code></pre></div>
+<p>Query image file information:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sipi<span class="w"> </span>query<span class="w"> </span>input.tif
+</code></pre></div>
+<p>Compare two image files pixel-wise:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sipi<span class="w"> </span>compare<span class="w"> </span>file1.tif<span class="w"> </span>file2.jpg
+</code></pre></div>
+<h2 id="running-vitrinli-as-a-server">Running Vitrinli as a Server<a class="headerlink" href="#running-vitrinli-as-a-server" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sipi<span class="w"> </span>server<span class="w"> </span>--config<span class="w"> </span>config/sipi.config.lua
+</code></pre></div>
+<h3 id="jwt-secret-sipi_jwtkey">JWT secret (<code>SIPI_JWTKEY</code>)<a class="headerlink" href="#jwt-secret-sipi_jwtkey" title="Permanent link">&para;</a></h3>
+<p>Any Lua-configured deployment (a <code>--config</code>/<code>SIPI_CONFIGFILE</code> pointing at a
+<code>.lua</code> file) must supply a jwt_secret of at least 32 bytes via the
+<code>SIPI_JWTKEY</code> environment variable (or the equivalent <code>--jwtkey</code> flag /
+<code>jwt_secret</code> config key). There is no shipped default — an empty, too-short,
+or shipped-literal secret refuses startup (fail closed), since it would let a
+deployment that inherited a known secret forge JWTs.</p>
+<p>Example (documentation only — generate your own secret, never reuse this
+value):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SIPI_JWTKEY</span><span class="o">=</span><span class="s1">&#39;a randomly generated secret, at least 32 bytes long&#39;</span>
+</code></pre></div>
+<p>The old Lua <code>admin = { user = '…', password = '…' }</code> block that used to ship
+alongside <code>jwt_secret</code> in <code>config/sipi.config.lua</code> is documented for
+reference only:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">admin</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">user</span> <span class="o">=</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">password</span> <span class="o">=</span> <span class="s1">&#39;Sipi-Admin&#39;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="configuration-file-format-lua-or-toml">Configuration file format (<code>.lua</code> or <code>.toml</code>)<a class="headerlink" href="#configuration-file-format-lua-or-toml" title="Permanent link">&para;</a></h3>
+<p><code>--config</code> accepts either a Lua file (<code>.lua</code>) or a TOML file (<code>.toml</code>),
+dispatched on the extension. The Lua file is parsed by the engine's Lua VM
+(Vitrinli's historical format); a TOML file is parsed directly by the server and
+needs no Lua VM in the config path. Route <em>scripts</em> are always Lua — TOML
+replaces the config <em>file</em>, not the scripting.</p>
+<blockquote>
+<p><strong>TOML config is experimental.</strong> It is the first of the native (Rust/TOML)
+alternatives Vitrinli is introducing for everything Lua is used for today (see
+<a href="https://github.com/dasch-swiss/vitrinli/blob/main/docs/adr/0017-extensibility-lua-and-rust.md">ADR-0017</a>).
+The schema may change without the usual compatibility guarantees until it is
+validated in production; the server logs a warning on startup when a <code>.toml</code>
+config is loaded. The Lua config path stays fully supported. Once the native
+alternatives stabilize, Lua will be marked deprecated.</p>
+</blockquote>
+<p>A TOML config groups keys into sections that mirror the <code>server</code> flag groups,
+with idiomatic snake_case names:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[network]</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">[paths]</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">img_root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/sipi/images&quot;</span><span class="w">   </span><span class="c1"># required</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">script_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/sipi/scripts&quot;</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">init_script</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/sipi/config/sipi.init.lua&quot;</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">[cache]</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/sipi/cache&quot;</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;200M&quot;</span><span class="w">               </span><span class="c1"># &quot;0&quot; disables the cache</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">[image]</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">jpeg_quality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">scaling_quality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">jpeg</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tiff</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">png</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">j2k</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="k">[tls_auth]</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="n">jwt_secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;…&quot;</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="k">[[routes]]</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="n">route</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/api/upload&quot;</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="n">script</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;upload.lua&quot;</span><span class="w">       </span><span class="c1"># resolved against [paths].script_dir</span>
+</code></pre></div>
+<p>Precedence is <code>config file &lt; environment variable &lt; command-line flag</code>, the same
+as for a Lua config: a CLI flag (or its <code>SIPI_*</code> env var) overrides the matching
+TOML key. <code>img_root</code> is required (an empty image root has nothing to resolve);
+routes with a relative <code>script</code> require <code>[paths].script_dir</code>. Unknown keys are
+rejected (a typo is a startup error, not a silently-ignored value), so knobs
+the Rust server does not own as config — TLS (<code>ssl_*</code>), <code>hostname</code>,
+<code>keep_alive</code>, thread count, and <code>logfile</code> — have no TOML key and are reported
+as unsupported; these are now CLI-flag/env-var-only knobs, accepted for
+parse-only compatibility (see <a href="#server-options">Server Options</a> below), not
+Lua config or TOML keys.</p>
+<p>The TOML key for each Lua config key:</p>
+<table>
+<thead>
+<tr>
+<th>TOML key</th>
+<th>Lua config key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[network] port</code></td>
+<td><code>port</code></td>
+</tr>
+<tr>
+<td><code>[paths] img_root</code></td>
+<td><code>imgroot</code></td>
+</tr>
+<tr>
+<td><code>[paths] script_dir</code></td>
+<td><code>scriptdir</code></td>
+</tr>
+<tr>
+<td><code>[paths] init_script</code></td>
+<td><code>initscript</code></td>
+</tr>
+<tr>
+<td><code>[paths] tmp_dir</code></td>
+<td><code>tmpdir</code></td>
+</tr>
+<tr>
+<td><code>[paths] max_temp_file_age</code></td>
+<td><code>max_temp_file_age</code></td>
+</tr>
+<tr>
+<td><code>[paths] doc_root</code></td>
+<td><code>fileserver.docroot</code></td>
+</tr>
+<tr>
+<td><code>[paths] www_route</code></td>
+<td><code>fileserver.wwwroute</code></td>
+</tr>
+<tr>
+<td><code>[paths] prefix_as_path</code></td>
+<td><code>prefix_as_path</code></td>
+</tr>
+<tr>
+<td><code>[cache] dir</code></td>
+<td><code>cache_dir</code></td>
+</tr>
+<tr>
+<td><code>[cache] size</code></td>
+<td><code>cache_size</code></td>
+</tr>
+<tr>
+<td><code>[cache] n_files</code></td>
+<td><code>cache_nfiles</code></td>
+</tr>
+<tr>
+<td><code>[limits] memory_limit</code></td>
+<td><code>memory_limit</code></td>
+</tr>
+<tr>
+<td><code>[limits] admission_mode</code></td>
+<td><code>admission_mode</code></td>
+</tr>
+<tr>
+<td><code>[limits] tiles_memory_ratio</code></td>
+<td><code>tiles_memory_ratio</code></td>
+</tr>
+<tr>
+<td><code>[limits] max_post_size</code></td>
+<td><code>max_post_size</code></td>
+</tr>
+<tr>
+<td><code>[limits] thumb_size</code></td>
+<td><code>thumb_size</code></td>
+</tr>
+<tr>
+<td><code>[image] jpeg_quality</code></td>
+<td><code>jpeg_quality</code></td>
+</tr>
+<tr>
+<td><code>[image] scaling_quality.{jpeg,tiff,png,j2k}</code></td>
+<td><code>scaling_quality.{…}</code> (the <code>j2k</code> entry is accepted but currently has no effect — the engine reads that slot under a legacy key)</td>
+</tr>
+<tr>
+<td><code>[tls_auth] jwt_secret</code></td>
+<td><code>jwt_secret</code></td>
+</tr>
+<tr>
+<td><code>[knora] path</code></td>
+<td><code>knora_path</code></td>
+</tr>
+<tr>
+<td><code>[knora] port</code></td>
+<td><code>knora_port</code></td>
+</tr>
+<tr>
+<td><code>[logging] level</code></td>
+<td><code>loglevel</code></td>
+</tr>
+<tr>
+<td><code>[[routes]]</code> (<code>method</code>/<code>route</code>/<code>script</code>)</td>
+<td><code>routes</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="health-check">Health Check<a class="headerlink" href="#health-check" title="Permanent link">&para;</a></h2>
+<p><code>sipi health</code> is a self-contained liveness probe. It performs an HTTP <code>GET</code> on
+the local <a href="../../operation/health-endpoint/"><code>/health</code></a> endpoint and maps the
+result to a process exit code, following the Docker/Swarm healthcheck
+convention:</p>
+<ul>
+<li><strong>0</strong> — the endpoint returned HTTP 200 (healthy).</li>
+<li><strong>1</strong> — connection refused, timeout, or any non-200 response (unhealthy).</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sipi<span class="w"> </span>health<span class="w">            </span><span class="c1"># probes http://127.0.0.1:1024/health</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>sipi<span class="w"> </span>health<span class="w"> </span>--port<span class="w"> </span><span class="m">80</span><span class="w">  </span><span class="c1"># probe a server running on a different port</span>
+</code></pre></div>
+<p>The host is always <code>127.0.0.1</code> and the path is always <code>/health</code>; only the port
+is configurable. A separate <code>sipi health</code> process cannot know whether the
+running server took its port from a config file, an env var, or <code>--serverport</code>,
+so the caller passes the port it configured (<code>--port</code>, default <code>1024</code>). The
+probe uses a short (~2 s) timeout so a wedged server reports unhealthy rather
+than hanging. Because it needs no <code>curl</code> in the image, it is the intended
+container/orchestrator liveness command (see
+<a href="../../operation/health-endpoint/">Health Endpoint</a>).</p>
+<h2 id="logging">Logging<a class="headerlink" href="#logging" title="Permanent link">&para;</a></h2>
+<p>Vitrinli uses two logging modes depending on how it is running:</p>
+<ul>
+<li>
+<p><strong>CLI mode</strong> (<code>convert</code>, <code>compare</code>, <code>query</code>): Plain text output.
+  Errors go to <strong>stderr</strong>, informational messages go to <strong>stdout</strong>.
+  This is the standard Unix convention for command-line tools. When
+  <code>--json</code> is also set (see <a href="#structured-json-output-cli">Structured JSON output</a>),
+  every level is routed to <strong>stderr</strong> so <code>stdout</code> stays reserved for the
+  single JSON document.</p>
+</li>
+<li>
+<p><strong>Server mode</strong> (<code>sipi server --config</code>): JSON-formatted log lines go to <strong>stdout</strong>.
+  This follows container best practices — Docker, Kubernetes, and log
+  collectors (Grafana Loki, Fluentd) expect structured logs on stdout.
+  Each line is a JSON object: <code>{"level": "INFO", "message": "..."}</code>.</p>
+</li>
+</ul>
+<h3 id="log-levels">Log Levels<a class="headerlink" href="#log-levels" title="Permanent link">&para;</a></h3>
+<p>Vitrinli supports the following log levels (in order of increasing severity):</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DEBUG</code></td>
+<td>Detailed diagnostic information.</td>
+</tr>
+<tr>
+<td><code>INFO</code></td>
+<td>Normal operational messages (routes added, server started, migrations).</td>
+</tr>
+<tr>
+<td><code>NOTICE</code></td>
+<td>Significant but normal events.</td>
+</tr>
+<tr>
+<td><code>WARNING</code></td>
+<td>Something unexpected but recoverable (e.g., failed XMP parse, incomplete metadata write).</td>
+</tr>
+<tr>
+<td><code>ERR</code></td>
+<td>Errors that affect a specific operation (e.g., image processing failure, ICC error).</td>
+</tr>
+<tr>
+<td><code>CRIT</code></td>
+<td>Critical errors.</td>
+</tr>
+<tr>
+<td><code>ALERT</code></td>
+<td>Conditions requiring immediate attention.</td>
+</tr>
+<tr>
+<td><code>EMERG</code></td>
+<td>System-wide emergencies.</td>
+</tr>
+</tbody>
+</table>
+<p>The log level controls which messages are emitted. Setting a level suppresses
+all messages below it. For example, <code>WARNING</code> shows only WARNING, ERR, CRIT,
+ALERT, and EMERG — suppressing DEBUG, INFO, and NOTICE.</p>
+<p>The log level can be configured in three ways (in order of precedence):</p>
+<ol>
+<li><strong>CLI option</strong>: <code>--loglevel WARNING</code></li>
+<li><strong>Environment variable</strong>: <code>SIPI_LOGLEVEL=WARNING</code></li>
+<li><strong>Lua config</strong>: <code>loglevel = "WARNING"</code> (in the <code>sipi</code> block)</li>
+</ol>
+<p>If none is specified, the default level is <code>INFO</code>.</p>
+<h2 id="command-line-options">Command-line Options<a class="headerlink" href="#command-line-options" title="Permanent link">&para;</a></h2>
+<h3 id="image-conversion-options">Image Conversion Options<a class="headerlink" href="#image-conversion-options" title="Permanent link">&para;</a></h3>
+<p>These options are accepted by the <code>convert</code> subcommand (and where
+documented in the per-subcommand matrix, by <code>convert access-file</code>
+and <code>convert service-file</code>). Usage: <code>sipi convert &lt;input&gt; &lt;output&gt;
+[options]</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Short</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--format &lt;fmt&gt;</code></td>
+<td><code>-F</code></td>
+<td>Output format: <code>jpx</code>, <code>jp2</code>, <code>jpg</code>, <code>tif</code>, <code>png</code>, <code>webp</code>, <code>gif</code></td>
+</tr>
+<tr>
+<td><code>--icc &lt;profile&gt;</code></td>
+<td><code>-I</code></td>
+<td>Convert to ICC profile: <code>none</code>, <code>sRGB</code>, <code>AdobeRGB</code>, <code>GRAY</code></td>
+</tr>
+<tr>
+<td><code>--quality &lt;1-100&gt;</code></td>
+<td><code>-q</code></td>
+<td>JPEG compression quality (1 = highest compression, 100 = best quality)</td>
+</tr>
+<tr>
+<td><code>--pagenum &lt;n&gt;</code></td>
+<td><code>-n</code></td>
+<td>Page number for multi-page PDF/TIFF input files</td>
+</tr>
+<tr>
+<td><code>--region &lt;x,y,w,h&gt;</code></td>
+<td><code>-r</code></td>
+<td>Select a region of interest (4 integer values)</td>
+</tr>
+<tr>
+<td><code>--reduce &lt;factor&gt;</code></td>
+<td><code>-R</code></td>
+<td>Reduce image size by factor (faster than <code>--scale</code>)</td>
+</tr>
+<tr>
+<td><code>--size &lt;w,h&gt;</code></td>
+<td><code>-s</code></td>
+<td>Resize image to given dimensions</td>
+</tr>
+<tr>
+<td><code>--scale &lt;percent&gt;</code></td>
+<td><code>-S</code></td>
+<td>Resize image by percentage</td>
+</tr>
+<tr>
+<td><code>--mirror &lt;dir&gt;</code></td>
+<td><code>-m</code></td>
+<td>Mirror image: <code>none</code>, <code>horizontal</code>, <code>vertical</code></td>
+</tr>
+<tr>
+<td><code>--rotate &lt;angle&gt;</code></td>
+<td><code>-o</code></td>
+<td>Rotate image by degrees (0.0 - 360.0)</td>
+</tr>
+<tr>
+<td><code>--skipmeta</code></td>
+<td><code>-k</code></td>
+<td>Strip all metadata from the output file</td>
+</tr>
+<tr>
+<td><code>--topleft</code></td>
+<td></td>
+<td>Enforce TOPLEFT orientation</td>
+</tr>
+<tr>
+<td><code>--watermark &lt;file&gt;</code></td>
+<td><code>-w</code></td>
+<td>Overlay a watermark (single-channel grayscale TIFF)</td>
+</tr>
+<tr>
+<td><code>--Ctiff_pyramid</code></td>
+<td></td>
+<td>Store output in pyramidal TIFF format</td>
+</tr>
+</tbody>
+</table>
+<h3 id="query-and-compare">Query and Compare<a class="headerlink" href="#query-and-compare" title="Permanent link">&para;</a></h3>
+<p>Use the <code>query</code> and <code>compare</code> subcommands. <code>--query</code> / <code>--compare</code>
+flag forms are gone.</p>
+<table>
+<thead>
+<tr>
+<th>Subcommand</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sipi query &lt;file&gt;</code></td>
+<td>Dump all information about the given file</td>
+</tr>
+<tr>
+<td><code>sipi compare &lt;f1&gt; &lt;f2&gt;</code></td>
+<td>Compare two files pixel-wise</td>
+</tr>
+</tbody>
+</table>
+<h3 id="decode-deadline">Decode deadline<a class="headerlink" href="#decode-deadline" title="Permanent link">&para;</a></h3>
+<p>Every offline verb (<code>convert</code>, <code>convert access-file</code>, <code>convert service-file</code>,
+<code>query</code>, <code>compare</code>) decodes its input under a 120 s wall-clock deadline, the
+same default the server applies per request. A malformed JPEG 2000 file can
+wedge the Kakadu decoder indefinitely; when the deadline passes the verb
+reports <code>decode exceeded the 120000 ms deadline</code> and exits non-zero instead
+of hanging the shell (or the ingest worker driving it). The wedged decode
+thread is abandoned and ends with the process.</p>
+<h3 id="structured-json-output-cli">Structured JSON output (CLI)<a class="headerlink" href="#structured-json-output-cli" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--json</code></td>
+<td>Emit a single JSON document to <code>stdout</code> instead of human-readable output. Accepted by <code>convert</code>, <code>convert access-file</code>, <code>query</code>, and <code>compare</code>. Useful for programmatic consumers and for full diagnostics on failures, which the CLI never reports to Sentry (see <a href="#structured-diagnostics-cli-mode">Structured Diagnostics (CLI Mode)</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>Use cases:</p>
+<ul>
+<li><strong>Local debugging</strong> — the primary RDU case. Every <code>ImageContext</code> field
+  appears in the JSON document; CLI failures are never sent to Sentry.</li>
+<li><strong>CI pipelines</strong> that need to assert on image properties
+  (<code>jq '.image.bps'</code>) or on a specific failure mode (<code>jq '.phase'</code>).</li>
+<li><strong>Scripts</strong> that consume sipi output pipeline-style.</li>
+</ul>
+<p>See <a href="../json-output/"><code>json-output.md</code></a> for the full schema, worked
+examples, and the <code>stdout</code> / <code>stderr</code> contract.</p>
+<h3 id="jpeg2000-options">JPEG2000 Options<a class="headerlink" href="#jpeg2000-options" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--Sprofile &lt;val&gt;</code></td>
+<td>J2K profile: <code>PROFILE0</code>, <code>PROFILE1</code>, <code>PROFILE2</code>, <code>PART2</code>, <code>CINEMA2K</code>, <code>CINEMA4K</code>, <code>BROADCAST</code>, <code>CINEMA2S</code>, <code>CINEMA4S</code>, <code>CINEMASS</code>, <code>IMF</code></td>
+</tr>
+<tr>
+<td><code>--rates &lt;string&gt;</code></td>
+<td>Bit-rate(s) for quality layers (<code>-1</code> for lossless final layer)</td>
+</tr>
+<tr>
+<td><code>--Clayers &lt;n&gt;</code></td>
+<td>Number of quality layers (default: 8)</td>
+</tr>
+<tr>
+<td><code>--Clevels &lt;n&gt;</code></td>
+<td>Number of wavelet decomposition levels (default: 8)</td>
+</tr>
+<tr>
+<td><code>--Corder &lt;val&gt;</code></td>
+<td>Progression order: <code>LRCP</code>, <code>RLCP</code>, <code>RPCL</code>, <code>PCRL</code>, <code>CPRL</code> (default: <code>RPCL</code>)</td>
+</tr>
+<tr>
+<td><code>--Stiles &lt;string&gt;</code></td>
+<td>Tile dimensions <code>"{tx,ty}"</code> (default: <code>"{256,256}"</code>)</td>
+</tr>
+<tr>
+<td><code>--Cprecincts &lt;string&gt;</code></td>
+<td>Precinct dimensions <code>"{px,py}"</code> (default: <code>"{256,256}"</code>)</td>
+</tr>
+<tr>
+<td><code>--Cblk &lt;string&gt;</code></td>
+<td>Code-block dimensions <code>"{dx,dy}"</code> (default: <code>"{64,64}"</code>)</td>
+</tr>
+<tr>
+<td><code>--Cuse_sop &lt;val&gt;</code></td>
+<td>Include SOP markers (default: yes)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="server-options">Server Options<a class="headerlink" href="#server-options" title="Permanent link">&para;</a></h3>
+<p>These options are accepted by the <code>server</code> subcommand. Usage:
+<code>sipi server [options]</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Short</th>
+<th>Env Var</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--config &lt;file&gt;</code></td>
+<td><code>-c</code></td>
+<td><code>SIPI_CONFIGFILE</code></td>
+<td></td>
+<td>Server config file — Lua (<code>.lua</code>) or TOML (<code>.toml</code>); see <a href="#configuration-file-format-lua-or-toml">Configuration file format</a></td>
+</tr>
+<tr>
+<td><code>--serverport &lt;n&gt;</code></td>
+<td></td>
+<td><code>SIPI_SERVERPORT</code></td>
+<td><code>80</code></td>
+<td>HTTP port</td>
+</tr>
+<tr>
+<td><code>--sslport &lt;n&gt;</code></td>
+<td></td>
+<td><code>SIPI_SSLPORT</code></td>
+<td><code>443</code></td>
+<td>HTTPS port</td>
+</tr>
+<tr>
+<td><code>--hostname &lt;name&gt;</code></td>
+<td></td>
+<td><code>SIPI_HOSTNAME</code></td>
+<td><code>localhost</code></td>
+<td>Public DNS hostname. Parse-only: accepted for compatibility, not read by the server</td>
+</tr>
+<tr>
+<td><code>--keepalive &lt;sec&gt;</code></td>
+<td></td>
+<td><code>SIPI_KEEPALIVE</code></td>
+<td><code>5</code></td>
+<td>HTTP keep-alive timeout in seconds. Parse-only: accepted for compatibility, unread</td>
+</tr>
+<tr>
+<td><code>--nthreads &lt;n&gt;</code></td>
+<td><code>-t</code></td>
+<td><code>SIPI_NTHREADS</code></td>
+<td><code>0</code> (auto)</td>
+<td>Worker threads (<code>0</code> = auto: available parallelism, container-aware, fallback 4)</td>
+</tr>
+<tr>
+<td><code>--tiles-thread-ratio &lt;r&gt;</code></td>
+<td></td>
+<td><code>SIPI_TILES_THREAD_RATIO</code></td>
+<td><code>0.5</code></td>
+<td>Fraction of workers guaranteed to tiles (0..1); the full partition is hard-capped at the rest</td>
+</tr>
+<tr>
+<td><code>--max-waiting &lt;n&gt;</code></td>
+<td></td>
+<td><code>SIPI_MAX_WAITING</code></td>
+<td><code>2×nthreads</code></td>
+<td>Max requests that may wait for a worker before HTTP 503 (<code>0</code> = no queue, shed immediately; <code>Retry-After: 1</code>)</td>
+</tr>
+<tr>
+<td><code>--queue-timeout &lt;sec&gt;</code></td>
+<td></td>
+<td><code>SIPI_QUEUE_TIMEOUT</code></td>
+<td><code>5</code></td>
+<td>Max seconds a request waits in queue before 503</td>
+</tr>
+<tr>
+<td><code>--memory-limit &lt;size&gt;</code></td>
+<td></td>
+<td><code>SIPI_MEMORY_LIMIT</code></td>
+<td><code>0</code> (auto)</td>
+<td>Total decode-memory envelope (<code>0</code> = auto-detect available RAM; <code>8G</code>, <code>500M</code>); the full partition's budget is envelope × (1 − tiles-memory-ratio)</td>
+</tr>
+<tr>
+<td><code>--admission-mode &lt;mode&gt;</code></td>
+<td></td>
+<td><code>SIPI_ADMISSION_MODE</code></td>
+<td><code>advanced</code></td>
+<td><code>basic</code> (enforce the basic tier only; advanced tier observe-only) or <code>advanced</code> (also enforce the memory budget + 503/413)</td>
+</tr>
+<tr>
+<td><code>--tiles-memory-ratio &lt;r&gt;</code></td>
+<td></td>
+<td><code>SIPI_TILES_MEMORY_RATIO</code></td>
+<td><code>0.25</code></td>
+<td>Fraction of the envelope reserved for tiles + non-decode floor (0..1)</td>
+</tr>
+<tr>
+<td><code>--large-decode-threshold-bytes &lt;n&gt;</code></td>
+<td></td>
+<td><code>SIPI_LARGE_DECODE_THRESHOLD_BYTES</code></td>
+<td><code>33554432</code> (32 MiB)</td>
+<td>Estimated peak-memory at/above which a decode is charged to the full partition; below it bypasses as a tile</td>
+</tr>
+<tr>
+<td><code>--preflight-cache-ttl &lt;sec&gt;</code></td>
+<td></td>
+<td><code>SIPI_PREFLIGHT_CACHE_TTL</code></td>
+<td><code>0</code> (disabled)</td>
+<td>Seconds a <code>pre_flight</code> access decision is cached per <code>(prefix, identifier, credential)</code>. Opt-in; enable (<code>&gt;0</code>) only if the hook decides purely on prefix/identifier/Cookie/Authorization (see the Preflight access-cache section in the Lua scripting guide)</td>
+</tr>
+<tr>
+<td><code>--preflight-cache-slots &lt;n&gt;</code></td>
+<td></td>
+<td><code>SIPI_PREFLIGHT_CACHE_SLOTS</code></td>
+<td><code>4096</code></td>
+<td>Slot count for the preflight access-cache</td>
+</tr>
+<tr>
+<td><code>--maxpost &lt;size&gt;</code></td>
+<td></td>
+<td><code>SIPI_MAXPOSTSIZE</code></td>
+<td><code>300M</code></td>
+<td>Maximum POST upload size</td>
+</tr>
+<tr>
+<td><code>--imgroot &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_IMGROOT</code></td>
+<td><code>./images</code></td>
+<td>Image repository root directory</td>
+</tr>
+<tr>
+<td><code>--docroot &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_DOCROOT</code></td>
+<td><code>./server</code></td>
+<td>Web server document root</td>
+</tr>
+<tr>
+<td><code>--wwwroute &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_WWWROUTE</code></td>
+<td><code>/server</code></td>
+<td>URL route for web server</td>
+</tr>
+<tr>
+<td><code>--scriptdir &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_SCRIPTDIR</code></td>
+<td><code>./scripts</code></td>
+<td>Directory for Lua route scripts</td>
+</tr>
+<tr>
+<td><code>--tmpdir &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_TMPDIR</code></td>
+<td><code>./tmp</code></td>
+<td>Temporary files directory</td>
+</tr>
+<tr>
+<td><code>--maxtmpage &lt;sec&gt;</code></td>
+<td></td>
+<td><code>SIPI_MAXTMPAGE</code></td>
+<td><code>86400</code></td>
+<td>Max age of temp files in seconds</td>
+</tr>
+<tr>
+<td><code>--initscript &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_INITSCRIPT</code></td>
+<td><code>./config/sipi.init.lua</code></td>
+<td>Path to Lua init script</td>
+</tr>
+<tr>
+<td><code>--cachedir &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_CACHEDIR</code></td>
+<td><code>./cache</code></td>
+<td>Cache directory</td>
+</tr>
+<tr>
+<td><code>--cachesize &lt;size&gt;</code></td>
+<td></td>
+<td><code>SIPI_CACHESIZE</code></td>
+<td><code>200M</code></td>
+<td>Maximum cache size (<code>-1</code>=unlimited, <code>0</code>=disabled)</td>
+</tr>
+<tr>
+<td><code>--cachenfiles &lt;n&gt;</code></td>
+<td></td>
+<td><code>SIPI_CACHENFILES</code></td>
+<td><code>200</code></td>
+<td>Maximum number of cached files (<code>0</code>=no limit)</td>
+</tr>
+<tr>
+<td><code>--thumbsize &lt;size&gt;</code></td>
+<td></td>
+<td><code>SIPI_THUMBSIZE</code></td>
+<td><code>!128,128</code></td>
+<td>Default thumbnail size (IIIF syntax)</td>
+</tr>
+<tr>
+<td><code>--sslcert &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_SSLCERTIFICATE</code></td>
+<td><code>./certificate/certificate.pem</code></td>
+<td>SSL certificate path. Parse-only: accepted for compatibility, unread</td>
+</tr>
+<tr>
+<td><code>--sslkey &lt;path&gt;</code></td>
+<td></td>
+<td><code>SIPI_SSLKEY</code></td>
+<td><code>./certificate/key.pem</code></td>
+<td>SSL key file path. Parse-only: accepted for compatibility, unread</td>
+</tr>
+<tr>
+<td><code>--jwtkey &lt;string&gt;</code></td>
+<td></td>
+<td><code>SIPI_JWTKEY</code></td>
+<td></td>
+<td>JWT shared secret, required for any Lua-configured deployment (at least 32 bytes; the shipped default is rejected)</td>
+</tr>
+<tr>
+<td><code>--loglevel &lt;level&gt;</code></td>
+<td></td>
+<td><code>SIPI_LOGLEVEL</code></td>
+<td><code>DEBUG</code></td>
+<td>Sets the engine log level (<code>DEBUG</code>/<code>INFO</code>/…, see Logging section); applied via <code>set_log_level</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sentry-error-reporting">Sentry Error Reporting<a class="headerlink" href="#sentry-error-reporting" title="Permanent link">&para;</a></h3>
+<p>No CLI flags — these are environment-variable only (see <a href="#environment-variables">Environment
+Variables</a> below): <code>SIPI_SENTRY_DSN</code>,
+<code>SIPI_SENTRY_RELEASE</code>, <code>SIPI_SENTRY_ENVIRONMENT</code>. Read by the Rust shell's
+<code>main</code> (<code>cli/rust/src/main.rs</code>), which owns Sentry init for every verb.</p>
+<h3 id="deprecated-options">Deprecated Options<a class="headerlink" href="#deprecated-options" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--pathprefix[=BOOL]</code></td>
+<td>Treat the IIIF URL prefix as a subdirectory under imgroot, i.e. <code>&lt;imgroot&gt;/&lt;prefix&gt;/&lt;id&gt;</code> (default: true; bare flag means true)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
+<p>All server options can be configured via environment variables. Environment variables
+override Lua configuration file values but are themselves overridden by command-line
+flags.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>CLI Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SIPI_CONFIGFILE</code></td>
+<td><code>--config</code></td>
+<td></td>
+<td>Configuration file path</td>
+</tr>
+<tr>
+<td><code>SIPI_RS_PORT</code></td>
+<td><em>(none)</em></td>
+<td></td>
+<td>Highest-precedence HTTP listen-port override (env-only, no CLI flag). Overrides <code>--serverport</code>/<code>SIPI_SERVERPORT</code> and the config's <code>port</code>. Primarily for parallel dev/test shells; safe to leave unset in production</td>
+</tr>
+<tr>
+<td><code>SIPI_SERVERPORT</code></td>
+<td><code>--serverport</code></td>
+<td><code>80</code></td>
+<td>HTTP port</td>
+</tr>
+<tr>
+<td><code>SIPI_SSLPORT</code></td>
+<td><code>--sslport</code></td>
+<td><code>443</code></td>
+<td>HTTPS port</td>
+</tr>
+<tr>
+<td><code>SIPI_HOSTNAME</code></td>
+<td><code>--hostname</code></td>
+<td><code>localhost</code></td>
+<td>Public hostname. Parse-only: accepted for compatibility, not read by the server</td>
+</tr>
+<tr>
+<td><code>SIPI_KEEPALIVE</code></td>
+<td><code>--keepalive</code></td>
+<td><code>5</code></td>
+<td>Keep-alive timeout (seconds). Parse-only: accepted for compatibility, unread</td>
+</tr>
+<tr>
+<td><code>SIPI_NTHREADS</code></td>
+<td><code>--nthreads</code></td>
+<td><code>0</code> (auto)</td>
+<td>Worker threads (<code>0</code> = auto: available parallelism, container-aware, fallback 4)</td>
+</tr>
+<tr>
+<td><code>SIPI_TILES_THREAD_RATIO</code></td>
+<td><code>--tiles-thread-ratio</code></td>
+<td><code>0.5</code></td>
+<td>Fraction of workers guaranteed to tiles (0..1); the full partition is hard-capped at the rest</td>
+</tr>
+<tr>
+<td><code>SIPI_MAX_WAITING</code></td>
+<td><code>--max-waiting</code></td>
+<td><code>2×nthreads</code></td>
+<td>Max requests that may wait for a worker before 503 (<code>0</code> = no queue, shed immediately)</td>
+</tr>
+<tr>
+<td><code>SIPI_QUEUE_TIMEOUT</code></td>
+<td><code>--queue-timeout</code></td>
+<td><code>5</code></td>
+<td>Max seconds in queue before 503</td>
+</tr>
+<tr>
+<td><code>SIPI_PREFLIGHT_CACHE_TTL</code></td>
+<td><code>--preflight-cache-ttl</code></td>
+<td><code>0</code> (disabled)</td>
+<td>Seconds a <code>pre_flight</code> decision is cached per <code>(prefix, identifier, credential)</code>. Opt-in; see the Preflight access-cache section in the Lua scripting guide before enabling</td>
+</tr>
+<tr>
+<td><code>SIPI_PREFLIGHT_CACHE_SLOTS</code></td>
+<td><code>--preflight-cache-slots</code></td>
+<td><code>4096</code></td>
+<td>Slot count for the preflight access-cache</td>
+</tr>
+<tr>
+<td><code>SIPI_MAXPOSTSIZE</code></td>
+<td><code>--maxpost</code></td>
+<td><code>300M</code></td>
+<td>Max POST size</td>
+</tr>
+<tr>
+<td><code>SIPI_IMGROOT</code></td>
+<td><code>--imgroot</code></td>
+<td><code>./images</code></td>
+<td>Image root directory</td>
+</tr>
+<tr>
+<td><code>SIPI_DOCROOT</code></td>
+<td><code>--docroot</code></td>
+<td><code>./server</code></td>
+<td>Document root</td>
+</tr>
+<tr>
+<td><code>SIPI_WWWROUTE</code></td>
+<td><code>--wwwroute</code></td>
+<td><code>/server</code></td>
+<td>Web server route</td>
+</tr>
+<tr>
+<td><code>SIPI_SCRIPTDIR</code></td>
+<td><code>--scriptdir</code></td>
+<td><code>./scripts</code></td>
+<td>Lua scripts directory</td>
+</tr>
+<tr>
+<td><code>SIPI_TMPDIR</code></td>
+<td><code>--tmpdir</code></td>
+<td><code>./tmp</code></td>
+<td>Temporary directory</td>
+</tr>
+<tr>
+<td><code>SIPI_MAXTMPAGE</code></td>
+<td><code>--maxtmpage</code></td>
+<td><code>86400</code></td>
+<td>Max temp file age</td>
+</tr>
+<tr>
+<td><code>SIPI_INITSCRIPT</code></td>
+<td><code>--initscript</code></td>
+<td><code>./config/sipi.init.lua</code></td>
+<td>Init script path</td>
+</tr>
+<tr>
+<td><code>SIPI_CACHEDIR</code></td>
+<td><code>--cachedir</code></td>
+<td><code>./cache</code></td>
+<td>Cache directory</td>
+</tr>
+<tr>
+<td><code>SIPI_CACHESIZE</code></td>
+<td><code>--cachesize</code></td>
+<td><code>200M</code></td>
+<td>Max cache size (<code>-1</code>=unlimited, <code>0</code>=disabled)</td>
+</tr>
+<tr>
+<td><code>SIPI_CACHENFILES</code></td>
+<td><code>--cachenfiles</code></td>
+<td><code>200</code></td>
+<td>Max cached files (<code>0</code>=no limit)</td>
+</tr>
+<tr>
+<td><code>SIPI_THUMBSIZE</code></td>
+<td><code>--thumbsize</code></td>
+<td><code>!128,128</code></td>
+<td>Thumbnail size</td>
+</tr>
+<tr>
+<td><code>SIPI_SSLCERTIFICATE</code></td>
+<td><code>--sslcert</code></td>
+<td><code>./certificate/certificate.pem</code></td>
+<td>SSL certificate. Parse-only: accepted for compatibility, unread</td>
+</tr>
+<tr>
+<td><code>SIPI_SSLKEY</code></td>
+<td><code>--sslkey</code></td>
+<td><code>./certificate/key.pem</code></td>
+<td>SSL key. Parse-only: accepted for compatibility, unread</td>
+</tr>
+<tr>
+<td><code>SIPI_JWTKEY</code></td>
+<td><code>--jwtkey</code></td>
+<td></td>
+<td>JWT secret, required for any Lua-configured deployment (at least 32 bytes; the shipped default is rejected)</td>
+</tr>
+<tr>
+<td><code>SIPI_ALLOWED_ORIGINS</code></td>
+<td><em>(none)</em></td>
+<td></td>
+<td>Comma-separated browser Origins allowed to make credentialed cross-origin (CORS) requests; empty/unset = reflect any Origin (default, backward-compatible); set = restrict to the listed origins. Applies to every CORS response, <code>info.json</code> included; an <code>info.json</code> or <code>knora.json</code> request without an Origin still gets <code>*</code></td>
+</tr>
+<tr>
+<td><code>SIPI_PUBLIC_HOSTS</code></td>
+<td><em>(none)</em></td>
+<td></td>
+<td>Comma-separated hosts allowed in the canonical <code>@id</code>, the 303 <code>Location</code>, the <code>Link</code> header, the cache key, and Lua <code>server.host</code>; empty/unset = trust <code>X-Forwarded-Host</code>/<code>Host</code> verbatim (default, backward-compatible); set = a header host on the list passes through, any other host is replaced by the first listed host</td>
+</tr>
+<tr>
+<td><code>SIPI_REQUEST_TIMEOUT</code></td>
+<td><em>(none)</em></td>
+<td><code>60</code></td>
+<td>Handler wall-clock timeout in seconds; a request whose handler exceeds it answers 408 (<code>0</code>/unset/unparseable falls back to the default)</td>
+</tr>
+<tr>
+<td><code>SIPI_BODY_READ_TIMEOUT</code></td>
+<td><em>(none)</em></td>
+<td><code>10</code></td>
+<td>Lua-route/docroot request-body-read timeout in seconds; a body that takes longer to read is cut off before admission (<code>0</code>/unset/unparseable falls back to the default)</td>
+</tr>
+<tr>
+<td><code>SIPI_JPEGQUALITY</code></td>
+<td><code>--quality</code></td>
+<td><code>60</code></td>
+<td>JPEG quality</td>
+</tr>
+<tr>
+<td><code>SIPI_LOGLEVEL</code></td>
+<td><code>--loglevel</code></td>
+<td><code>DEBUG</code></td>
+<td>Sets the engine log level; applied via <code>set_log_level</code></td>
+</tr>
+<tr>
+<td><code>SIPI_SENTRY_DSN</code></td>
+<td></td>
+<td></td>
+<td>Sentry DSN (no CLI flag)</td>
+</tr>
+<tr>
+<td><code>SIPI_SENTRY_RELEASE</code></td>
+<td></td>
+<td></td>
+<td>Sentry release (no CLI flag)</td>
+</tr>
+<tr>
+<td><code>SIPI_SENTRY_ENVIRONMENT</code></td>
+<td></td>
+<td></td>
+<td>Sentry environment (no CLI flag)</td>
+</tr>
+<tr>
+<td><code>SIPI_MEMORY_LIMIT</code></td>
+<td><code>--memory-limit</code></td>
+<td><code>0</code> (auto)</td>
+<td>Total RAM envelope (<code>0</code>=auto-detect available RAM, <code>8G</code>, <code>500M</code>); the full lane gets envelope × (1 − <code>tiles_memory_ratio</code>)</td>
+</tr>
+<tr>
+<td><code>SIPI_ADMISSION_MODE</code></td>
+<td><code>--admission-mode</code></td>
+<td><code>advanced</code></td>
+<td>Admission mode: <code>basic</code> (enforce basic tier only), <code>advanced</code> (also enforce the advanced tier)</td>
+</tr>
+<tr>
+<td><code>SIPI_TILES_MEMORY_RATIO</code></td>
+<td><code>--tiles-memory-ratio</code></td>
+<td><code>0.25</code></td>
+<td>Fraction of the envelope reserved for tiles + non-decode floor (range 0..1)</td>
+</tr>
+<tr>
+<td><code>SIPI_LARGE_DECODE_THRESHOLD_BYTES</code></td>
+<td><code>--large-decode-threshold-bytes</code></td>
+<td><code>33554432</code> (32 MiB)</td>
+<td>Estimated peak-memory at/above which a decode is charged to the full lane; below it bypasses as a tile</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Configuration precedence</strong> (highest to lowest):</p>
+<ol>
+<li>Command-line flags</li>
+<li>Environment variables</li>
+<li>Lua configuration file</li>
+</ol>
+<h2 id="exit-codes-and-error-handling">Exit Codes and Error Handling<a class="headerlink" href="#exit-codes-and-error-handling" title="Permanent link">&para;</a></h2>
+<h3 id="exit-codes">Exit Codes<a class="headerlink" href="#exit-codes" title="Permanent link">&para;</a></h3>
+<p>When running Vitrinli as a command-line image converter, the process exit code indicates
+whether the conversion succeeded:</p>
+<ul>
+<li><strong>0</strong> — Success. The output file was written correctly.</li>
+<li><strong>1</strong> (<code>EXIT_FAILURE</code>) — Image processing error. The image could not be read,
+  converted, or written.</li>
+</ul>
+<p><strong>Important for calling services:</strong> Always check the exit code. A non-zero exit code
+means the output file was not produced (or is incomplete).</p>
+<p>The <code>sipi health</code> subcommand follows the same convention: <strong>0</strong> = healthy
+(<code>/health</code> returned 200), <strong>1</strong> = unhealthy (connection refused, timeout, or
+non-200).</p>
+<h3 id="error-output">Error Output<a class="headerlink" href="#error-output" title="Permanent link">&para;</a></h3>
+<p>On failure, Vitrinli prints a short error message to <strong>stderr</strong> indicating the failure
+phase and the specific error. The format is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Error &lt;phase&gt; image: &lt;details&gt;
+</code></pre></div>
+<p>Where <code>&lt;phase&gt;</code> is one of <code>reading</code>, <code>converting</code>, or <code>writing</code>. Example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Error reading image: Unsupported JPEG colorspace JCS_UNKNOWN (file=input.jpg, dimensions=2048x1536, components=4)
+</code></pre></div>
+<h3 id="structured-diagnostics-cli-mode">Structured Diagnostics (CLI Mode)<a class="headerlink" href="#structured-diagnostics-cli-mode" title="Permanent link">&para;</a></h3>
+<p>CLI conversion failures are not sent to Sentry — only a crash (a panic in the
+Rust shell) is. A handled read/convert/write failure logs to stderr and,
+with <code>--json</code>, emits the full structured document described in
+<a href="#structured-json-output-cli">Structured JSON output (CLI)</a> above: the same
+image-context fields (<code>input_file</code>, <code>output_file</code>, <code>width</code>, <code>height</code>,
+<code>channels</code>, <code>bps</code>, <code>colorspace</code>, <code>icc_profile_type</code>, <code>orientation</code>,
+<code>file_size_bytes</code>) plus the failing <code>phase</code> (<code>read</code>, <code>convert</code>, or <code>write</code>)
+and the error message. This is the diagnostic surface for CLI failures —
+<code>--json</code> gets you full context regardless of whether <code>SIPI_SENTRY_DSN</code> is set.</p>
+<h3 id="common-failure-causes">Common Failure Causes<a class="headerlink" href="#common-failure-causes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unsupported colorspace (JCS_UNKNOWN)</td>
+<td>The JPEG uses a colorspace Vitrinli cannot convert. Re-encode the source image in sRGB.</td>
+</tr>
+<tr>
+<td>Unsupported bits/sample</td>
+<td>Only 8 and 16 bits/sample are supported. Images with other bit depths must be converted first.</td>
+</tr>
+<tr>
+<td>Channel/colorspace mismatch</td>
+<td>The number of channels does not match the declared colorspace (e.g., 4 channels but RGB). The file metadata may be corrupt.</td>
+</tr>
+<tr>
+<td>ICC profile incompatible</td>
+<td>The ICC profile does not match the channel count (e.g., CMYK profile on a 3-channel image).</td>
+</tr>
+<tr>
+<td>Corrupt or truncated file</td>
+<td>The input file is incomplete or damaged.</td>
+</tr>
+<tr>
+<td>Unsupported TIFF tiling</td>
+<td>The TIFF tile configuration is inconsistent or uses unsupported bit depths.</td>
+</tr>
+<tr>
+<td>EXIF rational with zero denominator</td>
+<td>A TIFF-format conversion embeds an EXIF rational tag (e.g. <code>ExposureTime</code>, <code>FNumber</code>) whose value is <code>n/0</code> with <code>n != 0</code>. The source metadata is corrupt; a <code>0/0</code> ("no value") rational is skipped rather than failing the write.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="integration-notes-for-calling-services">Integration Notes for Calling Services<a class="headerlink" href="#integration-notes-for-calling-services" title="Permanent link">&para;</a></h3>
+<p>If you call Vitrinli CLI from another service (e.g., a Java service):</p>
+<ol>
+<li><strong>Check the exit code.</strong> Non-zero means failure — do not assume the output file
+   exists or is valid.</li>
+<li><strong>Parse stderr</strong> (optional). The first line of stderr contains a human-readable
+   error message with the failure phase and details.</li>
+<li><strong>Pass <code>--json</code></strong> to get full diagnostics without reproducing the failure —
+   the document's <code>phase</code>, <code>colorspace</code>, <code>bps</code>, and <code>output_format</code> fields
+   identify the failure pattern (see <a href="#structured-diagnostics-cli-mode">Structured Diagnostics (CLI
+   Mode)</a> above).</li>
+</ol>
+<h2 id="configuration-files">Configuration Files<a class="headerlink" href="#configuration-files" title="Permanent link">&para;</a></h2>
+<p>Vitrinli's configuration file is written in <a href="https://www.lua.org/">Lua</a>. You
+can make your own configuration file by adapting
+<code>config/sipi.config.lua</code>.</p>
+<ul>
+<li>Check that the port number is correct and that your operating
+  system's firewall does not block it.</li>
+<li>Set <code>imgroot</code> to the directory containing the files to be served.</li>
+<li>Create the directory <code>cache</code> in the top-level directory of the
+  source tree.</li>
+</ul>
+<p>For more information, see the comments in <code>config/sipi.config.lua</code> and the
+<a href="../sipi/">Reference</a> page for all configuration parameters.</p>
+<h3 id="https-support">HTTPS Support<a class="headerlink" href="#https-support" title="Permanent link">&para;</a></h3>
+<p>Vitrinli supports SSL/TLS encryption if the
+<a href="https://www.openssl.org/">OpenSSL</a> library is installed. You will need
+to install a certificate; see <code>config/sipi.config.lua</code> for instructions.</p>
+<h3 id="iiif-prefixes">IIIF Prefixes<a class="headerlink" href="#iiif-prefixes" title="Permanent link">&para;</a></h3>
+<p>Vitrinli supports <a href="https://iiif.io/api/image/3.0/#21-image-request-uri-syntax">IIIF Image API
+URLs</a>.</p>
+<p>If the configuration property <code>prefix_as_path</code> is set to <code>true</code>, the
+IIIF <code>prefix</code> portion of the URL is interpreted as a subdirectory of
+<code>imgroot</code>, and Vitrinli looks for the requested image file in that
+subdirectory. Otherwise, it looks for the file in <code>imgroot</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
