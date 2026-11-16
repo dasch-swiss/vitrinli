@@ -140,6 +140,7 @@ cc_test(
     srcs = [
         "cpp/format_error_path_test.cpp",
         "cpp/format_overwrite_test.cpp",
+        "cpp/ifd0_copy_promotion_test.cpp",
         "cpp/imginfo_test.cpp",
         "cpp/j2k_channel_order_test.cpp",
         "cpp/j2k_dimension_regression_test.cpp",
