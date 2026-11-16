@@ -6,7 +6,8 @@
 // EXIF, XMP and IPTC larger than one JPEG marker segment (65533 bytes) are
 // written: Extended XMP, IPTC across APP13 segments, EXIF without its
 // previews. A block that cannot be fitted is left out with a warning; the
-// JPEG and every other block are still written.
+// JPEG and every other block are still written. Extended XMP is read back
+// into one packet.
 
 #include <gtest/gtest.h>
 
@@ -16,6 +17,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <exiv2/exiv2.hpp>
@@ -160,10 +162,157 @@ TEST(JpegMetadataSegments, LargeXmpIsSplitIntoExtendedXmpKeepingRightsInTheStand
   ASSERT_EQ(Exiv2::XmpParser::decode(moved, extended), 0);
   EXPECT_EQ(moved["Xmp.photoshop.History"].toString(), history);
 
+  // Read back, the ExtendedXMP is merged into the packet.
   Sipi::SipiImage reread;
   ASSERT_TRUE(reread.read(path).has_value());
   ASSERT_NE(reread.getXmp(), nullptr);
-  EXPECT_NE(reread.getXmp()->xmpBytes().find(rights), std::string::npos);
+  const std::string merged = reread.getXmp()->xmpBytes();
+  EXPECT_EQ(merged.find("HasExtendedXMP"), std::string::npos);
+  Exiv2::XmpData all;
+  ASSERT_EQ(Exiv2::XmpParser::decode(all, merged), 0);
+  EXPECT_EQ(all["Xmp.dc.rights"].toString(), "lang=\"x-default\" DaSCH");
+  EXPECT_EQ(all["Xmp.photoshop.Credit"].toString(), "DaSCH Credit");
+  EXPECT_EQ(all["Xmp.photoshop.History"].toString(), history);
+}
+
+// A packet split as the JPEG writer splits it, and its ExtendedXMP parts.
+struct SplitPacket
+{
+  std::string standard;
+  std::string guid;
+  std::string extended;
+};
+
+SplitPacket split_packet()
+{
+  const std::string packet = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">)"
+                             R"(<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">)"
+                             R"(<rdf:Description rdf:about="" xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/">)"
+                             R"(<photoshop:Credit>DaSCH Credit</photoshop:Credit><photoshop:History>)"
+                             + std::string(100000, 'h')
+                             + "</photoshop:History></rdf:Description></rdf:RDF></x:xmpmeta>";
+  const auto split = Sipi::Xmp(packet).split_extended(65533 - 29).value();
+  return { split.standard, split.guid, split.extended };
+}
+
+std::string part(const std::string &guid, std::uint32_t total, std::uint32_t offset, const std::string &bytes)
+{
+  std::string out = guid;
+  for (const std::uint32_t v : { total, offset }) {
+    out += static_cast<char>(v >> 24);
+    out += static_cast<char>(v >> 16);
+    out += static_cast<char>(v >> 8);
+    out += static_cast<char>(v);
+  }
+  return out + bytes;
+}
+
+std::string merge(const std::string &standard, const std::vector<std::string> &parts)
+{
+  const std::vector<std::string_view> views(parts.begin(), parts.end());
+  return Sipi::Xmp::merge_extended(standard, views);
+}
+
+TEST(JpegMetadataSegments, ExtendedXmpPartsAreJoinedInAnyOrder)
+{
+  const auto s = split_packet();
+  const auto total = static_cast<std::uint32_t>(s.extended.size());
+  const std::size_t half = s.extended.size() / 2;
+  const std::string merged = merge(s.standard,
+    { part(s.guid, total, static_cast<std::uint32_t>(half), s.extended.substr(half)),
+      part(s.guid, total, 0, s.extended.substr(0, half)) });
+  Exiv2::XmpData all;
+  ASSERT_EQ(Exiv2::XmpParser::decode(all, merged), 0);
+  EXPECT_EQ(all["Xmp.photoshop.Credit"].toString(), "DaSCH Credit");
+  EXPECT_EQ(all["Xmp.photoshop.History"].toString(), std::string(100000, 'h'));
+}
+
+// Other writers put xmpNote:HasExtendedXMP on the main description, as an
+// attribute or a property, and bind namespaces on the extension's rdf:RDF.
+TEST(JpegMetadataSegments, ExtendedXmpOfOtherWritersIsMerged)
+{
+  const std::string guid(32, 'C');
+  const std::string extension = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">)"
+                                R"(<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#")"
+                                R"( xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/">)"
+                                R"(<rdf:Description rdf:about=""><photoshop:History>moved</photoshop:History>)"
+                                R"(</rdf:Description></rdf:RDF></x:xmpmeta>)";
+  const std::vector<std::string> parts{ part(guid, static_cast<std::uint32_t>(extension.size()), 0, extension) };
+  const std::string head = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">)"
+                           R"(<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">)"
+                           R"(<rdf:Description rdf:about="" xmlns:xmpNote="http://ns.adobe.com/xmp/note/")"
+                           R"( xmlns:dc="http://purl.org/dc/elements/1.1/" dc:format="image/jpeg")";
+  const std::string tail = "</rdf:Description></rdf:RDF></x:xmpmeta>";
+  const std::string as_attribute =
+    head + R"( xmpNote:HasExtendedXMP=")" + guid + R"("><dc:source>DaSCH</dc:source>)" + tail;
+  const std::string as_property =
+    head + R"(><xmpNote:HasExtendedXMP> )" + guid + R"( </xmpNote:HasExtendedXMP><dc:source>DaSCH</dc:source>)" + tail;
+  for (const std::string &standard : { as_attribute, as_property }) {
+    const std::string merged = merge(standard, parts);
+    EXPECT_EQ(merged.find("HasExtendedXMP"), std::string::npos) << merged;
+    Exiv2::XmpData all;
+    ASSERT_EQ(Exiv2::XmpParser::decode(all, merged), 0) << merged;
+    EXPECT_EQ(all["Xmp.dc.format"].toString(), "image/jpeg");
+    EXPECT_EQ(all["Xmp.dc.source"].toString(), "DaSCH");
+    EXPECT_EQ(all["Xmp.photoshop.History"].toString(), "moved");
+  }
+}
+
+TEST(JpegMetadataSegments, XmpNeedingAnExtendedXmpOver16MiBIsNotSplit)
+{
+  const std::string packet = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">)"
+                             R"(<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">)"
+                             R"(<rdf:Description rdf:about="" xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/">)"
+                             R"(<photoshop:History>)"
+                             + std::string(16U << 20U, 'h')
+                             + "</photoshop:History></rdf:Description></rdf:RDF></x:xmpmeta>";
+  EXPECT_FALSE(Sipi::Xmp(packet).split_extended(65533 - 29).has_value());
+}
+
+TEST(JpegMetadataSegments, MalformedExtendedXmpKeepsTheStandardXmpUnchanged)
+{
+  const auto s = split_packet();
+  const auto total = static_cast<std::uint32_t>(s.extended.size());
+  const std::size_t half = s.extended.size() / 2;
+  const auto at_half = static_cast<std::uint32_t>(half);
+  const std::string first = part(s.guid, total, 0, s.extended.substr(0, half));
+  const std::string second = part(s.guid, total, at_half, s.extended.substr(half));
+  const std::string other_guid(32, s.guid.front() == 'A' ? 'B' : 'A');
+
+  EXPECT_EQ(merge(s.standard, { first }), s.standard) << "a missing part";
+  EXPECT_EQ(merge(s.standard,
+              { part(other_guid, total, 0, s.extended.substr(0, half)),
+                part(other_guid, total, at_half, s.extended.substr(half)) }),
+    s.standard)
+    << "a wrong GUID";
+  EXPECT_EQ(merge(s.standard, { first, part(s.guid, total, at_half - 10, s.extended.substr(half - 10)) }), s.standard)
+    << "overlapping offsets";
+  EXPECT_EQ(merge(s.standard, { part(s.guid, total + 1, 0, s.extended.substr(0, half)), second }), s.standard)
+    << "disagreeing full lengths";
+  // Trailing white space keeps the extension well-formed.
+  const std::string over_cap = s.extended + std::string((16U << 20U) + 1 - s.extended.size(), ' ');
+  EXPECT_EQ(merge(s.standard, { part(s.guid, static_cast<std::uint32_t>(over_cap.size()), 0, over_cap) }), s.standard)
+    << "a full length over 16 MiB";
+  EXPECT_EQ(merge(s.standard, { part(s.guid, 10, 0, "<x:xmpmeta") }), s.standard) << "an extension that does not parse";
+}
+
+// Every description of the extension carries the bindings in scope, so long
+// namespace URIs times many descriptions would multiply the 16 MiB input.
+TEST(JpegMetadataSegments, ExtendedXmpWithAnOversizedNamespaceUriIsIgnored)
+{
+  const std::string guid(32, 'D');
+  const std::string extension = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">)"
+                                R"(<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#")"
+                                R"( xmlns:big="http://example.org/)"
+                                + std::string(600, 'u')
+                                + R"(/"><rdf:Description rdf:about=""><big:Note>x</big:Note>)"
+                                  R"(</rdf:Description></rdf:RDF></x:xmpmeta>)";
+  const std::string standard = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">)"
+                               R"(<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">)"
+                               R"(<rdf:Description rdf:about="" xmlns:xmpNote="http://ns.adobe.com/xmp/note/")"
+                               R"( xmpNote:HasExtendedXMP=")"
+                               + guid + R"("/></rdf:RDF></x:xmpmeta>)";
+  EXPECT_EQ(merge(standard, { part(guid, static_cast<std::uint32_t>(extension.size()), 0, extension) }), standard);
 }
 
 TEST(JpegMetadataSegments, XmpThatCannotBeSplitIsLeftOutWithAWarning)

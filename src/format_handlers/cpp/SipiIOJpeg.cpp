@@ -12,9 +12,11 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unistd.h>
+#include <vector>
 
 #include <cstdio>
 #include <fcntl.h>
@@ -376,6 +378,32 @@ static void jpeg_html_dest(struct jpeg_compress_struct *cinfo,
 
 //=============================================================================
 
+// The XMP packet of the APP1 segments: the StandardXMP, with its ExtendedXMP
+// merged in (XMP Specification Part 3, 1.1.3.1). The StandardXMP payload is
+// everything after the 29-byte namespace header: older Photoshop exports
+// omit the optional <?xpacket> wrappers, so scanning for them is not reliable.
+static std::optional<std::string> xmp_packet(jpeg_saved_marker_ptr marker)
+{
+  constexpr std::string_view standard_sig("http://ns.adobe.com/xap/1.0/\0", 29);
+  constexpr std::string_view extension_sig("http://ns.adobe.com/xmp/extension/\0", 35);
+  std::optional<std::string_view> standard;
+  std::vector<std::string_view> parts;
+  for (; marker != nullptr; marker = marker->next) {
+    if (marker->marker != JPEG_APP0 + 1) { continue; }
+    const std::string_view data(reinterpret_cast<const char *>(marker->data), marker->data_length);
+    if (data.starts_with(extension_sig)) {
+      parts.push_back(data.substr(extension_sig.size()));
+      continue;
+    }
+    const auto pos = data.find(standard_sig);
+    if (pos != std::string_view::npos && pos + standard_sig.size() < data.size()) {
+      standard = data.substr(pos + standard_sig.size());
+    }
+  }
+  if (!standard) { return std::nullopt; }
+  return Xmp::merge_extended(*standard, parts);
+}
+
 // The image resources of every APP13 "Photoshop 3.0" segment, in order: a
 // resource can continue in the next segment.
 static std::string photoshop_resources(jpeg_saved_marker_ptr marker)
@@ -666,33 +694,6 @@ Result<bool> SipiIOJpeg::read(SipiImage *img,
         }
       }
 
-      //
-      // XMP packet: per Adobe XMP Specification Part 3 §1.1.3, the APP1 XMP
-      // segment payload starts with the 29-byte namespace header
-      // "http://ns.adobe.com/xap/1.0/\0" followed by the raw XMP packet
-      // bytes (typically beginning with `<?xpacket begin` or directly with
-      // `<x:xmpmeta`). Older Photoshop versions (e.g., CS 2008) omit the
-      // optional `<?xpacket>` wrappers entirely, which the previous
-      // hand-rolled boundary scanner did not tolerate. Since Xmp stores
-      // the raw string and does not currently parse it (see Xmp.cpp),
-      // the simplest correct extraction is "everything after the namespace
-      // header is the XMP packet".
-      //
-      // Only StandardXMP is read: ExtendedXMP segments
-      // ("http://ns.adobe.com/xmp/extension/\0"), which write() emits for a
-      // packet over one segment, are ignored.
-      //
-      // Nothing below can throw but std::bad_alloc.
-      constexpr size_t kXmpNsLen = 29;// "http://ns.adobe.com/xap/1.0/" + NUL
-      pos = (unsigned char *)memmem(marker->data, marker->data_length, "http://ns.adobe.com/xap/1.0/\000", kXmpNsLen);
-      if (pos != nullptr) {
-        const auto *data_end = (const unsigned char *)marker->data + marker->data_length;
-        const unsigned char *xmp_start = pos + kXmpNsLen;
-        if (xmp_start < data_end) {
-          const size_t xmp_len = data_end - xmp_start;
-          img->set_xmp(std::make_shared<Xmp>(std::string((const char *)xmp_start, xmp_len)));
-        }
-      }
     } else if (marker->marker == JPEG_APP0 + 2) {
       // ICC MARKER.... may span multiple marker segments
       auto *pos = static_cast<unsigned char *>(memmem(marker->data, marker->data_length, "ICC_PROFILE\0", 12));
@@ -743,6 +744,7 @@ Result<bool> SipiIOJpeg::read(SipiImage *img,
     }
     img->set_icc(*icc);
   }
+  if (auto xmp = xmp_packet(cinfo.marker_list)) { img->set_xmp(std::make_shared<Xmp>(*std::move(xmp))); }
   // A malformed resource block is fatal: SIPI is a repository and must not
   // admit corrupt embedded metadata.
   if (auto ps = parse_photoshop_resources(img, photoshop_resources(cinfo.marker_list)); !ps) {
@@ -980,26 +982,6 @@ Result<SipiImgInfo> SipiIOJpeg::read_shape(const std::string &filepath)
           return std::unexpected(exif.error());
         }
         img.set_exif(*exif);
-      }
-
-      //
-      // XMP packet: same bounded extraction as SipiIOJpeg::read() (DEV-6066)
-      // — the APP1 XMP segment payload starts with the 29-byte namespace
-      // header "http://ns.adobe.com/xap/1.0/\0"; everything after it is the
-      // raw XMP packet (older Photoshop exports omit the optional
-      // <?xpacket> wrappers, so scanning for them is not reliable). Only
-      // StandardXMP is read: ExtendedXMP segments are ignored.
-      //
-      // Nothing below can throw but std::bad_alloc.
-      constexpr size_t kXmpNsLen = 29;// "http://ns.adobe.com/xap/1.0/" + NUL
-      pos = (unsigned char *)memmem(marker->data, marker->data_length, "http://ns.adobe.com/xap/1.0/\000", kXmpNsLen);
-      if (pos != nullptr) {
-        const auto *data_end = (const unsigned char *)marker->data + marker->data_length;
-        const unsigned char *xmp_start = pos + kXmpNsLen;
-        if (xmp_start < data_end) {
-          const size_t xmp_len = data_end - xmp_start;
-          img.set_xmp(std::make_shared<Xmp>(std::string((const char *)xmp_start, xmp_len)));
-        }
       }
     }
     marker = marker->next;
