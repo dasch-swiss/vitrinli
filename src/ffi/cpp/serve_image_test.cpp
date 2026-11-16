@@ -1107,7 +1107,7 @@ TEST(BuildImageResponse, GoodJp2DecodesWithinDeadline)
   req.identifier = "lena512.jp2";
 
   auto eng = bare_engine();
-  eng.decode_timeout_ms = 120000;
+  eng.decode_timeout_ms = Sipi::ffi::kDefaultDecodeTimeoutMs;
 
   const auto before = Sipi::observability::Metrics::instance().wedged_threads.Value();
   const auto result = build_image_response(req, eng, kNeverCancelled);
