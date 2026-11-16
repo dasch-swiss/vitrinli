@@ -125,10 +125,12 @@ seam change than a function.
   uses a reduce level and stays cheap; a non-pyramidal TIFF decodes at native
   size. Accepted: a restricted `info.json` advertises no tiles, so viewers
   mostly request `full/max`. There is no shrunk-image cache.
-- **Restricted region requests stay in the Tile admission lane.** The shell
-  picks the lane before the preflight decision, so it cannot know a request is
-  restricted, while the engine decodes the whole image. The engine's memory
-  budget still gates every decode, so there is no OOM bypass; the cost is
-  Tile-lane thread occupancy under a crawler on restricted non-pyramidal TIFFs,
-  and `classifier_disagreement_total` rises with restricted traffic. Routing
-  them to the Full lane is a follow-up.
+- **Size-restricted requests run in the Full admission lane.** The shell picks
+  the lane before the preflight decision, from the IIIF params alone, so a
+  restricted region request is first admitted as a Tile. Once the preflight
+  yields a size restriction, the shell drops the Tile permit and acquires a
+  Full permit when the engine is about to decode, after its cache check (DEV-7603, ADR-0022's 2026-11-16 amendment).
+  A shed or timed-out Full acquire is a 503 with `Retry-After`. The Full lane
+  is smaller, so restricted traffic is shed sooner than Tile traffic; a
+  crawler on restricted non-pyramidal TIFFs occupies Full-lane threads, not
+  Tile-lane threads.

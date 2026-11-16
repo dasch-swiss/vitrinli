@@ -4,6 +4,21 @@ status: accepted
 
 # Cost-based two-lane admission control
 
+**Amendment (2026-11-16, DEV-7603):** a request is re-classified after the
+preflight. When the preflight restricts the size of a request admitted as a
+Tile, the engine decodes the whole image at the restricted size
+([ADR-0028](0028-restricted-view-coordinate-space.md)), which is Full work by
+this ADR's own definition. The engine calls the shell's before-decode hook after its cache check, and
+the shell then drops the Tile permit and acquires a Full permit, never holding
+one while it waits for the other; a shed or timed-out Full acquire refuses the
+decode, a 503 with `Retry-After`. The wait runs on
+the request's blocking thread and is bounded by the queue timeout, so a
+swapped request can wait up to twice the queue timeout in all (once per lane).
+A restricted cache hit or HEAD request decodes nothing and keeps its lane. The
+classification record uses the lane the request ran in, so swapped requests do
+not count in `classifier_disagreement_total`. A watermark-only restriction is
+not re-classified.
+
 **Amendment (2026-09-05, security hardening wave 2 / DEV-7139):** shipped
 `admission_mode` default flipped from `basic` to `advanced`; generic
 deployments now get memory enforcement by default. To observe shadow counters
