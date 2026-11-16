@@ -42,6 +42,7 @@ preserves tile headroom — an explicit design choice, not automatic preemption.
 | `info.json`, `knora.json` (metadata, no decode) | Tile |
 | `/{id}/file` (raw byte stream, no decode) | Tile |
 | Large explicit sizes, `/full/max/`, percentages (estimated peak ≥ `large_decode_threshold_bytes`) | Full |
+| Any image request whose preflight restricts the size (`restrict` with a `size`): admitted as classified, then moved to Full just before the engine decodes, because it decodes the whole image. Cache hits and HEAD requests decode nothing and keep their lane | Full |
 | Lua routes and docroot `.lua`/`.elua` scripts (script cost is unknowable up front; decodes they trigger are memory-budgeted in the same lane) | Full |
 
 Classification is coarse in the shell (from the IIIF URL params, before any
@@ -102,7 +103,10 @@ advanced tier's shadow counters before it enforces — e.g. before tuning
   alone exceeds the full-partition memory budget; it can never succeed.
 
 Tiles are never shed for full-partition pressure — they only shed when no global
-permit is genuinely free (a tile burst beyond `nthreads`).
+permit is genuinely free (a tile burst beyond `nthreads`). A size-restricted
+request is the exception: it is admitted as a tile, then swaps to a Full permit
+before the engine runs, so it can be shed (and counted in `full_shed_total`) by
+full-partition pressure.
 
 ## Metrics
 
@@ -123,7 +127,8 @@ OTLP `sipi.admission.*` instruments; Prometheus appends `_total` to counters).
   have rejected (zero in `advanced`, where `full_shed_total` counts the real
   rejections). The signal that sizes `full_max` before the switch.
 - `classifier_disagreement_total` — serves where the shell's pre-dispatch
-  tile/full verdict differed from the engine's precise post-decode verdict. A
+  tile/full verdict (the lane held after any size-restriction swap) differed
+  from the engine's precise post-decode verdict. A
   low, flat value confirms the pixel-proxy heuristic tracks the engine; a rising
   value means the bytes-per-pixel proxy needs revisiting.
 
