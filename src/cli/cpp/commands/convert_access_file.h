@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "cli/commands/decode_deadline.h"
+#include "ffi/engine_context.h"
 
 namespace Sipi::cli {
 
@@ -71,7 +71,7 @@ struct ConvertAccessFileArgs
   bool set_topleft = false;
 
   //!< Wall-clock decode deadline in ms, see decode_deadline.h.
-  std::size_t decode_timeout_ms = kDecodeTimeoutMs;
+  std::size_t decode_timeout_ms = Sipi::ffi::kDefaultDecodeTimeoutMs;
 
   //!< Emit JSON report on stdout.
   bool json_output = false;
