@@ -21,6 +21,7 @@ Concurrency:
       --queue-timeout <SECS>        Max seconds a queued request waits for a worker before 503 (default 5) [env: SIPI_QUEUE_TIMEOUT=]
       --preflight-cache-ttl <SECS>  Seconds a `pre_flight` access decision is cached per (image, credential), coalescing repeat auth calls for one image (default 0 = disabled; set >0, e.g. 2, only if the hook decides purely on prefix/identifier/Cookie/Authorization) [env: SIPI_PREFLIGHT_CACHE_TTL=]
       --preflight-cache-slots <N>   Slot count for the preflight access-cache (default 4096) [env: SIPI_PREFLIGHT_CACHE_SLOTS=]
+      --max-wedged-threads <N>      Wedged decode threads (decodes abandoned at the decode deadline) at which every request is shed with 503 and /health fails until restart (0 = default: nthreads - 1, at least 1) [env: SIPI_MAX_WEDGED_THREADS=]
 
 Limits:
       --maxpost <SIZE>                        Max POST body size, e.g. "300M" (engine parses the suffix) [env: SIPI_MAXPOSTSIZE=]

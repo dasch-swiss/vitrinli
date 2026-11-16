@@ -33,4 +33,9 @@ pub struct ConcurrencyArgs {
     /// Slot count for the preflight access-cache (default 4096).
     #[arg(long, env = "SIPI_PREFLIGHT_CACHE_SLOTS", value_name = "N")]
     pub preflight_cache_slots: Option<u64>,
+    /// Wedged decode threads (decodes abandoned at the decode deadline) at
+    /// which every request is shed with 503 and /health fails until restart
+    /// (0 = default: nthreads - 1, at least 1).
+    #[arg(long, env = "SIPI_MAX_WEDGED_THREADS", value_name = "N")]
+    pub max_wedged_threads: Option<u32>,
 }

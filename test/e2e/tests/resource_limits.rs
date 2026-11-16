@@ -8,6 +8,92 @@ use std::time::{Duration, Instant};
 // Resource limits tests — verify server handles heavy load without crashes
 // =============================================================================
 
+/// DEV-7597: once the wedged decode threads reach `SIPI_MAX_WEDGED_THREADS`,
+/// the server sheds every admitted request (IIIF and Lua routes) with 503
+/// instead of letting each new hang pin another core, and `/health` fails so
+/// the orchestrator restarts it. A 2 s decode deadline turns the DEV-7080
+/// fixture into one wedged thread; with a cap of 1 the next request is shed.
+///
+/// A dedicated server (the shed state lasts until restart) on an isolated
+/// cache dir, torn down by `Drop`; each request carries its own client timeout.
+#[test]
+fn wedged_threads_at_the_cap_shed_with_503() {
+    let cache_dir = tempfile::tempdir().expect("create isolated cache dir");
+    let cache_dir_str = cache_dir.path().to_string_lossy().into_owned();
+    let srv = SipiServer::start_env(
+        "config/sipi.e2e-test-config.lua",
+        &test_data_dir(),
+        &[],
+        &[
+            ("SIPI_DECODE_TIMEOUT_MS", "2000"),
+            ("SIPI_MAX_WEDGED_THREADS", "1"),
+            ("SIPI_REQUEST_TIMEOUT", "30"),
+            ("SIPI_CACHE_DIR", cache_dir_str.as_str()),
+        ],
+    );
+    let c = http_client();
+
+    let start = Instant::now();
+    let hung = c
+        .get(format!(
+            "{}/hang/dev7080_read_shape_hang.jp2/full/max/0/default.jpg",
+            srv.base_url
+        ))
+        .timeout(Duration::from_secs(25))
+        .send()
+        .expect("request for the hanging file failed");
+    let elapsed = start.elapsed();
+    assert_eq!(
+        hung.status().as_u16(),
+        500,
+        "a decode past the deadline should answer the engine's 500"
+    );
+    assert!(
+        elapsed < Duration::from_secs(20),
+        "the 2s decode deadline should answer well before 20s (took {elapsed:?})"
+    );
+
+    let shed = c
+        .get(format!(
+            "{}/unit/lena512.jp2/full/max/0/default.jpg",
+            srv.base_url
+        ))
+        .timeout(Duration::from_secs(10))
+        .send()
+        .expect("request after the cap was reached failed");
+    assert_eq!(
+        shed.status().as_u16(),
+        503,
+        "every IIIF request should be shed once wedged threads reach the cap"
+    );
+    assert!(
+        shed.headers().contains_key("retry-after"),
+        "the shed 503 should carry Retry-After"
+    );
+
+    let lua_route = c
+        .get(format!("{}/read_write_lua", srv.base_url))
+        .timeout(Duration::from_secs(10))
+        .send()
+        .expect("Lua route request after the cap was reached failed");
+    assert_eq!(
+        lua_route.status().as_u16(),
+        503,
+        "a Lua route should be shed once wedged threads reach the cap"
+    );
+
+    let health = c
+        .get(format!("{}/health", srv.base_url))
+        .timeout(Duration::from_secs(10))
+        .send()
+        .expect("/health request after the cap was reached failed");
+    assert_eq!(
+        health.status().as_u16(),
+        503,
+        "/health should fail once wedged threads reach the cap, so the server is restarted"
+    );
+}
+
 #[test]
 fn sustained_load_memory_growth() {
     // Send 100+ sequential requests for large images and check the cache does not

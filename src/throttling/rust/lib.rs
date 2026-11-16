@@ -8,9 +8,10 @@
 //! which bounds the number of fulls contending for global permits to `full_max`
 //! and so always leaves `≥ tile_min` global permits reachable by tiles.
 //!
-//! The crate is FFI-free: it depends on `tokio` and the domain types from
-//! `iiif_parser` only — no `//src/ffi`, no C++ engine — so its concurrency tests
-//! run without linking the image engine (DUNE-002). It owns the per-partition
+//! The crate is FFI-free: it depends on `tokio`, `tracing` and the domain types
+//! from `iiif_parser` only — no `//src/ffi`, no C++ engine — so its concurrency
+//! tests run without linking the image engine (DUNE-002). The engine's wedged
+//! decode-thread count reaches it as a plain `fn() -> u64` probe. It owns the per-partition
 //! wait/shed counters (a single writer) and exposes them as an [`AdmissionSnapshot`]
 //! for the OTLP bridge.
 //!
@@ -20,7 +21,7 @@
 //! `docs/adr/0022-two-lane-admission-control.md`.
 
 use std::fmt;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -91,6 +92,11 @@ pub struct AdmissionConfig {
     /// The RAM envelope in bytes (0 = auto). Carried only for the fingerprint
     /// metric; the byte cap itself is enforced engine-side.
     pub memory_limit_bytes: u64,
+    /// Wedged decode threads at or above which every acquire sheds
+    /// (`--max-wedged-threads`); 0 = no cap.
+    pub max_wedged_threads: u64,
+    /// Reads the engine's wedged decode-thread count, which never decreases.
+    pub wedged_threads: fn() -> u64,
 }
 
 /// A construction-time configuration error — the pool fails loud rather than
@@ -204,6 +210,10 @@ pub struct Admission {
     // Times the shell's pre-dispatch partition disagreed with the engine's precise
     // post-decode verdict (see `record_classification`) — the residual-drift signal.
     classifier_disagreement_total: AtomicU64,
+    max_wedged_threads: u64,
+    wedged_threads: fn() -> u64,
+    // Set on the first wedged shed, so the transition logs once.
+    shedding_wedged: AtomicBool,
 }
 
 impl Admission {
@@ -261,6 +271,9 @@ impl Admission {
             full_shed_total: AtomicU64::new(0),
             full_shadow_rejected_total: AtomicU64::new(0),
             classifier_disagreement_total: AtomicU64::new(0),
+            max_wedged_threads: cfg.max_wedged_threads,
+            wedged_threads: cfg.wedged_threads,
+            shedding_wedged: AtomicBool::new(false),
         })
     }
 
@@ -344,11 +357,44 @@ impl Admission {
     }
 
     /// Acquire a permit for a request of the given partition, or shed it.
+    ///
+    /// Once the wedged decode threads reach the cap, every acquire sheds until
+    /// restart. The cap is checked before the wait and again on admission, so a
+    /// request that queued while the cap was reached is shed too. Decodes
+    /// already running when it is reached can still wedge, so the count can
+    /// pass the cap by at most `permits_total - 1`.
     pub async fn acquire(&self, kind: AdmissionKind) -> Acquired {
-        match kind {
+        if self.wedged_cap_reached() {
+            return Acquired::Shed;
+        }
+        let acquired = match kind {
             AdmissionKind::Tile => self.acquire_tile().await,
             AdmissionKind::Full => self.acquire_full().await,
+        };
+        if matches!(acquired, Acquired::Admitted(_)) && self.wedged_cap_reached() {
+            return Acquired::Shed;
         }
+        acquired
+    }
+
+    /// True once the engine's wedged decode threads reached the cap. The count
+    /// never decreases, so this stays true until restart.
+    #[must_use]
+    pub fn wedged_cap_reached(&self) -> bool {
+        if self.max_wedged_threads == 0 {
+            return false;
+        }
+        let wedged = (self.wedged_threads)();
+        let reached = wedged >= self.max_wedged_threads;
+        if reached && !self.shedding_wedged.swap(true, Ordering::Relaxed) {
+            tracing::warn!(
+                wedged_threads = wedged,
+                max_wedged_threads = self.max_wedged_threads,
+                "wedged decode threads reached the cap: shedding every request \
+                 with 503 until restart"
+            );
+        }
+        reached
     }
 
     async fn acquire_tile(&self) -> Acquired {
@@ -547,6 +593,8 @@ mod tests {
             queue_timeout: Duration::from_millis(timeout_ms),
             large_decode_threshold_bytes: 32 * 1024 * 1024,
             memory_limit_bytes: 0,
+            max_wedged_threads: 0,
+            wedged_threads: || 0,
         }
     }
 
@@ -900,5 +948,60 @@ mod tests {
         a.record_classification(AdmissionKind::Tile, threshold); // engine Full
         a.record_classification(AdmissionKind::Full, threshold - 1); // engine Tile
         assert_eq!(a.snapshot().classifier_disagreement_total, 2);
+    }
+
+    #[test]
+    fn every_acquire_sheds_once_the_wedged_cap_is_reached() {
+        static WEDGED: AtomicU64 = AtomicU64::new(0);
+        let a = Admission::new(AdmissionConfig {
+            max_wedged_threads: 2,
+            wedged_threads: || WEDGED.load(Ordering::Relaxed),
+            ..cfg(4, 0.5, 4, 50)
+        })
+        .unwrap();
+        let rt = rt();
+        WEDGED.store(1, Ordering::Relaxed);
+        assert!(!a.wedged_cap_reached());
+        drop(admitted(rt.block_on(a.acquire(AdmissionKind::Tile))));
+        drop(admitted(rt.block_on(a.acquire(AdmissionKind::Full))));
+        WEDGED.store(2, Ordering::Relaxed);
+        assert!(a.wedged_cap_reached());
+        for kind in [AdmissionKind::Tile, AdmissionKind::Full] {
+            assert!(matches!(rt.block_on(a.acquire(kind)), Acquired::Shed));
+        }
+        assert_eq!(a.snapshot().permits_in_use, 0);
+    }
+
+    #[test]
+    fn a_request_queued_when_the_wedged_cap_is_reached_is_shed() {
+        static WEDGED: AtomicU64 = AtomicU64::new(0);
+        let a = Admission::new(AdmissionConfig {
+            max_wedged_threads: 1,
+            wedged_threads: || WEDGED.load(Ordering::Relaxed),
+            ..cfg(1, 0.5, 4, 1000)
+        })
+        .unwrap();
+        rt().block_on(async {
+            let held = admitted(a.acquire(AdmissionKind::Tile).await);
+            let release = async move {
+                tokio::task::yield_now().await;
+                WEDGED.store(1, Ordering::Relaxed);
+                drop(held);
+            };
+            let (queued, ()) = tokio::join!(a.acquire(AdmissionKind::Tile), release);
+            assert!(matches!(queued, Acquired::Shed));
+        });
+        assert_eq!(a.snapshot().permits_in_use, 0);
+    }
+
+    #[test]
+    fn a_zero_wedged_cap_never_sheds() {
+        let a = Admission::new(AdmissionConfig {
+            wedged_threads: || u64::MAX,
+            ..cfg(2, 0.5, 0, 50)
+        })
+        .unwrap();
+        assert!(!a.wedged_cap_reached());
+        drop(admitted(rt().block_on(a.acquire(AdmissionKind::Tile))));
     }
 }

@@ -528,7 +528,7 @@ const GAUGES: &[GaugeRow] = &[
     ),
     (
         "sipi.wedged_threads",
-        "Leaked decode threads that blew the seam deadline (restart when it reaches nthreads-1)",
+        "Leaked decode threads that blew the seam deadline; at --max-wedged-threads every request is shed and /health fails until restart",
         "",
         |s| s.wedged_threads,
     ),

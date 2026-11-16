@@ -28,6 +28,7 @@ pub mod telemetry;
 
 pub use config::ServerOverrides;
 
+use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use axum::{routing::get, Router};
 use std::future::IntoFuture;
@@ -114,7 +115,8 @@ static START: OnceLock<Instant> = OnceLock::new();
 /// `preflight_cache_ttl`/`preflight_cache_slots` are the Rust-owned preflight
 /// access-cache knobs (`--preflight-cache-ttl`/`--preflight-cache-slots`): the
 /// per-`(image, credential)` cache TTL in seconds (default 0 = disabled; the cache
-/// is opt-in) and its slot count.
+/// is opt-in) and its slot count. `max_wedged_threads` is the
+/// `--max-wedged-threads` shed cap (default `nthreads - 1`, at least 1).
 /// Blocks until shutdown; returns the process exit code. Telemetry init lives in
 /// [`server_main`] (inside the runtime) because the OTLP batch exporter needs a
 /// tokio runtime.
@@ -132,6 +134,7 @@ pub fn run(
     queue_timeout: Option<u32>,
     preflight_cache_ttl: Option<u32>,
     preflight_cache_slots: Option<u64>,
+    max_wedged_threads: Option<u32>,
 ) -> ExitCode {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
@@ -153,6 +156,7 @@ pub fn run(
         queue_timeout,
         preflight_cache_ttl,
         preflight_cache_slots,
+        max_wedged_threads,
     ))
 }
 
@@ -170,6 +174,7 @@ async fn server_main(
     queue_timeout: Option<u32>,
     preflight_cache_ttl: Option<u32>,
     preflight_cache_slots: Option<u64>,
+    max_wedged_threads: Option<u32>,
 ) -> ExitCode {
     // Stamp the process start for /health uptime before anything else.
     let _ = START.set(Instant::now());
@@ -405,6 +410,7 @@ async fn server_main(
         queue_timeout,
         preflight_cache_ttl,
         preflight_cache_slots,
+        max_wedged_threads,
     )
     .await;
 
@@ -527,6 +533,7 @@ async fn serve(
     queue_timeout: Option<u32>,
     preflight_cache_ttl: Option<u32>,
     preflight_cache_slots: Option<u64>,
+    max_wedged_threads: Option<u32>,
 ) -> std::io::Result<()> {
     // Read the cached engine config once (image root + prefix_as_path); a
     // not-ready state (no --config) leaves the serve routes returning 503.
@@ -545,6 +552,7 @@ async fn serve(
             queue_timeout,
             preflight_cache_ttl,
             preflight_cache_slots,
+            max_wedged_threads,
             // Read directly (like `SIPI_RS_PORT` below): CORS is a Rust-shell
             // knob, never a `ServerOverrides`/FFI concern.
             config::allowed_origins_from_env(),
@@ -639,17 +647,27 @@ async fn shutdown_signal() {
     tracing::info!("shutdown signal received; draining");
 }
 
-/// Rust-native liveness probe — bypasses the engine entirely. Mirrors the C++
+/// Rust-native liveness probe — bypasses the engine pool. Mirrors the C++
 /// health_handler's body: `{status, version, uptime_seconds}` as JSON. The
 /// version is the deployed release (`SIPI_SENTRY_RELEASE`, the same source as the
 /// OTel `service.version`), falling back to the crate version in local runs.
-async fn health() -> Response {
+/// Once the wedged decode threads reach `--max-wedged-threads` the server
+/// sheds every request until restart, so the probe answers 503 with status
+/// `wedged` and the orchestrator restarts it.
+async fn health(State(state): State<Arc<routes::AppState>>) -> Response {
     let uptime = START.get().map_or(0, |s| s.elapsed().as_secs());
     let version =
         telemetry::service_version().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_owned());
-    let body = serde_json::json!({ "status": "ok", "version": version, "uptime_seconds": uptime })
-        .to_string();
+    let (code, status) = if state.wedged_cap_reached() {
+        (axum::http::StatusCode::SERVICE_UNAVAILABLE, "wedged")
+    } else {
+        (axum::http::StatusCode::OK, "ok")
+    };
+    let body =
+        serde_json::json!({ "status": status, "version": version, "uptime_seconds": uptime })
+            .to_string();
     (
+        code,
         [(axum::http::header::CONTENT_TYPE, "application/json")],
         body,
     )
@@ -727,6 +745,7 @@ mod app_tests {
         app(
             Arc::new(
                 routes::AppState::load(
+                    None,
                     None,
                     None,
                     None,

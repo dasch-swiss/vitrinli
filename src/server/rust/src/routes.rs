@@ -134,6 +134,7 @@ impl AppState {
         queue_timeout: Option<u32>,
         preflight_cache_ttl: Option<u32>,
         preflight_cache_slots: Option<u64>,
+        max_wedged_threads: Option<u32>,
         allowed_origins: Vec<String>,
         public_hosts: Vec<String>,
     ) -> Result<Self, AdmissionError> {
@@ -146,6 +147,7 @@ impl AppState {
         let max_waiting =
             max_waiting.map_or_else(|| resolved_nthreads.saturating_mul(2), |n| n as usize);
         let queue_timeout = Duration::from_secs(u64::from(queue_timeout.unwrap_or(5)));
+        let max_wedged_threads = resolve_max_wedged_threads(max_wedged_threads, resolved_nthreads);
         // The memory-coupled admission config is read back from the engine (the
         // single authority — it parsed the Lua/override config and resolved the
         // envelope), so the shell's pool classifies and enforces against exactly
@@ -165,6 +167,8 @@ impl AppState {
             large_decode_threshold_bytes: ffi::large_decode_threshold_bytes()
                 .unwrap_or(32 * 1024 * 1024),
             memory_limit_bytes: ffi::memory_limit_bytes().unwrap_or(0),
+            max_wedged_threads,
+            wedged_threads: engine_wedged_threads,
         })?);
         // Preflight access-cache: opt-in, TTL default 0 = disabled (→ `None`, no
         // cache work per request); a TTL > 0 enables it, slots default 4096.
@@ -229,6 +233,12 @@ impl AppState {
                 },
             },
         )
+    }
+
+    /// True once the engine's wedged decode threads reached
+    /// `--max-wedged-threads`: every admission sheds and `/health` fails.
+    pub(crate) fn wedged_cap_reached(&self) -> bool {
+        self.admission.wedged_cap_reached()
     }
 
     /// Register the OTel observable instruments for the engine + admission metrics
@@ -581,9 +591,26 @@ fn complete(outcome_tx: oneshot::Sender<Outcome>, response: Response) {
     let _ = outcome_tx.send(Outcome::Complete(response));
 }
 
-/// Pool-full Throttling: a bare 503 with `Retry-After: 1` — no body,
-/// no internal detail. The client should retry shortly. The shed is already
-/// counted per partition inside [`Admission`]; this only builds the response.
+/// The `--max-wedged-threads` cap: the set value, else (unset or 0)
+/// `nthreads - 1`, at least 1: the point where one more wedged thread would
+/// leave no worker core free to decode.
+fn resolve_max_wedged_threads(set: Option<u32>, nthreads: usize) -> u64 {
+    set.filter(|n| *n > 0).map_or_else(
+        || u64::try_from(nthreads.saturating_sub(1).max(1)).unwrap_or(u64::MAX),
+        u64::from,
+    )
+}
+
+/// The engine's wedged decode threads, the probe [`Admission`] sheds on. An
+/// unreadable snapshot counts as none wedged.
+fn engine_wedged_threads() -> u64 {
+    ffi::metrics_snapshot().map_or(0, |s| u64::try_from(s.wedged_threads).unwrap_or(0))
+}
+
+/// Throttling: a bare 503 with `Retry-After: 1` — no body, no internal
+/// detail. The client should retry shortly. Used for a pool shed (already
+/// counted per partition inside [`Admission`], the wedged-thread shed included);
+/// this only builds the response.
 fn busy_response() -> Response {
     let mut response = sink::error_response(StatusCode::SERVICE_UNAVAILABLE);
     response
@@ -3331,6 +3358,15 @@ mod tests {
         assert_eq!(resp.headers().get(header::RETRY_AFTER).unwrap(), "1");
     }
 
+    #[test]
+    fn max_wedged_threads_defaults_to_nthreads_minus_one_at_least_one() {
+        assert_eq!(resolve_max_wedged_threads(None, 8), 7);
+        assert_eq!(resolve_max_wedged_threads(None, 2), 1);
+        assert_eq!(resolve_max_wedged_threads(None, 1), 1);
+        assert_eq!(resolve_max_wedged_threads(Some(3), 8), 3);
+        assert_eq!(resolve_max_wedged_threads(Some(0), 8), 7);
+    }
+
     // The two-lane pool's acquire/shed/classify behaviour is covered by the
     // engine-free crate tests in `//src/throttling/rust:admission_test`.
 
@@ -3346,6 +3382,8 @@ mod tests {
             queue_timeout: Duration::from_millis(timeout_ms),
             large_decode_threshold_bytes: 32 * 1024 * 1024,
             memory_limit_bytes: 0,
+            max_wedged_threads: 0,
+            wedged_threads: || 0,
         })
         .expect("admission config")
     }
@@ -3556,6 +3594,8 @@ mod tests {
                 queue_timeout: Duration::from_secs(1),
                 large_decode_threshold_bytes: 32 * 1024 * 1024,
                 memory_limit_bytes: 0,
+                max_wedged_threads: 0,
+                wedged_threads: || 0,
             })
             .expect("admission config"),
         );
