@@ -304,7 +304,8 @@ config-file key. It is controlled by the `--max-waiting` / `SIPI_MAX_WAITING` an
 #### Cache Configuration
 Vitrinli uses a file-based LRU cache to store converted images, avoiding expensive re-conversions when the same
 variant is requested multiple times. The cache is keyed by the Cache key (the canonical IIIF URL plus watermark and size-restriction suffixes) and validated against
-the source file's modification time — stale entries are automatically replaced.
+the source file's modification time — stale entries are automatically replaced. Watermarked output is never read from
+or written to the cache, because the Cache key records only that a watermark was applied, not which one.
 
 **Eviction:** When the cache reaches its size or file-count limit (high-water mark at 100%), LRU eviction
 removes the least-recently-used entries until usage drops to 80% (low-water mark). Both limits are enforced

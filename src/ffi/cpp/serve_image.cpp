@@ -733,13 +733,16 @@ std::expected<ServeResponse, SipiStatus>
     return out;
   }
 
-  // Cache hit (never for watermarked output): pin the file, serve it, unpin when
-  // the body has been delivered.
-  if (eng.cache != nullptr) {
-    const std::string cachefile = eng.cache->check(infile, cache_key, true);
+  // Watermarked output never reads or writes the cache: the key records only
+  // that a watermark was applied, not which one, so a hit could hand one
+  // caller's watermark to another. An empty watermark is no watermark.
+  SipiCache *const cache = watermark.empty() ? eng.cache : nullptr;
+
+  // Cache hit: pin the file, serve it, unpin when the body has been delivered.
+  if (cache != nullptr) {
+    const std::string cachefile = cache->check(infile, cache_key, true);
     if (!cachefile.empty()) {
       log_debug("Using cachefile %s", cachefile.c_str());
-      SipiCache *cache = eng.cache;
       auto body = full_file_body(cachefile);
       if (!body) {
         cache->deblock(cachefile);// pinned by check(); release it before bailing
@@ -1031,8 +1034,8 @@ std::expected<ServeResponse, SipiStatus>
   // Cache file: probe writability now (a 500 here is still pre-commit), then let
   // the producer's TeeSink fill it during the encode.
   std::string cachefile;
-  if (eng.cache != nullptr) {
-    cachefile = eng.cache->getNewCacheFileName();
+  if (cache != nullptr) {
+    cachefile = cache->getNewCacheFileName();
     std::ofstream probe(cachefile, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
     if (probe.fail()) { return std::unexpected(SipiStatus::InternalError); }
   }
@@ -1045,7 +1048,7 @@ std::expected<ServeResponse, SipiStatus>
   out.body = StreamBody{ std::make_unique<ImageEncodeProducer>(std::move(img),
     quality_format.format(),
     eng.jpeg_quality,
-    eng.cache,
+    cache,
     std::move(cachefile),
     infile,
     cache_key,

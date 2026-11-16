@@ -116,7 +116,7 @@ The IIIF Image API canonical URL for a request. The IIIF spec form.
 _Avoid_: canonical-with-watermark
 
 **Cache key**:
-The string Vitrinli uses to key the cache. Extends the canonical URL with a `/0` or `/1` watermark suffix and, for a size-restricted image, a `/r<RW>x<RH>` restriction suffix, since both affect the bytes but are not in the IIIF spec. The `Link` header carries neither suffix.
+The string Vitrinli uses to key the cache. Extends the canonical URL with a `/0` or `/1` watermark suffix and, for a size-restricted image, a `/r<RW>x<RH>` restriction suffix, since both affect the bytes but are not in the IIIF spec. The `Link` header carries neither suffix. The watermark suffix says only that a watermark was applied, not which one, so watermarked output never reads or writes the cache.
 _Avoid_: canonical URL (in cache contexts)
 
 ### Image processing
@@ -468,7 +468,7 @@ Not yet built (ADR-0006, ADR-0004). A read-path sum type `using InputSource = st
 - Format handlers read from a filepath and emit to an **Output sink** (write path); the **Tee sink** composes multiple output sinks for Vitrinli's dual-write-to-HTTP-and-cache optimization. (A symmetric typed **Input source** read path is a [target shape](#target-shape-not-yet-built), not yet built.)
 - **Preservation metadata** = **Embedded metadata** ∪ **Essentials packet**; both travel with an Image across format conversions. The Essentials packet additionally indexes file-structure offsets so an **Object storage** read takes one **Range GET** of the prefix. Per ADR-0011, rights / provenance / PREMIS fields travel on the **Embedded metadata** side of the union (via XMP), not in the Essentials packet.
 - The **Preservation pipeline** chains: **Preservation File** (long-term bit-level preservation) → **Service File** (mezzanine baseline read by Vitrinli server) → **Access File** (end-user delivery). Each step is intentional (per ADR-0010): a file's stage is the outcome of the operator's CLI invocation at creation time, never inferred from format. **Service File** ⊂ **Service File format** is what server mode reads; **Preservation File** ⊂ **Preservation File format** is the OAIS preservation copy.
-- The **Cache key** extends the **Canonical URL** with a *Watermark* bit and a size restriction's (RW, RH); the **Cache** is keyed by it.
+- The **Cache key** extends the **Canonical URL** with a *Watermark* bit and a size restriction's (RW, RH); the **Cache** is keyed by it and holds only unwatermarked output.
 - **Throttling** = **Admission** (shell-side two-partition pool, pre-dispatch) + **Decode memory budget** (engine-side at the post-cache gate). The **Cache** short-circuits before the engine-side policy.
 - **Observability** = **Metrics** + **Sentry context**.
 - **Operating mode** = **CLI mode** + **Server mode**; **CLI report** is exclusive to CLI mode.
