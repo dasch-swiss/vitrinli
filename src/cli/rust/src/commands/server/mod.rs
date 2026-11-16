@@ -100,6 +100,7 @@ impl From<&ServerArgs> for ServerOverrides {
             queue_timeout: _,
             preflight_cache_ttl: _,
             preflight_cache_slots: _,
+            max_wedged_threads: _,
         } = concurrency;
 
         ServerOverrides {
@@ -164,5 +165,6 @@ pub fn run(server_argv: &[String]) -> ExitCode {
         args.concurrency.queue_timeout,
         args.concurrency.preflight_cache_ttl,
         args.concurrency.preflight_cache_slots,
+        args.concurrency.max_wedged_threads,
     )
 }

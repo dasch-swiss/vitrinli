@@ -2,7 +2,7 @@
 
 `admission` is the pre-dispatch pool that classifies each request into a tile or
 full partition and bounds concurrency with two semaphores (a global pool + a full
-sub-pool). It is FFI-free — deps are `tokio` and the domain types from
+sub-pool). It is FFI-free — deps are `tokio`, `tracing` and the domain types from
 `//src/iiifparser/rust:iiif_parser` only, never `//src/ffi` or the C++ engine — so
 its concurrency tests run without linking Kakadu (DUNE-002). Colocated under
 `src/throttling/` with the engine-side `//src/throttling/cpp:memory_budget`
@@ -23,6 +23,7 @@ rust_library(
     deps = [
         "//src/iiifparser/rust:iiif_parser",
         "@crates//:tokio",
+        "@crates//:tracing",
     ],
 )
 

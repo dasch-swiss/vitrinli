@@ -8,6 +8,10 @@ Returns JSON with server status, version, and uptime:
 {"status":"ok","version":"3.18.0","uptime_seconds":3600}
 ```
 
+Once the wedged decode threads reach the cap (see
+[Wedged Decode Threads](#wedged-decode-threads)) it answers `503` with
+`"status":"wedged"`.
+
 - **Response time**: < 5ms (no I/O, no Lua, no auth)
 - **Method**: GET only
 - **Route**: Registered before the catch-all IIIF handler
@@ -42,18 +46,28 @@ healthcheck.
 
 **Swarm behavior**: Docker Swarm has a single HEALTHCHECK — no separate liveness/readiness probes. When HEALTHCHECK fails after `retries`, Swarm kills and replaces the container. The `start_period` gives 10s for initialization (failures don't count, but container *receives traffic* during this period).
 
-**Design consequence**: `/health` returns healthy once initialization completes. Only return unhealthy for truly fatal conditions (deadlocks, corrupted state), not for transient load.
+**Design consequence**: `/health` returns healthy once initialization completes. Only return unhealthy for truly fatal conditions (deadlocks, corrupted state, wedged decode threads at the cap), not for transient load.
 
 ## Wedged Decode Threads
 
 A JP2 decode that blows the seam deadline (DEV-7080) leaves its thread running —
 Kakadu offers no clean abort, so the FFI seam detaches it rather than blocking
-the request indefinitely. The leaked thread is counted by the `wedged_threads`
-gauge (`Sipi::observability::Metrics`), exported over OTLP alongside the other
-decode/memory gauges and reported by `/health`. It is never decremented — a
-wedged thread is not reclaimable short of a restart. Operators restart the
-process once `wedged_threads` reaches `nthreads - 1`: at that point the decode
-pool is one lane from total wedge, a silent outage.
+the request indefinitely. A spinning codec keeps a core busy for as long as the
+thread runs. The leaked thread is counted by the `wedged_threads` gauge
+(`Sipi::observability::Metrics`), exported over OTLP as `sipi.wedged_threads`
+alongside the other decode/memory gauges. It is never decremented — a wedged
+thread is not reclaimable short of a restart.
+
+Once `wedged_threads` reaches `--max-wedged-threads` / `SIPI_MAX_WEDGED_THREADS`
+(default `nthreads - 1`, at least 1), every admission sheds: IIIF requests
+(images, `/file`, `info.json`, `knora.json`, cache hits included), Lua routes
+and the docroot fileserver answer `503` with `Retry-After: 1`, and the server
+logs one warning when it enters that state. The admission pool checks the cap
+before a request waits and again when it is admitted, so a queued request is
+shed too; decodes already running can still wedge, so the count can pass the
+cap by at most `nthreads - 1`. `/health` answers `503`, so Swarm replaces the
+container after its `retries`. Alert on `sipi.wedged_threads` as well, to see
+how often this happens.
 
 ## Traefik Configuration
 

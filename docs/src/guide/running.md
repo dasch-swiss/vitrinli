@@ -275,6 +275,10 @@ to `SIPI_QUEUE_TIMEOUT`, twice that for a size-restricted request that swaps to
 the Full lane) and a probe before the decode come out of the same margin, so a
 request that queued long, or a file that hangs both probe and decode, can still
 end in a 408.
+A server-side decode that misses the deadline leaves a wedged thread; at
+`--max-wedged-threads` (default `nthreads - 1`) the server sheds every request
+with 503 and `/health` fails until restart (see
+[Wedged Decode Threads](../operation/health-endpoint.md#wedged-decode-threads)).
 
 ### Structured JSON output (CLI)
 
@@ -330,6 +334,7 @@ These options are accepted by the `server` subcommand. Usage:
 | `--decode-timeout-ms <ms>` | | `SIPI_DECODE_TIMEOUT_MS` | 80 % of `SIPI_REQUEST_TIMEOUT` | Wall-clock deadline for one image decode or shape probe; must be shorter than the request timeout, or the server refuses to start (see [Decode deadline](#decode-deadline)) |
 | `--preflight-cache-ttl <sec>` | | `SIPI_PREFLIGHT_CACHE_TTL` | `0` (disabled) | Seconds a `pre_flight` access decision is cached per `(prefix, identifier, credential)`. Opt-in; enable (`>0`) only if the hook decides purely on prefix/identifier/Cookie/Authorization (see the Preflight access-cache section in the Lua scripting guide) |
 | `--preflight-cache-slots <n>` | | `SIPI_PREFLIGHT_CACHE_SLOTS` | `4096` | Slot count for the preflight access-cache |
+| `--max-wedged-threads <n>` | | `SIPI_MAX_WEDGED_THREADS` | `nthreads - 1` (at least 1) | Wedged decode threads (decodes abandoned at the decode deadline) at which every request is shed with 503 and `/health` fails until restart; alert on `sipi.wedged_threads` (see [Wedged Decode Threads](../operation/health-endpoint.md#wedged-decode-threads)) |
 | `--maxpost <size>` | | `SIPI_MAXPOSTSIZE` | `300M` | Maximum POST upload size |
 | `--imgroot <path>` | | `SIPI_IMGROOT` | `./images` | Image repository root directory |
 | `--docroot <path>` | | `SIPI_DOCROOT` | `./server` | Web server document root |
@@ -409,6 +414,7 @@ flags.
 | `SIPI_TILES_MEMORY_RATIO` | `--tiles-memory-ratio` | `0.25` | Fraction of the envelope reserved for tiles + non-decode floor (range 0..1) |
 | `SIPI_LARGE_DECODE_THRESHOLD_BYTES` | `--large-decode-threshold-bytes` | `33554432` (32 MiB) | Estimated peak-memory at/above which a decode is charged to the full lane; below it bypasses as a tile |
 | `SIPI_DECODE_TIMEOUT_MS` | `--decode-timeout-ms` | 80 % of `SIPI_REQUEST_TIMEOUT` | Wall-clock deadline for one image decode or shape probe; must be shorter than the request timeout |
+| `SIPI_MAX_WEDGED_THREADS` | `--max-wedged-threads` | `nthreads - 1` (at least 1) | Wedged decode threads at which every request is shed with 503 and `/health` fails until restart |
 
 **Configuration precedence** (highest to lowest):
 
