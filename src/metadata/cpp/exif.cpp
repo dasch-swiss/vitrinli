@@ -387,6 +387,20 @@ void Exif::erase_previews()
 }
 //============================================================================
 
+std::optional<std::vector<unsigned char>> Exif::value_bytes(const std::string &key) const
+{
+  try {
+    const auto pos = exifData.findKey(Exiv2::ExifKey(key));
+    if (pos == exifData.end()) { return std::nullopt; }
+    std::vector<unsigned char> bytes(pos->size());
+    pos->copy(bytes.data(), byteorder);
+    return bytes;
+  } catch (const Exiv2::Error &) {
+    return std::nullopt;
+  }
+}
+//============================================================================
+
 bool Exif::restrict_image_resources(std::size_t w, std::size_t h)
 {
   const Exiv2::ExifKey key("Exif.Image.ImageResources");

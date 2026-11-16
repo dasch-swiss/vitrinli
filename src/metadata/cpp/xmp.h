@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <iosfwd>
+#include <memory>
 #include <mutex>
 #include <span>
 #include <string>
@@ -69,6 +70,14 @@ public:
    * Destructor
    */
   ~Xmp();
+
+  /*!
+   * The packet, if it is well-formed UTF-8 XML (the only encoding
+   * split_extended() reads) with an rdf:RDF element and no DOCTYPE (trailing
+   * NUL bytes are dropped first); kMetadataParseFailed otherwise. Checked
+   * with expat, one parser per call.
+   */
+  [[nodiscard]] static Result<std::shared_ptr<Xmp>> parse_complete(std::string packet);
 
 
   /*!

@@ -39,6 +39,14 @@ public:
   [[nodiscard]] static Result<std::shared_ptr<Iptc>> parse(const unsigned char *iptc, unsigned int len);
 
   /*!
+   * Like parse(), but kMetadataParseFailed unless the buffer is a sequence
+   * of at least one whole IIM dataset, trailing zero padding aside, and Exiv2
+   * decodes every one. parse() accepts a buffer Exiv2 reads only in part:
+   * Exiv2 skips bytes that are no dataset and drops one that runs past the end.
+   */
+  [[nodiscard]] static Result<std::shared_ptr<Iptc>> parse_complete(const unsigned char *iptc, unsigned int len);
+
+  /*!
    * Destructor
    */
   ~Iptc();

@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -251,8 +252,13 @@ public:
   /// other resource stays byte for byte. False if the block cannot be parsed or
   /// holds a native size this does not rewrite (slices, the legacy header).
   /// The IPTC resource and the raw XMP and IPTC copies (XMLPacket, IPTCNAA)
-  /// need nothing: exifBytes() never writes them.
+  /// need nothing: exifBytes() never writes them. The copies reach an output
+  /// only as the XMP and IPTC SipiImage::promote_ifd0_copies() makes of them.
   [[nodiscard]] bool restrict_image_resources(std::size_t w, std::size_t h);
+
+  /// The value bytes of the field `key` in this EXIF's byte order (the bytes
+  /// the file holds), or nullopt if the field is absent.
+  [[nodiscard]] std::optional<std::vector<unsigned char>> value_bytes(const std::string &key) const;
 
   friend std::ostream &operator<<(std::ostream &lhs, Exif &rhs);
 };
