@@ -12,7 +12,9 @@
 
 #include "gtest/gtest.h"
 
+#include <chrono>
 #include <climits>
+#include <cstdint>
 #include <cstdlib>
 #include <string>
 
@@ -255,4 +257,47 @@ TEST(SeamProbe, ImageNewSucceedsWhenBudgetDisabled)
   SipiImageHandle *handle = sipi_image_new(path.c_str(), nullptr, nullptr, 0, 0, nullptr, collect_str, &err_msg);
   ASSERT_NE(handle, nullptr);
   sipi_image_free(handle);
+}
+
+TEST(SeamProbe, FileDimsReadsNativeShape)
+{
+  const std::string path = fixture("/unit/lena512.tif");
+  std::uint64_t nx = 0;
+  std::uint64_t ny = 0;
+  int orientation = -1;
+  std::string err_msg;
+  ASSERT_EQ(sipi_image_file_dims(path.c_str(), &nx, &ny, &orientation, collect_str, &err_msg), 0) << err_msg;
+  EXPECT_EQ(nx, 512u);
+  EXPECT_EQ(ny, 512u);
+}
+
+// DEV-7604: the Lua `SipiImage.dims` probe runs under the decode deadline. The
+// fixture wedges inside read_shape (DEV-7080), so the call must return the
+// deadline error within the deadline plus a margin instead of hanging.
+TEST(SeamProbe, FileDimsOnHangingFileHitsTheDeadline)
+{
+  // set_engine_context is process-global: restore the previous context even
+  // when an assertion below fails.
+  struct RestoreEngine
+  {
+    Sipi::ffi::EngineContext saved = Sipi::ffi::engine_context_or_default();
+    ~RestoreEngine() { Sipi::ffi::set_engine_context(saved); }
+  } restore;
+
+  Sipi::ffi::EngineContext eng;
+  eng.decode_timeout_ms = 2000;
+  Sipi::ffi::set_engine_context(eng);
+
+  const std::string path = fixture("/hang/dev7080_read_shape_hang.jp2");
+  std::uint64_t nx = 0;
+  std::uint64_t ny = 0;
+  int orientation = -1;
+  std::string err_msg;
+  const auto start = std::chrono::steady_clock::now();
+  const int rc = sipi_image_file_dims(path.c_str(), &nx, &ny, &orientation, collect_str, &err_msg);
+  const auto elapsed = std::chrono::steady_clock::now() - start;
+
+  EXPECT_NE(rc, 0);
+  EXPECT_EQ(err_msg, "image decode deadline exceeded");
+  EXPECT_LT(elapsed, std::chrono::milliseconds(2000) + std::chrono::seconds(10));
 }
