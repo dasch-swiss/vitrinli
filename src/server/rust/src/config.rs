@@ -38,7 +38,7 @@ pub(crate) const DEFAULT_LARGE_DECODE_THRESHOLD_BYTES: u64 = 32 * 1024 * 1024;
 /// codec/limit overrides above.
 ///
 /// Unset or empty is the "no restriction configured" sentinel: `cors_allow`
-/// then reflects any origin. Setting the var switches an instance into
+/// then reflects any origin except the opaque `null`. Setting the var switches an instance into
 /// allowlist mode.
 pub fn allowed_origins_from_env() -> Vec<String> {
     parse_csv_list(std::env::var("SIPI_ALLOWED_ORIGINS").ok().as_deref())

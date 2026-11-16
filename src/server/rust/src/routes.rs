@@ -352,6 +352,10 @@ async fn iiif_response(
         && headers.contains_key(header::RANGE))
     .then(|| content_disposition(&parsed.identifier))
     .flatten();
+    let credential_dependent = match parsed.kind {
+        RequestKind::FileDownload => state.has_file_preflight,
+        _ => state.has_preflight,
+    };
 
     // The engine commits the head (status + headers) on the oneshot, then streams
     // body chunks on the bounded mpsc as it produces them. A slow client
@@ -381,7 +385,7 @@ async fn iiif_response(
             body_tx,
         );
     });
-    match outcome_rx.await {
+    let mut response = match outcome_rx.await {
         // JSON / redirect / error / HEAD: a complete response, returned as built.
         Ok(Outcome::Complete(response)) => response,
         // Image / file: stream the body as the engine produces it, adding the
@@ -403,7 +407,40 @@ async fn iiif_response(
         // The blocking task dropped the sender without sending — a panic the
         // sink's catch_unwind somehow escaped — maps to a bare 500.
         Err(_) => sink::error_response(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+    if credential_dependent {
+        mark_private(response.headers_mut());
     }
+    response
+}
+
+/// Keep a response whose bytes depend on the caller's credentials out of
+/// shared caches: `private` leads `Cache-Control` (replacing `public`, keeping
+/// the engine's other directives; `private` alone when there were none), and
+/// `Vary` lists `Cookie` and `Authorization`. Browser caching stays as the
+/// engine set it; `no-store` would end it for every public tile behind a hook.
+fn mark_private(h: &mut HeaderMap) {
+    let directives: Vec<String> = h
+        .get_all(header::CACHE_CONTROL)
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .flat_map(|v| v.split(','))
+        .map(str::trim)
+        .filter(|d| {
+            !d.is_empty() && !d.eq_ignore_ascii_case("public") && !d.eq_ignore_ascii_case("private")
+        })
+        .map(str::to_owned)
+        .collect();
+    let value = std::iter::once("private".to_owned())
+        .chain(directives)
+        .collect::<Vec<_>>()
+        .join(", ");
+    h.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_str(&value).expect("joined from visible-ASCII header values"),
+    );
+    append_vary(h, "Cookie");
+    append_vary(h, "Authorization");
 }
 
 /// The blocking engine dispatch, run on a `spawn_blocking` thread under a pool
@@ -1116,9 +1153,9 @@ pub async fn cors_preflight(State(state): State<Arc<AppState>>, headers: HeaderM
     cors_preflight_response(&headers, &state.allowed_origins)
 }
 
-/// The CORS-preflight response (`OPTIONS`): `204` + the served methods + the
-/// echoed Origin + credentials (gated by [`cors_allow`] against `allowlist`;
-/// in allowlist mode a listed origin also gets `Vary: Origin`) + the requested
+/// The CORS-preflight response (`OPTIONS`): `204`, the served methods, the
+/// echoed Origin and credentials (gated by [`cors_allow`] against
+/// `allowlist`), `Vary: Origin` on every decision, and the requested
 /// headers. Shared by the [`cors_preflight`] handler and the docroot
 /// fileserver's OPTIONS path. Answers `204` (not `200`) to keep the CORS
 /// credentials contract intact.
@@ -1128,30 +1165,23 @@ fn cors_preflight_response(headers: &HeaderMap, allowlist: &[String]) -> Respons
         "GET, POST, PUT, DELETE",
     );
     let origin = header_str(headers, "origin");
-    match cors_allow(origin.as_deref(), allowlist) {
-        CorsDecision::Allow { vary } => {
-            if let Some(origin) = origin.and_then(|o| HeaderValue::from_str(&o).ok()) {
-                builder = builder
-                    .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin)
-                    .header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-                if vary {
-                    builder = builder.header(header::VARY, "Origin");
-                }
-            }
+    if cors_allow(origin.as_deref(), allowlist) == CorsDecision::Allow {
+        if let Some(origin) = origin.and_then(|o| HeaderValue::from_str(&o).ok()) {
+            builder = builder
+                .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin)
+                .header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         }
-        CorsDecision::Deny { vary: true } => {
-            builder = builder.header(header::VARY, "Origin");
-        }
-        CorsDecision::Deny { vary: false } => {}
     }
     if let Some(req_headers) = header_str(headers, "access-control-request-headers")
         .and_then(|h| HeaderValue::from_str(&h).ok())
     {
         builder = builder.header(header::ACCESS_CONTROL_ALLOW_HEADERS, req_headers);
     }
-    builder
+    let mut response = builder
         .body(Body::empty())
-        .unwrap_or_else(|_| sink::error_response(StatusCode::INTERNAL_SERVER_ERROR))
+        .unwrap_or_else(|_| sink::error_response(StatusCode::INTERNAL_SERVER_ERROR));
+    append_vary(response.headers_mut(), "Origin");
+    response
 }
 
 // ── Configured Lua routes ────────────────────────────────────────────────────
@@ -1714,7 +1744,7 @@ async fn serve_docroot(state: Arc<AppState>, req: Request) -> Response {
     })
     .await
     .unwrap_or(StaticOutcome::Err(StatusCode::INTERNAL_SERVER_ERROR));
-    match outcome {
+    let mut response = match outcome {
         StaticOutcome::Stream {
             status,
             headers,
@@ -1723,8 +1753,11 @@ async fn serve_docroot(state: Arc<AppState>, req: Request) -> Response {
             length,
         } => stream_region(status, headers, path, offset, length),
         StaticOutcome::Head { status, headers } => head_only(status, &headers),
-        StaticOutcome::Err(status) => sink::error_response(status),
-    }
+        StaticOutcome::Err(status) => return sink::error_response(status),
+    };
+    // The ACAO `push_cors` set depends on the request's Origin.
+    append_vary(response.headers_mut(), "Origin");
+    response
 }
 
 /// The blocking outcome of resolving + describing a static docroot file, built
@@ -1996,27 +2029,16 @@ fn leading_u64(s: &str) -> Option<u64> {
 
 /// Append the CORS `Access-Control-Allow-Origin` echo when [`cors_allow`]
 /// allows `origin` against `allowlist` (ACAO only — no credentials, matching
-/// today's fileserver behaviour in both modes). In allowlist mode a listed
-/// origin also gets `Vary: Origin`. The raw value is validated downstream
+/// today's fileserver behaviour in both modes). The caller adds `Vary: Origin`
+/// to the built response on every decision. The raw value is validated downstream
 /// (`apply_headers` / `head_only` drop a header `http` rejects), so a
 /// control-char Origin can't inject a header.
 fn push_cors(headers: &mut Vec<(String, String)>, origin: Option<&str>, allowlist: &[String]) {
-    match cors_allow(origin, allowlist) {
-        CorsDecision::Allow { vary } => {
-            if let Some(o) = origin {
-                headers.push((
-                    header::ACCESS_CONTROL_ALLOW_ORIGIN.to_string(),
-                    o.to_owned(),
-                ));
-                if vary {
-                    headers.push((header::VARY.to_string(), "Origin".to_owned()));
-                }
-            }
-        }
-        CorsDecision::Deny { vary: true } => {
-            headers.push((header::VARY.to_string(), "Origin".to_owned()));
-        }
-        CorsDecision::Deny { vary: false } => {}
+    if let (CorsDecision::Allow, Some(o)) = (cors_allow(origin, allowlist), origin) {
+        headers.push((
+            header::ACCESS_CONTROL_ALLOW_ORIGIN.to_string(),
+            o.to_owned(),
+        ));
     }
 }
 
@@ -2027,37 +2049,55 @@ fn push_cors(headers: &mut Vec<(String, String)>, origin: Option<&str>, allowlis
 /// [`json_cors`]), and a `pre_flight` hook that answers the request itself may
 /// set its own, which an echo would overwrite. Otherwise an allowed `origin` is echoed with
 /// `Access-Control-Allow-Credentials: true` (cookie auth: without it the
-/// browser withholds the DSP session cookie cross-origin), and allowlist mode
-/// adds `Origin` to `Vary` — on a deny too, so a shared cache does not serve a
-/// cached deny to a later allowed origin.
+/// browser withholds the DSP session cookie cross-origin), and `Origin` is
+/// added to `Vary` on every decision, a deny included, so a shared cache does
+/// not serve one origin's response to another.
 fn with_cors(mut response: Response, origin: Option<&str>, decision: CorsDecision) -> Response {
     let h = response.headers_mut();
+    append_vary(h, "Origin");
     if h.contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN) {
         return response;
     }
-    let vary = match decision {
-        CorsDecision::Allow { vary } => {
-            if let Some(acao) = origin.and_then(|o| HeaderValue::from_str(o).ok()) {
-                h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, acao);
-                h.insert(
-                    header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                    HeaderValue::from_static("true"),
-                );
-            }
-            vary
+    if decision == CorsDecision::Allow {
+        if let Some(acao) = origin.and_then(|o| HeaderValue::from_str(o).ok()) {
+            h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, acao);
+            h.insert(
+                header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                HeaderValue::from_static("true"),
+            );
         }
-        CorsDecision::Deny { vary } => vary,
-    };
-    let varies_on_origin = h
+    }
+    response
+}
+
+/// Add `token` to the response's `Vary` unless a `Vary` value already lists
+/// it (case-insensitive). Every `Vary` header is scanned, and the result is
+/// one `Vary` header: a client or cache that reads only the first `Vary`
+/// still sees every token.
+fn append_vary(h: &mut HeaderMap, token: &str) {
+    let values: Vec<String> = h
         .get_all(header::VARY)
         .iter()
         .filter_map(|v| v.to_str().ok())
+        .map(str::to_owned)
+        .collect();
+    let listed = values
+        .iter()
         .flat_map(|v| v.split(','))
-        .any(|v| v.trim().eq_ignore_ascii_case("origin"));
-    if vary && !varies_on_origin {
-        h.append(header::VARY, HeaderValue::from_static("Origin"));
+        .any(|v| v.trim().eq_ignore_ascii_case(token));
+    if listed {
+        return;
     }
-    response
+    let joined = values
+        .iter()
+        .map(String::as_str)
+        .chain([token])
+        .collect::<Vec<_>>()
+        .join(", ");
+    h.insert(
+        header::VARY,
+        HeaderValue::from_str(&joined).expect("joined from visible-ASCII header values"),
+    );
 }
 
 /// A head-only response (HEAD) carrying the static-serve headers, no body.
@@ -2305,8 +2345,7 @@ fn redirect(headers: &HeaderMap, parsed: &ParsedRequest, public_hosts: &[String]
 /// knora.json. No Origin answers `*`; a presented Origin is echoed when
 /// [`cors_allow`] allows it against `allowlist`, else no ACAO is emitted.
 /// [`json_response`] adds credentials to an echoed Origin. The ACAO depends on
-/// the Origin in every mode, so the response always varies on `Origin`
-/// (whatever [`CorsDecision`]'s `vary` says, which the image route uses); with a
+/// the Origin in every mode, so the response always varies on `Origin`; with a
 /// preflight hook the body depends on the credentials too (clamped dims, 401
 /// auth challenge), so an intermediary cache must not share it across them.
 fn json_cors(
@@ -2317,8 +2356,8 @@ fn json_cors(
     let acao = match origin {
         None => Some("*".to_owned()),
         Some(o) => match cors_allow(Some(&o), allowlist) {
-            CorsDecision::Allow { .. } => Some(o),
-            CorsDecision::Deny { .. } => None,
+            CorsDecision::Allow => Some(o),
+            CorsDecision::Deny => None,
         },
     };
     let vary: &'static [&'static str] = if hook_configured {
@@ -2334,41 +2373,35 @@ fn json_cors(
 /// response, [`json_cors`] for info.json and knora.json, [`cors_preflight_response`],
 /// [`push_cors`]) reads through [`cors_allow`] — the four sites differ only in
 /// which headers they attach on `Allow`, not in whether they attach them.
-#[derive(Clone, Copy)]
+///
+/// Every site emits `Vary: Origin` on both decisions, in both modes, with or
+/// without an Origin header: whether the response carries
+/// `Access-Control-Allow-Origin` depends on the request's Origin, so a shared
+/// cache must not serve one origin's response (or a deny) to another.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CorsDecision {
-    /// No Origin header was presented, or the allowlist is non-empty and the
-    /// presented Origin is not on it: emit no CORS headers for this request.
-    /// `vary` is `true` whenever the allowlist is non-empty (allowlist mode)
-    /// — even on a deny, the response varies by the request's Origin header,
-    /// so the caller must still emit `Vary: Origin` (with no other CORS
-    /// headers) to keep a shared cache from serving a cached deny to a later
-    /// allowed origin. In the default (empty-allowlist) mode `vary` is always
-    /// `false`.
-    Deny { vary: bool },
-    /// Emit the site's CORS headers for the presented Origin. `vary` is `true`
-    /// only in allowlist mode (the allowlist is non-empty) — a shared cache
-    /// must not serve one origin's `Access-Control-Allow-Origin` to another,
-    /// so the caller should also emit `Vary: Origin`. In the default
-    /// (empty-allowlist) mode `vary` is always `false`.
-    Allow { vary: bool },
+    /// Emit no CORS headers for this request, only `Vary: Origin`.
+    Deny,
+    /// Emit the site's CORS headers for the presented Origin.
+    Allow,
 }
 
 /// Decide whether `origin` may be echoed back, given the configured
 /// `allowlist` (`SIPI_ALLOWED_ORIGINS`, [`crate::config::allowed_origins_from_env`]).
 ///
 /// An empty `allowlist` is the opt-out default: any presented Origin is
-/// allowed. A non-empty
-/// `allowlist` switches the instance into allowlist mode: only an exact,
-/// listed origin is allowed; anything else — including no Origin header at
-/// all — is denied.
+/// allowed. A non-empty `allowlist` switches the instance into allowlist mode:
+/// only an exact, listed origin is allowed; anything else — including no
+/// Origin header at all — is denied. The opaque Origin `null` (sandboxed
+/// iframes, `file:` pages, some redirects) is denied in both modes, also when
+/// the allowlist lists it: any such context can send it, so echoing it with
+/// credentials would grant every one of them the caller's cookies.
 fn cors_allow(origin: Option<&str>, allowlist: &[String]) -> CorsDecision {
     match origin {
-        None => CorsDecision::Deny {
-            vary: !allowlist.is_empty(),
-        },
-        Some(_) if allowlist.is_empty() => CorsDecision::Allow { vary: false },
-        Some(o) if allowlist.iter().any(|a| a == o) => CorsDecision::Allow { vary: true },
-        Some(_) => CorsDecision::Deny { vary: true },
+        None | Some("null") => CorsDecision::Deny,
+        Some(_) if allowlist.is_empty() => CorsDecision::Allow,
+        Some(o) if allowlist.iter().any(|a| a == o) => CorsDecision::Allow,
+        Some(_) => CorsDecision::Deny,
     }
 }
 
@@ -2496,9 +2529,11 @@ fn restricted_dims(
 /// `Access-Control-Allow-Credentials: true` (cookie auth); `*` does not, as
 /// CORS forbids the pairing. `vary`, from [`json_cors`], names every header
 /// the response varies on and is emitted as one joined `Vary` header when
-/// non-empty. `private`, set by the caller whenever the
-/// body is credential-dependent, emits `Cache-Control: private, no-store` so
-/// an intermediary cache never shares one caller's response with another.
+/// non-empty; with a `link_context` the Content-Type and `Link` depend on
+/// `Accept`, so `Accept` is added to that list. `private`, set by the caller
+/// whenever the body is credential-dependent, emits
+/// `Cache-Control: private, no-store` so an intermediary cache never shares
+/// one caller's response with another.
 fn json_response(
     status: StatusCode,
     value: &serde_json::Value,
@@ -2521,12 +2556,6 @@ fn json_response(
             }
         }
     }
-    if !vary.is_empty() {
-        builder = builder.header(header::VARY, vary.join(", "));
-    }
-    if private {
-        builder = builder.header(header::CACHE_CONTROL, "private, no-store");
-    }
 
     let wants_ldjson =
         header_str(headers, header::ACCEPT.as_str()).as_deref() == Some("application/ld+json");
@@ -2547,9 +2576,19 @@ fn json_response(
             builder = builder.header(header::CONTENT_TYPE, "application/json");
         }
     }
-    builder
+    let mut response = builder
         .body(Body::from(body))
-        .unwrap_or_else(|_| sink::error_response(StatusCode::INTERNAL_SERVER_ERROR))
+        .unwrap_or_else(|_| sink::error_response(StatusCode::INTERNAL_SERVER_ERROR));
+    let h = response.headers_mut();
+    let accept = link_context.map(|_| "Accept");
+    for token in vary.iter().copied().chain(accept) {
+        append_vary(h, token);
+    }
+    if private {
+        h.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+        mark_private(h);
+    }
+    response
 }
 
 /// Synthesise the request scheme + host from the forwarded headers (SIPI runs
@@ -2794,8 +2833,7 @@ mod tests {
         );
         assert!(h.get(header::ACCESS_CONTROL_ALLOW_ORIGIN).is_none());
         assert!(h.get(header::ACCESS_CONTROL_ALLOW_CREDENTIALS).is_none());
-        // Empty allowlist (default/reflect mode): no Vary.
-        assert!(h.get(header::VARY).is_none());
+        assert_eq!(h.get(header::VARY).unwrap(), "Origin");
     }
 
     #[test]
@@ -2848,34 +2886,89 @@ mod tests {
     #[test]
     fn cors_allow_reflects_any_origin_when_allowlist_empty() {
         // Default (opt-out) posture: any presented Origin is allowed.
-        assert!(matches!(
+        assert_eq!(
             cors_allow(Some("https://example.org"), &[]),
-            CorsDecision::Allow { vary: false }
-        ));
-        assert!(matches!(
-            cors_allow(None, &[]),
-            CorsDecision::Deny { vary: false }
-        ));
+            CorsDecision::Allow
+        );
+        assert_eq!(cors_allow(None, &[]), CorsDecision::Deny);
     }
 
     #[test]
     fn cors_allow_permits_only_listed_origin_when_allowlist_set() {
         let allowlist = vec!["https://a.example".to_string()];
-        assert!(matches!(
+        assert_eq!(
             cors_allow(Some("https://a.example"), &allowlist),
-            CorsDecision::Allow { vary: true }
-        ));
-        assert!(matches!(
+            CorsDecision::Allow
+        );
+        assert_eq!(
             cors_allow(Some("https://evil.example"), &allowlist),
-            CorsDecision::Deny { vary: true }
-        ));
-        // No Origin at all against a non-empty allowlist still varies by
-        // Origin — a shared cache must not serve this deny to a later
-        // allowed origin.
-        assert!(matches!(
-            cors_allow(None, &allowlist),
-            CorsDecision::Deny { vary: true }
-        ));
+            CorsDecision::Deny
+        );
+        assert_eq!(cors_allow(None, &allowlist), CorsDecision::Deny);
+    }
+
+    #[test]
+    fn cors_allow_denies_the_null_origin_in_both_modes() {
+        assert_eq!(cors_allow(Some("null"), &[]), CorsDecision::Deny);
+        let allowlist = vec!["null".to_string(), "https://a.example".to_string()];
+        assert_eq!(cors_allow(Some("null"), &allowlist), CorsDecision::Deny);
+    }
+
+    #[test]
+    fn cors_sites_vary_on_origin_in_reflect_mode() {
+        for origin in [None, Some("https://example.org"), Some("null")] {
+            let resp = with_cors(
+                sink::error_response(StatusCode::NOT_FOUND),
+                origin,
+                cors_allow(origin, &[]),
+            );
+            assert_eq!(
+                resp.headers().get(header::VARY).unwrap(),
+                "Origin",
+                "{origin:?}"
+            );
+
+            let pairs: Vec<_> = origin.map(|o| ("origin", o)).into_iter().collect();
+            let resp = cors_preflight_response(&headers(&pairs), &[]);
+            assert_eq!(
+                resp.headers().get(header::VARY).unwrap(),
+                "Origin",
+                "{origin:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn null_origin_gets_no_cors_headers_on_any_site() {
+        let allowlist = ["null".to_string()];
+        for list in [&[][..], &allowlist[..]] {
+            let resp = with_cors(
+                sink::error_response(StatusCode::NOT_FOUND),
+                Some("null"),
+                cors_allow(Some("null"), list),
+            );
+            assert!(resp
+                .headers()
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .is_none());
+            assert!(resp
+                .headers()
+                .get(header::ACCESS_CONTROL_ALLOW_CREDENTIALS)
+                .is_none());
+
+            let resp = cors_preflight_response(&headers(&[("origin", "null")]), list);
+            assert!(resp
+                .headers()
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .is_none());
+
+            let mut pushed = Vec::new();
+            push_cors(&mut pushed, Some("null"), list);
+            assert!(pushed.is_empty());
+
+            let (acao, _) = json_cors(Some("null".to_owned()), list, false);
+            assert!(acao.is_none());
+        }
     }
 
     #[test]
@@ -2920,7 +3013,7 @@ mod tests {
             let resp = with_cors(
                 sink::error_response(status),
                 Some("https://example.org"),
-                CorsDecision::Allow { vary: false },
+                CorsDecision::Allow,
             );
             let h = resp.headers();
             assert_eq!(resp.status(), status);
@@ -2934,23 +3027,23 @@ mod tests {
                 "true",
                 "{status}"
             );
-            assert!(h.get(header::VARY).is_none(), "{status}");
+            assert_eq!(h.get(header::VARY).unwrap(), "Origin", "{status}");
         }
     }
 
     #[test]
-    fn with_cors_varies_on_origin_in_allowlist_mode() {
+    fn with_cors_varies_on_origin_on_every_decision() {
         let allowed = with_cors(
             sink::error_response(StatusCode::NOT_FOUND),
             Some("https://a.example"),
-            CorsDecision::Allow { vary: true },
+            CorsDecision::Allow,
         );
         assert_eq!(allowed.headers().get(header::VARY).unwrap(), "Origin");
 
         let denied = with_cors(
             sink::error_response(StatusCode::NOT_FOUND),
             Some("https://evil.example"),
-            CorsDecision::Deny { vary: true },
+            CorsDecision::Deny,
         );
         let h = denied.headers();
         assert!(h.get(header::ACCESS_CONTROL_ALLOW_ORIGIN).is_none());
@@ -2960,9 +3053,14 @@ mod tests {
         let no_origin = with_cors(
             sink::error_response(StatusCode::NOT_FOUND),
             None,
-            CorsDecision::Deny { vary: false },
+            CorsDecision::Deny,
         );
-        assert!(no_origin.headers().is_empty());
+        let vary: Vec<_> = no_origin.headers().get_all(header::VARY).iter().collect();
+        assert_eq!(vary, ["Origin"]);
+        assert!(no_origin
+            .headers()
+            .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+            .is_none());
     }
 
     #[test]
@@ -2981,7 +3079,7 @@ mod tests {
                 true,
             ),
             None,
-            CorsDecision::Deny { vary: true },
+            CorsDecision::Deny,
         );
         let h = resp.headers();
         assert_eq!(h.get(header::ACCESS_CONTROL_ALLOW_ORIGIN).unwrap(), "*");
@@ -2994,11 +3092,7 @@ mod tests {
         let mut resp = sink::error_response(StatusCode::NOT_FOUND);
         resp.headers_mut()
             .insert(header::VARY, HeaderValue::from_static("Cookie, origin"));
-        let resp = with_cors(
-            resp,
-            Some("https://evil.example"),
-            CorsDecision::Deny { vary: true },
-        );
+        let resp = with_cors(resp, Some("https://evil.example"), CorsDecision::Deny);
         let vary: Vec<_> = resp.headers().get_all(header::VARY).iter().collect();
         assert_eq!(vary, ["Cookie, origin"]);
     }
@@ -3070,8 +3164,7 @@ mod tests {
         assert!(h.get(header::VARY).is_none());
         assert!(h.get(header::CACHE_CONTROL).is_none());
 
-        // Allowlist mode (`vary: ["Origin"]`) still emits `Vary: Origin` on a
-        // deny (no `acao`) — the caller passes `vary` independent of `acao`.
+        // `vary` is emitted independent of `acao`: a deny still varies.
         let resp = json_response(
             StatusCode::OK,
             &value,
@@ -3104,7 +3197,67 @@ mod tests {
     }
 
     #[test]
-    fn push_cors_listed_origin_gets_vary_unlisted_gets_nothing() {
+    fn json_response_with_a_link_context_varies_on_accept() {
+        let value = serde_json::json!({ "ok": true });
+        let resp = json_response(
+            StatusCode::OK,
+            &value,
+            &headers(&[]),
+            Some("http://iiif.io/api/image/3/context.json"),
+            Some("*"),
+            &["Origin"],
+            false,
+        );
+        assert_eq!(resp.headers().get(header::VARY).unwrap(), "Origin, Accept");
+    }
+
+    #[test]
+    fn mark_private_prefixes_the_engine_cache_control() {
+        for (engine, expected) in [
+            (
+                Some("must-revalidate, post-check=0, pre-check=0"),
+                "private, must-revalidate, post-check=0, pre-check=0",
+            ),
+            (
+                Some("public, must-revalidate, max-age=0"),
+                "private, must-revalidate, max-age=0",
+            ),
+            (Some("private, max-age=0"), "private, max-age=0"),
+            (Some("private, no-store"), "private, no-store"),
+            (None, "private"),
+        ] {
+            let mut h = HeaderMap::new();
+            if let Some(cc) = engine {
+                h.insert(header::CACHE_CONTROL, HeaderValue::from_static(cc));
+            }
+            mark_private(&mut h);
+            let cc: Vec<_> = h.get_all(header::CACHE_CONTROL).iter().collect();
+            assert_eq!(cc, [expected], "{engine:?}");
+        }
+    }
+
+    #[test]
+    fn mark_private_adds_cookie_and_authorization_to_vary_once() {
+        let mut h = HeaderMap::new();
+        h.insert(header::VARY, HeaderValue::from_static("Origin, cookie"));
+        mark_private(&mut h);
+        let vary: Vec<_> = h.get_all(header::VARY).iter().collect();
+        assert_eq!(vary, ["Origin, cookie, Authorization"]);
+        mark_private(&mut h);
+        let vary: Vec<_> = h.get_all(header::VARY).iter().collect();
+        assert_eq!(vary, ["Origin, cookie, Authorization"]);
+
+        // Separate `Vary` headers become one.
+        let mut h = HeaderMap::new();
+        h.append(header::VARY, HeaderValue::from_static("Accept"));
+        h.append(header::VARY, HeaderValue::from_static("Cookie"));
+        mark_private(&mut h);
+        let vary: Vec<_> = h.get_all(header::VARY).iter().collect();
+        assert_eq!(vary, ["Accept, Cookie, Authorization"]);
+    }
+
+    #[test]
+    fn push_cors_echoes_only_a_listed_origin() {
         let allowlist = vec!["https://a.example".to_string()];
         let mut headers = Vec::new();
         push_cors(&mut headers, Some("https://a.example"), &allowlist);
@@ -3112,7 +3265,6 @@ mod tests {
             header::ACCESS_CONTROL_ALLOW_ORIGIN.to_string(),
             "https://a.example".to_string()
         )));
-        assert!(headers.contains(&(header::VARY.to_string(), "Origin".to_string())));
 
         let mut headers = Vec::new();
         push_cors(&mut headers, Some("https://evil.example"), &allowlist);
@@ -3120,10 +3272,7 @@ mod tests {
             header::ACCESS_CONTROL_ALLOW_ORIGIN.to_string(),
             "https://evil.example".to_string()
         )));
-        assert_eq!(
-            headers,
-            vec![(header::VARY.to_string(), "Origin".to_string())]
-        );
+        assert!(headers.is_empty());
     }
 
     #[test]

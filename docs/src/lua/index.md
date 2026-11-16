@@ -471,6 +471,10 @@ returns a table that contains all necessary information. For details about the I
 - `header`: Header of login window
 - `label`: Label of the login window
 
+Vitrinli copies only `label`, `header`, `description`, `confirmLabel`, `failureHeader` and `failureDescription`
+into the auth-service block of the 401 `info.json`, and builds `@context`, `@id`, `profile` and the token and logout
+services itself. Every other key of the table stays out of the response.
+
 In addition, the filepath has to be returns. A full response may look as follows:
 
 ```lua

@@ -545,6 +545,9 @@ The following matrix maps every testable IIIF spec requirement to its test statu
 | Error ACAO on a 503 shed | :white_check_mark: | `lua_route_occupies_the_full_lane` | `admission_control.rs`; echoed Origin + credentials |
 | Error ACAO under `SIPI_ALLOWED_ORIGINS` | :white_check_mark: | `allowed_origins_allowlist_gates_info_json_cors` | `security.rs`; 404 echoes a listed Origin, an unlisted one gets only `Vary: Origin` |
 | OPTIONS preflight | :white_check_mark: | `cors_preflight` | |
+| Image `Vary: Origin` in reflect mode | :white_check_mark: | `cors_image_varies_on_origin_in_reflect_mode` | With and without Origin, on a 200 and a 404 |
+| Origin `null` gets no ACAO | :white_check_mark: | `cors_null_origin_gets_no_allow_origin` | Image, info.json, knora.json, `/file` and OPTIONS; unit `null_origin_gets_no_cors_headers_on_any_site` covers an allowlisted `null` |
+| Info.json `Vary: Accept` | :white_check_mark: | `info_json_varies_on_accept` | Content-Type and `Link` depend on `Accept` |
 
 ### HTTP Behavior (Section 7)
 
@@ -674,6 +677,8 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | CLI `query` / `compare` / `verify` subcommands | :white_check_mark: | `cli.rs::cli_query_dumps_image_info`, `cli_compare_identical_files_reports_match`, `cli_compare_differing_files_reports_mismatch`, `cli_verify_pipeline_service_and_access_files` | the verify pipeline test exercises `convert service-file` → `verify service-file` → `convert access-file` → `verify access-file` end to end |
 | Watermark application via HTTP | :white_check_mark: | `server.rs::watermark_applied_via_http` | |
 | Restrict + watermark combined | :white_check_mark: | `server.rs::restrict_plus_watermark` | |
+| Hook-gated responses stay out of shared caches | :white_check_mark: | `security.rs::hook_gated_responses_are_private` | Image, info.json, knora.json and `/file` behind a preflight hook: `Cache-Control` has `private`, `Vary` lists `Cookie` and `Authorization`, on 200, 401 and 404 |
+| Auth-service block copies only description keys | :white_check_mark: | unit `info.rs::auth_service_copies_only_the_description_keys` | Other preflight keys never reach the 401 info.json; built `@id`, `profile`, `service` cannot be overridden |
 | Watermark cache key separation | :white_check_mark: | `cache.rs::watermark_cache_separation` | |
 | Watermarked output never uses the cache | :white_check_mark: | `serve_image_test` (`WatermarkedOutputNeverUsesTheCache`) | two watermarks, same coordinates: no cache write, and a `/1` entry already on disk is never read; an empty watermark still caches |
 | CLI watermark mode | :white_check_mark: | `cli.rs::cli_convert_watermark_changes_output_bytes` | asserts a valid JPEG whose bytes differ from a plain convert of the same input |
@@ -702,11 +707,11 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | Rotation parameters | 9 | 0 | 100% |
 | Quality parameters | 6 | 0 | 100% |
 | Format parameters | 5 | 0 | 100% |
-| CORS | 13 | 0 | 100% |
+| CORS | 16 | 0 | 100% |
 | HTTP behavior | 13 | 0 | 100% |
 | Identifiers | 4 | 1 (ARK/URN) | 80% |
-| Vitrinli extensions | 100 | 7 | 93% |
-| **Total** | **200** | **8** | **96%** |
+| Vitrinli extensions | 102 | 7 | 94% |
+| **Total** | **205** | **8** | **96%** |
 
 *(Three additional Vitrinli-extension rows — Prometheus `/metrics`, `/api/cache`, SSL/TLS — are excluded from this count entirely: they are removed-on-the-Rust-shell features, not gaps. See the N/A note above the extension matrix.)*
 

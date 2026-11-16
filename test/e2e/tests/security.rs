@@ -394,6 +394,62 @@ fn restricted_info_json_hides_native_resolution_and_tiles() {
 }
 
 #[test]
+fn hook_gated_responses_are_private() {
+    // The default server runs `pre_flight` and `file_pre_flight`, so every
+    // IIIF and /file response depends on the caller's credentials: a shared
+    // cache must not store it (`private`) or key it without them (`Vary`).
+    let srv = server();
+    for (path, status) in [
+        ("/unit/lena512.jp2/full/max/0/default.jpg", 200),
+        // `deny` from `pre_flight`.
+        ("/tmp/lena512.jp2/full/max/0/default.jpg", 401),
+        ("/unit/missing.jp2/full/max/0/default.jpg", 404),
+        ("/unit/lena512.jp2/info.json", 200),
+        // `deny` from `pre_flight` on knora.json is a bare 404.
+        ("/tmp/lena512.jp2/knora.json", 404),
+        ("/unit/test.csv/file", 200),
+        // `deny` from `file_pre_flight`.
+        ("/unit/test2.csv/file", 401),
+        ("/unit/missing.csv/file", 404),
+    ] {
+        let resp = client()
+            .get(format!("{}{path}", srv.base_url))
+            .send()
+            .unwrap_or_else(|e| panic!("GET {path} failed: {e}"));
+        assert_eq!(resp.status().as_u16(), status, "{path}");
+        let joined = |name: reqwest::header::HeaderName| {
+            resp.headers()
+                .get_all(name)
+                .iter()
+                .filter_map(|v| v.to_str().ok())
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let cache_control = joined(reqwest::header::CACHE_CONTROL);
+        assert!(
+            cache_control
+                .split(',')
+                .any(|d| d.trim().eq_ignore_ascii_case("private")),
+            "{path}: Cache-Control must contain private, got: {cache_control}"
+        );
+        assert!(
+            !cache_control
+                .split(',')
+                .any(|d| d.trim().eq_ignore_ascii_case("public")),
+            "{path}: Cache-Control must not contain public, got: {cache_control}"
+        );
+        let vary = joined(reqwest::header::VARY);
+        for token in ["Cookie", "Authorization"] {
+            assert!(
+                vary.split(',')
+                    .any(|v| v.trim().eq_ignore_ascii_case(token)),
+                "{path}: Vary must contain {token}, got: {vary}"
+            );
+        }
+    }
+}
+
+#[test]
 fn knora_json_denied_path_returns_not_found() {
     // `tmp` always denies — knora.json is a DSP-internal surface and must not
     // disclose an auth challenge or the resource's existence to a denied caller.

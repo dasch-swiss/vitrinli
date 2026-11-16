@@ -425,6 +425,92 @@ fn cors_knora_json_varies_on_origin() {
     assert_varies_on_origin(&resp);
 }
 
+#[test]
+fn cors_image_varies_on_origin_in_reflect_mode() {
+    // Whether the image response carries ACAO depends on the Origin, so it
+    // varies on Origin with and without one, on a success and on an error.
+    let srv = server();
+    for path in [
+        "/unit/lena512.jp2/full/max/0/default.jpg",
+        "/unit/missing.jp2/full/max/0/default.jpg",
+    ] {
+        let url = format!("{}{path}", srv.base_url);
+        let resp = client().get(&url).send().expect("GET image failed");
+        assert_varies_on_origin(&resp);
+        let resp = client()
+            .get(&url)
+            .header("Origin", "https://example.org")
+            .send()
+            .expect("GET image with Origin failed");
+        assert_varies_on_origin(&resp);
+    }
+}
+
+#[test]
+fn cors_null_origin_gets_no_allow_origin() {
+    // The opaque Origin `null` is sent by sandboxed iframes and `file:`
+    // pages; echoing it with credentials would hand any of them the
+    // caller's cookies.
+    let srv = server();
+    for path in [
+        "/unit/lena512.jp2/full/max/0/default.jpg",
+        "/unit/lena512.jp2/info.json",
+        "/unit/lena512.jp2/knora.json",
+        "/unit/test.csv/file",
+    ] {
+        let resp = client()
+            .get(format!("{}{path}", srv.base_url))
+            .header("Origin", "null")
+            .send()
+            .unwrap_or_else(|e| panic!("GET {path} failed: {e}"));
+        assert_eq!(resp.status().as_u16(), 200, "{path}");
+        assert!(
+            resp.headers().get("access-control-allow-origin").is_none(),
+            "{path}: Origin null must get no ACAO"
+        );
+        assert!(
+            resp.headers()
+                .get("access-control-allow-credentials")
+                .is_none(),
+            "{path}: Origin null must get no credentials"
+        );
+        assert_varies_on_origin(&resp);
+    }
+    let resp = client()
+        .request(
+            reqwest::Method::OPTIONS,
+            format!("{}/unit/lena512.jp2/full/max/0/default.jpg", srv.base_url),
+        )
+        .header("Origin", "null")
+        .header("Access-Control-Request-Method", "GET")
+        .send()
+        .expect("OPTIONS with Origin null failed");
+    assert!(resp.headers().get("access-control-allow-origin").is_none());
+}
+
+#[test]
+fn info_json_varies_on_accept() {
+    // Content-Type and Link depend on Accept (application/ld+json or not).
+    let srv = server();
+    let resp = client()
+        .get(format!("{}/unit/lena512.jp2/info.json", srv.base_url))
+        .header("Accept", "application/ld+json")
+        .send()
+        .expect("GET info.json failed");
+    assert_eq!(resp.status().as_u16(), 200);
+    let vary = resp
+        .headers()
+        .get("vary")
+        .expect("missing Vary header")
+        .to_str()
+        .unwrap();
+    assert!(
+        vary.split(',')
+            .any(|v| v.trim().eq_ignore_ascii_case("accept")),
+        "info.json Vary should contain Accept, got: {vary}"
+    );
+}
+
 /// Assert `resp` echoes `origin` with credentials, as the image route does.
 fn assert_credentialed_echo(resp: &reqwest::blocking::Response, origin: &str) {
     let headers = resp.headers();

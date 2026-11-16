@@ -283,10 +283,25 @@ pub fn is_auth_type(permission: SipiPermType) -> bool {
     )
 }
 
+/// The preflight keys copied into the auth-service block: the IIIF Auth API v1
+/// description properties. Every other key stays out of the public 401 body,
+/// so a hook value meant for the shell (`size`, `watermark`, `infile`) or a
+/// key that would override a built field (`@id`, `profile`, `service`) cannot
+/// reach it.
+const AUTH_SERVICE_KEYS: [&str; 6] = [
+    "label",
+    "header",
+    "description",
+    "confirmLabel",
+    "failureHeader",
+    "failureDescription",
+];
+
 /// Build the IIIF Auth API v1 `service` object for an auth-type info.json.
 /// Requires `cookieUrl` (and `tokenUrl`); a
-/// missing required key → `None` (a 500). The remaining kv pairs pass
-/// through except the structural keys. `logoutUrl` is optional.
+/// missing required key → `None` (a 500). `@context`, `@id`, `profile` and the
+/// nested `service` are built here; of the kv pairs only [`AUTH_SERVICE_KEYS`]
+/// are copied. `logoutUrl` is optional.
 pub fn auth_service(permission: SipiPermType, kv: &[(String, String)]) -> Option<Value> {
     let get = |key: &str| kv.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str());
     let profile = match permission {
@@ -307,11 +322,10 @@ pub fn auth_service(permission: SipiPermType, kv: &[(String, String)]) -> Option
     service.insert("@id".into(), json!(cookie_url));
     service.insert("profile".into(), json!(profile));
     for (k, v) in kv {
-        if !matches!(
-            k.as_str(),
-            "cookieUrl" | "tokenUrl" | "logoutUrl" | "infile"
-        ) {
+        if AUTH_SERVICE_KEYS.contains(&k.as_str()) {
             service.insert(k.clone(), json!(v));
+        } else if !matches!(k.as_str(), "cookieUrl" | "tokenUrl" | "logoutUrl") {
+            tracing::debug!(key = %k, "preflight key left out of the auth-service block");
         }
     }
     let mut sub = vec![json!({ "@id": token_url, "profile": "http://iiif.io/api/auth/1/token" })];
@@ -604,6 +618,57 @@ mod tests {
         let sub = svc["service"].as_array().unwrap();
         assert_eq!(sub[0]["profile"], "http://iiif.io/api/auth/1/token");
         assert_eq!(sub[1]["profile"], "http://iiif.io/api/auth/1/logout");
+    }
+
+    #[test]
+    fn auth_service_copies_only_the_description_keys() {
+        let mut kv: Vec<(String, String)> = [
+            ("cookieUrl", "https://auth/cookie"),
+            ("tokenUrl", "https://auth/token"),
+            ("size", "!512,512"),
+            ("watermark", "/srv/wm.tif"),
+            ("secret", "s3cr3t"),
+            ("type", "login"),
+            ("@id", "https://evil/id"),
+            ("@context", "https://evil/context"),
+            ("profile", "https://evil/profile"),
+            ("service", "https://evil/service"),
+        ]
+        .iter()
+        .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+        .collect();
+        let described = [
+            "label",
+            "header",
+            "description",
+            "confirmLabel",
+            "failureHeader",
+            "failureDescription",
+        ];
+        for key in described {
+            kv.push((key.to_owned(), format!("{key} text")));
+        }
+        let svc = auth_service(SipiPermType::Login, &kv).expect("login service");
+        let obj = svc.as_object().unwrap();
+        for key in described {
+            assert_eq!(svc[key], format!("{key} text"), "{key}");
+        }
+        for key in [
+            "size",
+            "watermark",
+            "secret",
+            "type",
+            "cookieUrl",
+            "tokenUrl",
+        ] {
+            assert!(obj.get(key).is_none(), "{key} leaked");
+        }
+        assert_eq!(svc["@id"], "https://auth/cookie");
+        assert_eq!(svc["@context"], "http://iiif.io/api/auth/1/context.json");
+        assert_eq!(svc["profile"], "http://iiif.io/api/auth/1/login");
+        assert_eq!(svc["service"][0]["@id"], "https://auth/token");
+        // The four built fields plus the six description keys.
+        assert_eq!(obj.len(), 4 + described.len());
     }
 
     #[test]
