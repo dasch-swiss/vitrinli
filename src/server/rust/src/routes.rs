@@ -25,7 +25,7 @@ use tempfile::NamedTempFile;
 use tokio::sync::{mpsc, oneshot};
 
 use admission::{
-    Acquired, Admission, AdmissionConfig, AdmissionError, AdmissionKind, AdmissionMode,
+    Acquired, Admission, AdmissionConfig, AdmissionError, AdmissionKind, AdmissionMode, Permit,
 };
 use iiif_parser::{ParsedRequest, RequestKind};
 
@@ -359,6 +359,8 @@ async fn iiif_response(
     // the engine's cancelled() poll and a failed body send both observe, aborting
     // the work. The pool permit is held for the whole dispatch — released when the
     // blocking task ends (after the last chunk), restoring the concurrency bound.
+    // `serve_image` may swap it for a Full permit when the engine is about to
+    // decode a size-restricted image (`reclassify_to_full`).
     let (outcome_tx, outcome_rx) = oneshot::channel::<Outcome>();
     let (body_tx, body_rx) = mpsc::channel::<sink::BodyItem>(sink::BODY_CHANNEL_CAP);
     // Carry the request span (created by OtelAxumLayer) onto the blocking thread
@@ -366,10 +368,17 @@ async fn iiif_response(
     // stamps the C++ engine logs.
     let request_span = tracing::Span::current();
     tokio::task::spawn_blocking(move || {
-        let _permit = permit; // released when the engine work (decode/encode/stream) completes
+        let mut permit = Some(permit);
         let _entered = request_span.enter();
         dispatch_engine(
-            &state, &parsed, &method, &uri, &headers, outcome_tx, body_tx,
+            &state,
+            &parsed,
+            &method,
+            &uri,
+            &headers,
+            &mut permit,
+            outcome_tx,
+            body_tx,
         );
     });
     match outcome_rx.await {
@@ -403,12 +412,15 @@ async fn iiif_response(
 /// async runtime never blocks on the C++ engine. Redirects are handled by the
 /// caller before the pool; file downloads are handled here, ahead of the IIIF
 /// JSON/image kinds.
+// Single-caller engine-dispatch glue, as `serve_image`.
+#[allow(clippy::too_many_arguments)]
 fn dispatch_engine(
     state: &AppState,
     parsed: &ParsedRequest,
     method: &Method,
     uri: &Uri,
     headers: &HeaderMap,
+    permit: &mut Option<Permit>,
     outcome_tx: oneshot::Sender<Outcome>,
     body_tx: mpsc::Sender<sink::BodyItem>,
 ) {
@@ -482,6 +494,7 @@ fn dispatch_engine(
                 *method == Method::HEAD,
                 &access,
                 &state.admission,
+                permit,
                 &state.public_hosts,
                 outcome_tx,
                 body_tx,
@@ -855,6 +868,7 @@ fn serve_image(
     is_head: bool,
     access: &Access,
     admission: &Admission,
+    permit: &mut Option<Permit>,
     public_hosts: &[String],
     outcome_tx: oneshot::Sender<Outcome>,
     body_tx: mpsc::Sender<sink::BodyItem>,
@@ -926,6 +940,14 @@ fn serve_image(
         }
     };
 
+    // A size restriction makes the engine decode the whole image, so the lane
+    // swap runs from the engine's before-decode hook: a cache hit or HEAD
+    // request, which decodes nothing, keeps its lane.
+    let size_restricted = restricted_width != 0;
+    let mut lane_swap = LaneSwap {
+        admission,
+        permit: &mut *permit,
+    };
     let req = SipiServeRequest {
         resolved_path: c_resolved.as_ptr(),
         prefix: c_prefix.as_ptr(),
@@ -948,6 +970,9 @@ fn serve_image(
         // into the flat `SipiImageErrorReport` struct.
         report_error: Some(ffi::report_image_error),
         report_ctx: c_uri.as_ptr() as *mut std::ffi::c_void,
+        before_decode: size_restricted
+            .then_some(swap_lane_before_decode as ffi::SipiBeforeDecodeFn),
+        before_decode_ctx: std::ptr::from_mut(&mut lane_swap).cast(),
     };
 
     // Wall-clock anchor for the engine child spans: the per-phase offsets the
@@ -966,13 +991,62 @@ fn serve_image(
     // and traces are independent pipelines, so the take is unconditional.
     let observed = ffi::serve_timings_take();
     crate::metrics::record_decode_estimate(observed.decode_estimate_bytes);
-    // Compare the shell's pre-dispatch partition against the engine's precise
-    // verdict (estimate ≥ threshold), bumping the disagreement counter on drift.
-    // A zero estimate (cache hit / HEAD / passthrough) records nothing.
-    admission.record_classification(admission.classify(parsed), observed.decode_estimate_bytes);
+    // Compare the lane the request ran in (after any re-classification) against
+    // the engine's precise verdict (estimate ≥ threshold), bumping the
+    // disagreement counter on drift. A zero estimate (cache hit / HEAD /
+    // passthrough) records nothing.
+    // No permit: the lane swap failed and the engine refused before its
+    // estimate, so there is nothing to compare.
+    if let Some(held) = permit.as_ref().map(Permit::kind) {
+        admission.record_classification(held, observed.decode_estimate_bytes);
+    }
     // Break the opaque engine span open: one child span per phase (decode,
     // encode, …) under `sipi.serve`, from the timings the engine just recorded.
     emit_engine_phase_spans(engine_start, &observed);
+}
+
+/// The `before_decode_ctx` of a size-restricted serve: what
+/// [`swap_lane_before_decode`] needs to swap the permit.
+struct LaneSwap<'a> {
+    admission: &'a Admission,
+    permit: &'a mut Option<Permit>,
+}
+
+/// The engine's before-decode hook for a size-restricted serve: runs
+/// [`reclassify_to_full`] and refuses the decode (non-zero, a 503) when the
+/// Full lane sheds or times out. A panic refuses too; it never unwinds into C++.
+extern "C" fn swap_lane_before_decode(ctx: *mut std::ffi::c_void) -> std::ffi::c_int {
+    // SAFETY: `ctx` is the `LaneSwap` `serve_image` passes; it outlives the
+    // synchronous `sipi_serve_image` call, and nothing else touches it meanwhile.
+    let swap = unsafe { &mut *ctx.cast::<LaneSwap<'_>>() };
+    let swapped = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        reclassify_to_full(swap.admission, swap.permit)
+    }));
+    std::ffi::c_int::from(!matches!(swapped, Ok(true)))
+}
+
+/// Move a size-restricted request from the Tile to the Full lane. A size
+/// restriction makes the engine decode the whole image (ADR-0028), which is
+/// Full-lane work (ADR-0022), but the lane was picked before the preflight.
+/// The Tile permit is dropped before the Full acquire, so the request never
+/// holds one permit while it waits for the other. Returns false when the Full
+/// lane sheds or times out; `permit` is then empty. A permit that is already
+/// Full is kept.
+///
+/// Runs on the `spawn_blocking` thread, so it blocks on the runtime handle;
+/// the wait is bounded by the admission queue timeout.
+fn reclassify_to_full(admission: &Admission, permit: &mut Option<Permit>) -> bool {
+    if permit.as_ref().map(Permit::kind) != Some(AdmissionKind::Tile) {
+        return true;
+    }
+    *permit = None;
+    match tokio::runtime::Handle::current().block_on(admission.acquire(AdmissionKind::Full)) {
+        Acquired::Admitted(full) => {
+            *permit = Some(full);
+            true
+        }
+        Acquired::Shed | Acquired::TimedOut => false,
+    }
 }
 
 /// Mint an OTel child span under the current `sipi.serve` span for each engine
@@ -3110,6 +3184,125 @@ mod tests {
 
     // The two-lane pool's acquire/shed/classify behaviour is covered by the
     // engine-free crate tests in `//src/throttling/rust:admission_test`.
+
+    // ── Re-classification of size-restricted requests ───────────────────────
+
+    fn swap_admission(nthreads: usize, max_waiting: usize, timeout_ms: u64) -> Admission {
+        Admission::new(AdmissionConfig {
+            nthreads,
+            tiles_thread_ratio: 0.5,
+            tiles_memory_ratio: 0.25,
+            mode: AdmissionMode::Advanced,
+            max_waiting,
+            queue_timeout: Duration::from_millis(timeout_ms),
+            large_decode_threshold_bytes: 32 * 1024 * 1024,
+            memory_limit_bytes: 0,
+        })
+        .expect("admission config")
+    }
+
+    /// `reclassify_to_full` blocks on the runtime handle, as it does on a
+    /// `spawn_blocking` thread; a multi-thread runtime drives the timer.
+    fn swap_runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .unwrap()
+    }
+
+    fn take(acquired: Acquired) -> Permit {
+        match acquired {
+            Acquired::Admitted(p) => p,
+            Acquired::Shed | Acquired::TimedOut => panic!("expected a permit"),
+        }
+    }
+
+    #[test]
+    fn reclassify_drops_the_tile_permit_before_the_full_acquire() {
+        // One worker: the tile holds the only global permit, so the Full
+        // acquire succeeds only when the tile permit is dropped first.
+        let a = swap_admission(1, 4, 200);
+        let rt = swap_runtime();
+        let mut permit = Some(take(rt.block_on(a.acquire(AdmissionKind::Tile))));
+        let _ctx = rt.enter();
+        assert!(reclassify_to_full(&a, &mut permit));
+        assert_eq!(permit.as_ref().map(Permit::kind), Some(AdmissionKind::Full));
+        let s = a.snapshot();
+        assert_eq!(s.permits_in_use, 1);
+        assert_eq!(s.full_in_use, 1);
+    }
+
+    #[test]
+    fn reclassify_keeps_a_full_permit() {
+        let a = swap_admission(4, 0, 50);
+        let rt = swap_runtime();
+        let mut permit = Some(take(rt.block_on(a.acquire(AdmissionKind::Full))));
+        let _ctx = rt.enter();
+        assert!(reclassify_to_full(&a, &mut permit));
+        assert_eq!(permit.as_ref().map(Permit::kind), Some(AdmissionKind::Full));
+        assert_eq!(a.snapshot().full_in_use, 1);
+    }
+
+    #[test]
+    fn reclassify_fails_when_the_full_lane_sheds_or_times_out() {
+        // nthreads 2 → full_max 1, held by another request. Queue disabled: shed;
+        // queue enabled: the wait times out. Either way the tile permit is gone.
+        for (max_waiting, timeout_ms) in [(0, 50), (4, 20)] {
+            let a = swap_admission(2, max_waiting, timeout_ms);
+            let rt = swap_runtime();
+            let _other = take(rt.block_on(a.acquire(AdmissionKind::Full)));
+            let mut permit = Some(take(rt.block_on(a.acquire(AdmissionKind::Tile))));
+            let _ctx = rt.enter();
+            assert!(
+                !reclassify_to_full(&a, &mut permit),
+                "max_waiting {max_waiting}"
+            );
+            assert!(permit.is_none());
+            assert_eq!(a.snapshot().permits_in_use, 1, "only the other Full holds");
+        }
+    }
+
+    #[test]
+    fn the_before_decode_hook_refuses_only_a_failed_swap() {
+        // nthreads 2 → full_max 1. Free: the hook swaps and lets the decode go
+        // on (0). Held by another request with the queue disabled: it refuses (1).
+        for (other_holds_full, answer) in [(false, 0), (true, 1)] {
+            let a = swap_admission(2, 0, 50);
+            let rt = swap_runtime();
+            let _other =
+                other_holds_full.then(|| take(rt.block_on(a.acquire(AdmissionKind::Full))));
+            let mut permit = Some(take(rt.block_on(a.acquire(AdmissionKind::Tile))));
+            let _ctx = rt.enter();
+            let mut swap = LaneSwap {
+                admission: &a,
+                permit: &mut permit,
+            };
+            assert_eq!(
+                swap_lane_before_decode(std::ptr::from_mut(&mut swap).cast()),
+                answer
+            );
+            let expected = (!other_holds_full).then_some(AdmissionKind::Full);
+            assert_eq!(permit.as_ref().map(Permit::kind), expected);
+        }
+    }
+
+    #[test]
+    fn a_swapped_request_records_no_classifier_disagreement() {
+        // A small restricted region classifies as Tile, but the engine decodes
+        // the whole image (estimate ≥ threshold). Recording the held lane after
+        // the swap agrees with the engine; the pre-dispatch class would not.
+        let a = swap_admission(4, 0, 50);
+        let threshold = a.snapshot().large_decode_threshold_bytes;
+        let rt = swap_runtime();
+        let mut permit = Some(take(rt.block_on(a.acquire(AdmissionKind::Tile))));
+        let _ctx = rt.enter();
+        assert!(reclassify_to_full(&a, &mut permit));
+        a.record_classification(permit.as_ref().unwrap().kind(), threshold);
+        assert_eq!(a.snapshot().classifier_disagreement_total, 0);
+        a.record_classification(AdmissionKind::Tile, threshold);
+        assert_eq!(a.snapshot().classifier_disagreement_total, 1);
+    }
 
     // ── /server docroot fileserver pure helpers ──────────────────────────────
 

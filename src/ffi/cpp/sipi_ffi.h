@@ -182,6 +182,11 @@ typedef struct
  *  that already lives on the request and isn't part of the flat struct. */
 typedef void (*SipiReportErrorFn)(void *ctx, const SipiImageErrorReport *err);
 
+/* Called at most once per serve, after the cache check and before the decode:
+ *  never for HEAD, a passthrough or a cache hit. Returns 0 to go on; non-zero
+ *  refuses the decode, and the engine answers 503 with `Retry-After: 1`. */
+typedef int (*SipiBeforeDecodeFn)(void *ctx);
+
 #ifdef __cplusplus
 /* Lock-step layout guard — paired with the Rust offset/size_of test in
  * src/server/rust/src/ffi.rs. All fields are 8-byte-wide (pointers / uint64_t),
@@ -217,6 +222,8 @@ typedef struct
   int is_head; /* 1 = HEAD: emit status + headers, no body, no cache write */
   SipiReportErrorFn report_error; /* handled-error side-channel report, or NULL = not wanted */
   void *report_ctx; /* opaque data passed to report_error (the Rust edge: the request URI) */
+  SipiBeforeDecodeFn before_decode; /* decode-admission hook, or NULL = not wanted */
+  void *before_decode_ctx; /* opaque data passed to before_decode */
 } SipiServeRequest;
 
 /* ── Config override channel ─────────────────────────────────────────────────
@@ -490,8 +497,8 @@ static_assert(offsetof(SipiIiifParams, rotation_mirror) == 60, "SipiIiifParams l
 static_assert(offsetof(SipiIiifParams, quality_type) == 64, "SipiIiifParams layout drift");
 static_assert(offsetof(SipiIiifParams, format_type) == 68, "SipiIiifParams layout drift");
 
-/* SipiServeRequest — pointers + the nested SipiIiifParams + the report channel. */
-static_assert(sizeof(SipiServeRequest) == 160, "SipiServeRequest size drifted from src/server/rust/src/ffi.rs");
+/* SipiServeRequest — pointers + the nested SipiIiifParams + the report and before-decode channels. */
+static_assert(sizeof(SipiServeRequest) == 176, "SipiServeRequest size drifted from src/server/rust/src/ffi.rs");
 static_assert(offsetof(SipiServeRequest, resolved_path) == 0, "SipiServeRequest layout drift");
 static_assert(offsetof(SipiServeRequest, prefix) == 8, "SipiServeRequest layout drift");
 static_assert(offsetof(SipiServeRequest, identifier) == 16, "SipiServeRequest layout drift");
@@ -505,6 +512,8 @@ static_assert(offsetof(SipiServeRequest, request_uri) == 128, "SipiServeRequest 
 static_assert(offsetof(SipiServeRequest, is_head) == 136, "SipiServeRequest layout drift");
 static_assert(offsetof(SipiServeRequest, report_error) == 144, "SipiServeRequest layout drift");
 static_assert(offsetof(SipiServeRequest, report_ctx) == 152, "SipiServeRequest layout drift");
+static_assert(offsetof(SipiServeRequest, before_decode) == 160, "SipiServeRequest layout drift");
+static_assert(offsetof(SipiServeRequest, before_decode_ctx) == 168, "SipiServeRequest layout drift");
 
 
 /* SipiImageDims — five uint32_t; 4-aligned, unlike the pointer-bearing structs. */
