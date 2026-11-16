@@ -60,6 +60,7 @@ tracked and their disagreement is observable, so residual drift can be tuned.
 | `SIPI_ADMISSION_MODE` | `--admission-mode` | `advanced` | `basic` (enforce basic tier only) or `advanced` (also enforce the advanced tier) |
 | `SIPI_LARGE_DECODE_THRESHOLD_BYTES` | `--large-decode-threshold-bytes` | `33554432` (32 MiB) | Estimated peak at/above which a decode is a full-partition decode |
 | `SIPI_REQUEST_TIMEOUT` | *(none)* | `60` (seconds) | Handler wall-clock timeout; a request whose handler exceeds it answers 408. Must exceed `SIPI_QUEUE_TIMEOUT` plus the largest expected full decode, or legitimate slow requests get 408 instead of completing |
+| `SIPI_DECODE_TIMEOUT_MS` | `--decode-timeout-ms` | 80 % of `SIPI_REQUEST_TIMEOUT` | Wall-clock deadline for one decode or shape probe. Must be shorter than `SIPI_REQUEST_TIMEOUT` (startup refuses otherwise), so a hung decode that started promptly fails with the engine's deadline error, releases its permit and counts in `wedged_threads` before the handler timeout answers 408. Queue wait (up to twice `SIPI_QUEUE_TIMEOUT` for a lane swap) and a shape probe come out of the same margin |
 | `SIPI_BODY_READ_TIMEOUT` | *(none)* | `10` (seconds) | Lua-route/docroot request-body-read timeout; a slow/trickling client is cut off before it ever reaches `admission.acquire`, so it cannot hold a Full permit while still streaming its body |
 
 `ops-deploy` renders `DSP_IIIF_MEMORY_LIMIT` → `SIPI_MEMORY_LIMIT` and

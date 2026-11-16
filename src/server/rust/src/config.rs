@@ -83,6 +83,28 @@ pub fn request_timeout_from_env() -> std::time::Duration {
     std::time::Duration::from_secs(secs)
 }
 
+/// The server's decode deadline in ms: `set` (the merged CLI/env/TOML value)
+/// when given, else 80 % of `request`. It must stay shorter than the request
+/// timeout, so a decode that starts promptly ends with the engine's deadline
+/// error and permit release before the shell answers 408 (queue wait and a
+/// shape probe come out of the same margin); a set value at or above it, or
+/// zero, refuses startup.
+pub fn resolve_decode_timeout(
+    set: Option<u64>,
+    request: std::time::Duration,
+) -> Result<u64, String> {
+    let request_ms = request.as_millis();
+    match set {
+        None => Ok(u64::try_from(request_ms * 4 / 5).unwrap_or(u64::MAX)),
+        Some(0) => Err("decode_timeout_ms must be positive".to_owned()),
+        Some(ms) if u128::from(ms) >= request_ms => Err(format!(
+            "decode_timeout_ms ({ms} ms) must be shorter than the request timeout \
+             (SIPI_REQUEST_TIMEOUT, {request_ms} ms)"
+        )),
+        Some(ms) => Ok(ms),
+    }
+}
+
 /// The Lua-route body-admission size default when the Lua config leaves
 /// `max_post_size` unset (`0`). `0` does not mean unlimited: every Lua-route
 /// body cap is finite, so no unbounded request body is read into RAM before
@@ -187,6 +209,9 @@ pub struct ServerOverrides {
     /// Estimated peak-memory threshold (bytes) at/above which a decode is a
     /// full-lane decode charged against the budget; below it is a tile decode.
     pub large_decode_threshold_bytes: Option<u64>,
+    /// Wall-clock decode deadline in ms. `server_main` replaces it with the
+    /// resolved value ([`resolve_decode_timeout`]) before the engine init.
+    pub decode_timeout_ms: Option<u64>,
     /// Raw size string ("300M"); the engine parses the suffix.
     pub maxpost: Option<String>,
     pub thumbsize: Option<String>,
@@ -239,6 +264,7 @@ impl std::fmt::Debug for ServerOverrides {
                 "large_decode_threshold_bytes",
                 &self.large_decode_threshold_bytes,
             )
+            .field("decode_timeout_ms", &self.decode_timeout_ms)
             .field("maxpost", &self.maxpost)
             .field("thumbsize", &self.thumbsize)
             .field("knorapath", &self.knorapath)
@@ -281,6 +307,7 @@ impl ServerOverrides {
             admission_mode: None,
             tiles_memory_ratio: None,
             large_decode_threshold_bytes: None,
+            decode_timeout_ms: None,
             maxpost: Some(cfg.max_post_size.clone()),
             thumbsize: Some(cfg.thumb_size.clone()),
             knorapath: Some(cfg.knora_path.clone()),
@@ -349,6 +376,7 @@ impl ServerOverrides {
             large_decode_threshold_bytes: self
                 .large_decode_threshold_bytes
                 .or(base.large_decode_threshold_bytes),
+            decode_timeout_ms: self.decode_timeout_ms.or(base.decode_timeout_ms),
             maxpost: self.maxpost.or(base.maxpost),
             thumbsize: self.thumbsize.or(base.thumbsize),
             knorapath: self.knorapath.or(base.knorapath),
@@ -426,6 +454,9 @@ pub(crate) struct SipiServerConfig {
     pub has_jpeg_quality: c_int,
     pub has_tiles_memory_ratio: c_int,
     pub has_large_decode_threshold_bytes: c_int,
+    // Appended after the 4-byte block: 8-aligned at 224, padded to 240.
+    pub decode_timeout_ms: u64,
+    pub has_decode_timeout_ms: c_int,
 }
 
 /// Owns the C storage backing a [`SipiServerConfig`] so its pointers stay valid
@@ -475,6 +506,7 @@ impl OverridesHolder {
             admission_mode,
             tiles_memory_ratio,
             large_decode_threshold_bytes,
+            decode_timeout_ms,
             maxpost,
             thumbsize,
             knorapath,
@@ -531,6 +563,8 @@ impl OverridesHolder {
             // Always present: the shell always supplies the threshold (its own
             // default when unset), so the engine can rely on the seam value.
             has_large_decode_threshold_bytes: 1,
+            decode_timeout_ms: decode_timeout_ms.unwrap_or(0),
+            has_decode_timeout_ms: decode_timeout_ms.is_some() as c_int,
         };
 
         Ok(Self {
@@ -576,7 +610,7 @@ mod layout {
     fn repr_c_matches_sipi_ffi_h() {
         assert_eq!(size_of::<usize>(), 8, "layout assumes an LP64 target");
         assert_eq!(align_of::<SipiServerConfig>(), 8);
-        assert_eq!(size_of::<SipiServerConfig>(), 224);
+        assert_eq!(size_of::<SipiServerConfig>(), 240);
 
         assert_eq!(offset_of!(SipiServerConfig, imgroot), 0);
         assert_eq!(offset_of!(SipiServerConfig, scriptdir), 8);
@@ -618,6 +652,8 @@ mod layout {
             offset_of!(SipiServerConfig, has_large_decode_threshold_bytes),
             220
         );
+        assert_eq!(offset_of!(SipiServerConfig, decode_timeout_ms), 224);
+        assert_eq!(offset_of!(SipiServerConfig, has_decode_timeout_ms), 232);
     }
 }
 
@@ -841,5 +877,76 @@ mod tests {
         // flagged as always-true) — this still catches a future edit that
         // sets the constant to 0.
         assert!(std::hint::black_box(DEFAULT_MAX_POST_SIZE) > 0);
+    }
+}
+
+#[cfg(test)]
+mod decode_timeout_tests {
+    use super::{resolve_decode_timeout, ServerOverrides};
+    use crate::config_file::Config;
+    use std::time::Duration;
+
+    #[test]
+    fn unset_is_80_percent_of_the_request_timeout() {
+        assert_eq!(
+            resolve_decode_timeout(None, Duration::from_secs(60)),
+            Ok(48_000)
+        );
+        assert_eq!(
+            resolve_decode_timeout(None, Duration::from_secs(1)),
+            Ok(800)
+        );
+        assert_eq!(
+            resolve_decode_timeout(None, Duration::from_secs(5)),
+            Ok(4_000)
+        );
+    }
+
+    #[test]
+    fn a_set_value_below_the_request_timeout_is_kept() {
+        assert_eq!(
+            resolve_decode_timeout(Some(2_000), Duration::from_secs(60)),
+            Ok(2_000)
+        );
+        assert_eq!(
+            resolve_decode_timeout(Some(59_999), Duration::from_secs(60)),
+            Ok(59_999)
+        );
+    }
+
+    #[test]
+    fn a_set_value_not_below_the_request_timeout_refuses_and_names_both() {
+        let err = resolve_decode_timeout(Some(60_000), Duration::from_secs(60)).unwrap_err();
+        assert!(err.contains("60000 ms"), "{err}");
+        assert!(err.contains("SIPI_REQUEST_TIMEOUT"), "{err}");
+        assert!(resolve_decode_timeout(Some(120_000), Duration::from_secs(60)).is_err());
+    }
+
+    #[test]
+    fn zero_refuses() {
+        assert!(resolve_decode_timeout(Some(0), Duration::from_secs(60)).is_err());
+    }
+
+    /// The check runs on the merged value, so a TOML value refuses like a
+    /// CLI/env one, and a CLI/env value overrides the TOML one.
+    #[test]
+    fn the_merged_toml_and_cli_value_is_checked() {
+        let toml = "[paths]\nimg_root = \"/img\"\n[limits]\ndecode_timeout_ms = 90000\n";
+        let cfg: Config = toml::from_str(toml).unwrap();
+        let (from_toml, _) = cfg.resolve(ServerOverrides::default()).unwrap();
+        assert!(
+            resolve_decode_timeout(from_toml.decode_timeout_ms, Duration::from_secs(60)).is_err()
+        );
+
+        let cfg: Config = toml::from_str(toml).unwrap();
+        let cli = ServerOverrides {
+            decode_timeout_ms: Some(30_000),
+            ..Default::default()
+        };
+        let (merged, _) = cfg.resolve(cli).unwrap();
+        assert_eq!(
+            resolve_decode_timeout(merged.decode_timeout_ms, Duration::from_secs(60)),
+            Ok(30_000)
+        );
     }
 }

@@ -308,6 +308,10 @@ typedef struct SipiServerConfig
   int has_jpeg_quality;
   int has_tiles_memory_ratio;
   int has_large_decode_threshold_bytes;
+  /* Appended after the 4-byte block: the 8-byte scalar sits at an 8-aligned
+   * offset, and the trailing padding brings the size to 240. */
+  uint64_t decode_timeout_ms;/* wall-clock decode deadline; the shell always sends the resolved value */
+  int has_decode_timeout_ms;
 } SipiServerConfig;
 
 #ifdef __cplusplus
@@ -316,7 +320,7 @@ typedef struct SipiServerConfig
  * breaks one of the two. LP64 on every supported target (darwin-aarch64,
  * linux-x86_64, linux-aarch64). */
 static_assert(sizeof(void *) == 8, "SipiServerConfig layout assumes an LP64 target");
-static_assert(sizeof(SipiServerConfig) == 224, "SipiServerConfig size drifted from src/server/rust/src/config.rs");
+static_assert(sizeof(SipiServerConfig) == 240, "SipiServerConfig size drifted from src/server/rust/src/config.rs");
 static_assert(offsetof(SipiServerConfig, imgroot) == 0, "SipiServerConfig layout drift");
 static_assert(offsetof(SipiServerConfig, scriptdir) == 8, "SipiServerConfig layout drift");
 static_assert(offsetof(SipiServerConfig, initscript) == 16, "SipiServerConfig layout drift");
@@ -351,6 +355,8 @@ static_assert(offsetof(SipiServerConfig, has_pathprefix) == 208, "SipiServerConf
 static_assert(offsetof(SipiServerConfig, has_jpeg_quality) == 212, "SipiServerConfig layout drift");
 static_assert(offsetof(SipiServerConfig, has_tiles_memory_ratio) == 216, "SipiServerConfig layout drift");
 static_assert(offsetof(SipiServerConfig, has_large_decode_threshold_bytes) == 220, "SipiServerConfig layout drift");
+static_assert(offsetof(SipiServerConfig, decode_timeout_ms) == 224, "SipiServerConfig layout drift");
+static_assert(offsetof(SipiServerConfig, has_decode_timeout_ms) == 232, "SipiServerConfig layout drift");
 #endif
 
 /* Engine-counter snapshot for `sipi_metrics_snapshot`. Incomplete here on

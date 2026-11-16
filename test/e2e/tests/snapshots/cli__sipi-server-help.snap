@@ -28,6 +28,7 @@ Limits:
       --admission-mode <MODE>                 Admission mode: advanced (default; enforces the memory + two-lane caps) or basic (thread cap only). An unrecognized value falls back to basic [env: SIPI_ADMISSION_MODE=]
       --tiles-memory-ratio <RATIO>            Fraction of the envelope reserved for tiles (0..1); the full lane gets envelope × (1 − ratio). Defaults to 0.25 [env: SIPI_TILES_MEMORY_RATIO=]
       --large-decode-threshold-bytes <BYTES>  Estimated peak-memory threshold in bytes at/above which a decode is a full-lane decode charged against the budget; below it is a tile decode that bypasses the budget. Defaults to 32 MiB [env: SIPI_LARGE_DECODE_THRESHOLD_BYTES=]
+      --decode-timeout-ms <MS>                Wall-clock deadline in ms for one image decode; a decode past it is abandoned with an error. Must be shorter than `SIPI_REQUEST_TIMEOUT`; defaults to 80 % of it [env: SIPI_DECODE_TIMEOUT_MS=]
       --thumbsize <SIZE>                      Thumbnail size used within Lua, e.g. "!128,128" [env: SIPI_THUMBSIZE=]
 
 Paths:

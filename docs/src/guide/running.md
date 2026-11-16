@@ -142,6 +142,7 @@ The TOML key for each Lua config key:
 | `[limits] memory_limit` | `memory_limit` |
 | `[limits] admission_mode` | `admission_mode` |
 | `[limits] tiles_memory_ratio` | `tiles_memory_ratio` |
+| `[limits] decode_timeout_ms` | *(none: CLI, env or TOML only)* |
 | `[limits] max_post_size` | `max_post_size` |
 | `[limits] thumb_size` | `thumb_size` |
 | `[image] jpeg_quality` | `jpeg_quality` |
@@ -258,12 +259,22 @@ flag forms are gone.
 ### Decode deadline
 
 Every offline verb (`convert`, `convert access-file`, `convert service-file`,
-`query`, `compare`) decodes its input under a 120 s wall-clock deadline, the
-same default the server applies per request. A malformed JPEG 2000 file can
-wedge the Kakadu decoder indefinitely; when the deadline passes the verb
-reports `decode exceeded the 120000 ms deadline` and exits non-zero instead
-of hanging the shell (or the ingest worker driving it). The wedged decode
-thread is abandoned and ends with the process.
+`query`, `compare`) decodes its input under a 120 s wall-clock deadline. A
+malformed JPEG 2000 file can wedge the Kakadu decoder indefinitely; when the
+deadline passes the verb reports `decode exceeded the 120000 ms deadline` and
+exits non-zero instead of hanging the shell (or the ingest worker driving it).
+The wedged decode thread is abandoned and ends with the process.
+
+The server uses a shorter deadline, so its own timeout error answers before
+the request timeout does: `--decode-timeout-ms` / `SIPI_DECODE_TIMEOUT_MS`
+(TOML `[limits] decode_timeout_ms`), default 80 % of `SIPI_REQUEST_TIMEOUT`
+(48 s at the default 60 s). A set value must be shorter than the request
+timeout, or the server refuses to start. The deadline bounds each image decode
+and each shape probe (`info.json`, Lua `SipiImage.dims`). The queue wait (up
+to `SIPI_QUEUE_TIMEOUT`, twice that for a size-restricted request that swaps to
+the Full lane) and a probe before the decode come out of the same margin, so a
+request that queued long, or a file that hangs both probe and decode, can still
+end in a 408.
 
 ### Structured JSON output (CLI)
 
@@ -316,6 +327,7 @@ These options are accepted by the `server` subcommand. Usage:
 | `--admission-mode <mode>` | | `SIPI_ADMISSION_MODE` | `advanced` | `basic` (enforce the basic tier only; advanced tier observe-only) or `advanced` (also enforce the memory budget + 503/413) |
 | `--tiles-memory-ratio <r>` | | `SIPI_TILES_MEMORY_RATIO` | `0.25` | Fraction of the envelope reserved for tiles + non-decode floor (0..1) |
 | `--large-decode-threshold-bytes <n>` | | `SIPI_LARGE_DECODE_THRESHOLD_BYTES` | `33554432` (32 MiB) | Estimated peak-memory at/above which a decode is charged to the full partition; below it bypasses as a tile |
+| `--decode-timeout-ms <ms>` | | `SIPI_DECODE_TIMEOUT_MS` | 80 % of `SIPI_REQUEST_TIMEOUT` | Wall-clock deadline for one image decode or shape probe; must be shorter than the request timeout, or the server refuses to start (see [Decode deadline](#decode-deadline)) |
 | `--preflight-cache-ttl <sec>` | | `SIPI_PREFLIGHT_CACHE_TTL` | `0` (disabled) | Seconds a `pre_flight` access decision is cached per `(prefix, identifier, credential)`. Opt-in; enable (`>0`) only if the hook decides purely on prefix/identifier/Cookie/Authorization (see the Preflight access-cache section in the Lua scripting guide) |
 | `--preflight-cache-slots <n>` | | `SIPI_PREFLIGHT_CACHE_SLOTS` | `4096` | Slot count for the preflight access-cache |
 | `--maxpost <size>` | | `SIPI_MAXPOSTSIZE` | `300M` | Maximum POST upload size |
@@ -396,6 +408,7 @@ flags.
 | `SIPI_ADMISSION_MODE` | `--admission-mode` | `advanced` | Admission mode: `basic` (enforce basic tier only), `advanced` (also enforce the advanced tier) |
 | `SIPI_TILES_MEMORY_RATIO` | `--tiles-memory-ratio` | `0.25` | Fraction of the envelope reserved for tiles + non-decode floor (range 0..1) |
 | `SIPI_LARGE_DECODE_THRESHOLD_BYTES` | `--large-decode-threshold-bytes` | `33554432` (32 MiB) | Estimated peak-memory at/above which a decode is charged to the full lane; below it bypasses as a tile |
+| `SIPI_DECODE_TIMEOUT_MS` | `--decode-timeout-ms` | 80 % of `SIPI_REQUEST_TIMEOUT` | Wall-clock deadline for one image decode or shape probe; must be shorter than the request timeout |
 
 **Configuration precedence** (highest to lowest):
 

@@ -192,6 +192,10 @@ async fn server_main(
         "FFI seam self-check should report 404 for a missing file"
     );
 
+    // Read once: the request timeout bounds the decode deadline resolved below
+    // and is the handler timeout `app` installs.
+    let request_timeout = config::request_timeout_from_env();
+
     // Install the engine + config before serving. engine_context() hard-fails on
     // any serve call until this runs, so without --config only the engine-free
     // routes (/health, /favicon.ico) work. Both config flavors are parsed
@@ -200,7 +204,7 @@ async fn server_main(
     // the scripting crate's config VM. `effective` is the overrides after the
     // config base + CLI/env merge (the listen port folds in here for both
     // flavors); the configured Lua routes are sourced Rust-side either way.
-    let (effective, configured_routes): (ServerOverrides, Option<Vec<ffi::RouteEntry>>) =
+    let (mut effective, configured_routes): (ServerOverrides, Option<Vec<ffi::RouteEntry>>) =
         match config.as_deref() {
             Some(cfg) if cfg.ends_with(".toml") => {
                 // Experimental (ADR-0017): the native config format may change
@@ -225,14 +229,6 @@ async fn server_main(
                         return ExitCode::FAILURE;
                     }
                 };
-                // The engine default-constructs its config; these overrides then
-                // supply every value.
-                if let Err(code) = ffi::init(&effective) {
-                    tracing::error!(config = %cfg, code, "sipi_init failed");
-                    flush_telemetry(otel).await;
-                    return ExitCode::FAILURE;
-                }
-                tracing::info!(config = %cfg, "engine installed (TOML config)");
                 (effective, Some(routes))
             }
             Some(cfg) => {
@@ -266,14 +262,7 @@ async fn server_main(
                         script: config_file::compose_script_path(&parsed.script_dir, &r.script),
                     })
                     .collect();
-                let effective = overrides.layered_over(base);
-                if let Err(code) = ffi::init(&effective) {
-                    tracing::error!(config = %cfg, code, "sipi_init failed");
-                    flush_telemetry(otel).await;
-                    return ExitCode::FAILURE;
-                }
-                tracing::info!(config = %cfg, "engine installed (Lua config)");
-                (effective, Some(routes))
+                (overrides.layered_over(base), Some(routes))
             }
             None => {
                 tracing::warn!(
@@ -282,6 +271,36 @@ async fn server_main(
                 (overrides, None)
             }
         };
+
+    if let Some(cfg) = config.as_deref() {
+        // The engine always receives the resolved deadline, so its own default
+        // applies only to the offline verbs.
+        match config::resolve_decode_timeout(effective.decode_timeout_ms, request_timeout) {
+            Ok(ms) => effective.decode_timeout_ms = Some(ms),
+            Err(e) => {
+                tracing::error!(config = %cfg, error = %e, "invalid decode deadline");
+                flush_telemetry(otel).await;
+                return ExitCode::FAILURE;
+            }
+        }
+        // The engine default-constructs its config; these overrides then
+        // supply every value.
+        if let Err(code) = ffi::init(&effective) {
+            tracing::error!(config = %cfg, code, "sipi_init failed");
+            flush_telemetry(otel).await;
+            return ExitCode::FAILURE;
+        }
+        let flavor = if cfg.ends_with(".toml") {
+            "TOML"
+        } else {
+            "Lua"
+        };
+        tracing::info!(
+            config = %cfg,
+            decode_timeout_ms = effective.decode_timeout_ms,
+            "engine installed ({flavor} config)"
+        );
+    }
 
     // The docroot fileserver executes `.lua`/`.elua` scripts, so if it overlaps
     // any root a request can write to (imgroot, tmpdir, cache_dir) or the
@@ -376,6 +395,7 @@ async fn server_main(
     let result = serve(
         effective.serverport,
         drain_deadline,
+        request_timeout,
         configured_routes,
         lua_env,
         hook_probes,
@@ -418,7 +438,7 @@ async fn flush_telemetry(otel: telemetry::Telemetry) {
 /// never touch the FFI; every other path is the IIIF catch-all, which classifies,
 /// validates, and drives the engine seam. The CORS, concurrency, OTel, and
 /// request-duration layers wrap this.
-pub fn app(state: Arc<routes::AppState>) -> Router {
+pub fn app(state: Arc<routes::AppState>, request_timeout: Duration) -> Router {
     use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
     let mut router = Router::new()
         // The bare root has no `*rest` capture, so register it explicitly; the
@@ -483,7 +503,7 @@ pub fn app(state: Arc<routes::AppState>) -> Router {
         // task, so the 408 bounds client-visible latency, not permit occupancy.
         .layer(tower_http::timeout::TimeoutLayer::with_status_code(
             axum::http::StatusCode::REQUEST_TIMEOUT,
-            config::request_timeout_from_env(),
+            request_timeout,
         ))
         // Registered after the layers so liveness / asset probes never enter the
         // trace pipeline or the latency histogram — they also bypass the engine
@@ -497,6 +517,7 @@ pub fn app(state: Arc<routes::AppState>) -> Router {
 async fn serve(
     port: Option<u16>,
     drain_timeout: Duration,
+    request_timeout: Duration,
     configured_routes: Option<Vec<ffi::RouteEntry>>,
     lua_env: Option<std::sync::Arc<scripting::LuaEnv>>,
     hook_probes: Option<scripting::HookProbes>,
@@ -569,7 +590,7 @@ async fn serve(
     // `axum::serve` exposes no hyper builder, so it cannot enforce a header-read
     // timeout or cap concurrent connections directly; both are enforced at the
     // edge in Traefik instead.
-    let server = axum::serve(listener, app(state))
+    let server = axum::serve(listener, app(state, request_timeout))
         .with_graceful_shutdown(graceful)
         .into_future();
     tokio::pin!(server);
@@ -703,22 +724,25 @@ mod app_tests {
     fn test_app() -> Router {
         // Defaults everywhere (ratios fall back to valid values), so `load` cannot
         // return the degenerate-ratio error here.
-        app(Arc::new(
-            routes::AppState::load(
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Vec::new(),
-                Vec::new(),
-            )
-            .expect("default admission config is valid"),
-        ))
+        app(
+            Arc::new(
+                routes::AppState::load(
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Vec::new(),
+                    Vec::new(),
+                )
+                .expect("default admission config is valid"),
+            ),
+            config::request_timeout_from_env(),
+        )
     }
 
     async fn status_of(uri: &str) -> StatusCode {
