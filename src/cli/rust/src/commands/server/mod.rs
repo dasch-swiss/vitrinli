@@ -77,6 +77,7 @@ impl From<&ServerArgs> for ServerOverrides {
             admission_mode,
             tiles_memory_ratio,
             large_decode_threshold_bytes,
+            decode_timeout_ms,
             thumbsize,
         } = limits;
         let TlsAuthArgs {
@@ -119,6 +120,7 @@ impl From<&ServerArgs> for ServerOverrides {
             admission_mode: admission_mode.clone(),
             tiles_memory_ratio: *tiles_memory_ratio,
             large_decode_threshold_bytes: *large_decode_threshold_bytes,
+            decode_timeout_ms: *decode_timeout_ms,
             maxpost: maxpost.clone(),
             thumbsize: thumbsize.clone(),
             knorapath: knorapath.clone(),

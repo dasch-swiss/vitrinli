@@ -29,6 +29,11 @@ pub struct LimitsArgs {
     /// that bypasses the budget. Defaults to 32 MiB.
     #[arg(long, env = "SIPI_LARGE_DECODE_THRESHOLD_BYTES", value_name = "BYTES")]
     pub large_decode_threshold_bytes: Option<u64>,
+    /// Wall-clock deadline in ms for one image decode; a decode past it is
+    /// abandoned with an error. Must be shorter than `SIPI_REQUEST_TIMEOUT`;
+    /// defaults to 80 % of it.
+    #[arg(long, env = "SIPI_DECODE_TIMEOUT_MS", value_name = "MS")]
+    pub decode_timeout_ms: Option<u64>,
     /// Thumbnail size used within Lua, e.g. "!128,128".
     #[arg(long, env = "SIPI_THUMBSIZE", value_name = "SIZE")]
     pub thumbsize: Option<String>,

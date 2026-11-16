@@ -143,4 +143,13 @@ mod tests {
         assert_eq!(args.logging.loglevel.as_deref(), Some("INFO"));
         assert_eq!(args.paths.pathprefix, Some(true));
     }
+
+    /// `--decode-timeout-ms` lands in the limits group; the server checks the
+    /// merged CLI/env/TOML value against the request timeout
+    /// (`sipi::config::resolve_decode_timeout`).
+    #[test]
+    fn decode_timeout_ms_parses_into_limits() {
+        let args = ServerArgs::try_parse_from(["server", "--decode-timeout-ms", "2000"]).unwrap();
+        assert_eq!(args.limits.decode_timeout_ms, Some(2000));
+    }
 }

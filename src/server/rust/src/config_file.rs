@@ -100,6 +100,9 @@ struct LimitsSection {
     /// Estimated peak-memory threshold (bytes): at/above it a decode is a
     /// full-lane decode charged against the budget; below it is a tile decode.
     large_decode_threshold_bytes: Option<u64>,
+    /// Wall-clock decode deadline in ms; must be shorter than the request
+    /// timeout. Unset: 80 % of the request timeout.
+    decode_timeout_ms: Option<u64>,
     /// Raw size string ("300M"); the engine parses the suffix.
     max_post_size: Option<String>,
     thumb_size: Option<String>,
@@ -288,6 +291,7 @@ impl Config {
             admission_mode: self.limits.admission_mode.clone(),
             tiles_memory_ratio: self.limits.tiles_memory_ratio,
             large_decode_threshold_bytes: self.limits.large_decode_threshold_bytes,
+            decode_timeout_ms: self.limits.decode_timeout_ms,
             maxpost: self.limits.max_post_size.clone(),
             thumbsize: self.limits.thumb_size.clone(),
             knorapath: self.knora.path.clone(),

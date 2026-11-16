@@ -122,6 +122,9 @@ extern "C" int sipi_init(const SipiServerConfig *overrides)
     // override, installed into the EngineContext below. 0 (shell did not set it)
     // conservatively classifies every decode as full-lane.
     std::size_t large_decode_threshold_bytes = 0;
+    // The decode deadline is shell-resolved (shorter than the request timeout)
+    // and, like the threshold above, lands only in the EngineContext.
+    std::size_t decode_timeout_ms = Sipi::ffi::kDefaultDecodeTimeoutMs;
     if (overrides != nullptr) {
       const SipiServerConfig &o = *overrides;
       // Strings (null = absent).
@@ -147,6 +150,7 @@ extern "C" int sipi_init(const SipiServerConfig *overrides)
       if (o.has_large_decode_threshold_bytes) {
         large_decode_threshold_bytes = o.large_decode_threshold_bytes;
       }
+      if (o.has_decode_timeout_ms) decode_timeout_ms = o.decode_timeout_ms;
       if (o.thumbsize != nullptr) conf.setThumbSize(o.thumbsize);
       if (o.knorapath != nullptr) conf.setKnoraPath(o.knorapath);
       if (o.knoraport != nullptr) conf.setKnoraPort(o.knoraport);
@@ -258,6 +262,7 @@ extern "C" int sipi_init(const SipiServerConfig *overrides)
       .scaling_quality = to_scaling_quality(conf.getScalingQuality()),
       .port = conf.getPort(),
       .max_post_size = conf.getMaxPostSize(),
+      .decode_timeout_ms = decode_timeout_ms,
     });
 
     g_server_runtime = std::move(runtime);
