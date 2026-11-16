@@ -27,6 +27,12 @@ class SipiMemoryBudget;
 
 namespace Sipi::ffi {
 
+/*! Default wall-clock decode deadline (ms), shared by the engine and every
+ *  offline verb. The server overrides it at init with a value below the
+ *  request timeout; the offline verbs keep it, since no request timeout
+ *  bounds them and ingest decodes very large masters. */
+inline constexpr std::size_t kDefaultDecodeTimeoutMs = 120000;
+
 /*! Engine services + config read by the IIIF image pipeline. The two service
  *  pointers are non-owning (the installer outlives every serve call) and may be
  *  null when the corresponding feature is disabled. */
@@ -59,7 +65,7 @@ struct EngineContext
   //!< Wall-clock deadline (ms) for each seam decode call (`read_shape` / `read`).
   //!< An unpatchable Kakadu decode hang past this deadline is abandoned (its
   //!< thread detached) and counted in `wedged_threads` (DEV-7080).
-  std::size_t decode_timeout_ms = 120000;
+  std::size_t decode_timeout_ms = kDefaultDecodeTimeoutMs;
 };
 
 /*! Install the engine context (copied into a file-static). Called once at
