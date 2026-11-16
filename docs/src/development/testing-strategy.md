@@ -612,6 +612,7 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | XMP preservation through IIIF pipeline | :white_check_mark: | `server.rs::restricted_output_keeps_rights_metadata_verbatim`; unit `formats_test` `JpegMetadataSegments.*` | XMP `dc:rights` and EXIF `Copyright` of `CIELab16.tif` survive byte for byte in jpg/png/tif/jp2 outputs; `cli_json.rs` covers malformed XMP; a jpg XMP packet over one segment is split into Extended XMP with the rights in the standard packet and merged back into one packet on read, an EXIF over one segment loses only its previews; a block that still does not fit (EXIF, unsplittable XMP) is left out with a warning and the JPEG is delivered |
 | ICC profile preservation/conversion | :x: GAP | — | C++ unit tests exist but no HTTP-level round-trip test |
 | IPTC metadata preservation | :white_check_mark: | `heritage_jpeg.rs`; `server.rs::every_output_format_keeps_the_iptc_metadata` | resilient parse of heritage APP13/IPTC; `CIELab16.tif`'s `Iptc.*` lines (Copyright included) equal the source's in jpg/png/tif/jp2 outputs, restricted and unrestricted; IPTC over one segment continues in further APP13 segments (unit `JpegMetadataSegments.LargeIptcContinuesInFurtherApp13Segments`) |
+| XMP/IPTC held only in EXIF IFD0 copies | :white_check_mark: | unit `formats_test` `Ifd0CopyPromotion.*`; `serve_image_test` `RestrictedImage.PromotedIfd0CopiesDropPreviewsAndStateTheDeliveredSize` | `Exif.Image.XMLPacket` and `Exif.Image.IPTCNAA` become the XMP and IPTC in jpg/png/tif/jp2 outputs when the image has none; a primary block wins; a copy that does not parse whole is left out; a restricted output, watermarked or not, drops their previews and states the delivered size |
 | Essentials round-trip | :white_check_mark: | `upload.rs::metadata_essentials_roundtrip` | |
 | CLI conversion metadata fidelity | :white_check_mark: | `cli.rs::cli_metadata_fidelity` | |
 | MIME consistency check (`/api/mimetest`) | :white_check_mark: | `server.rs::mime_consistency` | all 6 cases ported |
@@ -710,8 +711,8 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | CORS | 16 | 0 | 100% |
 | HTTP behavior | 13 | 0 | 100% |
 | Identifiers | 4 | 1 (ARK/URN) | 80% |
-| Vitrinli extensions | 102 | 7 | 94% |
-| **Total** | **205** | **8** | **96%** |
+| Vitrinli extensions | 104 | 7 | 94% |
+| **Total** | **207** | **8** | **96%** |
 
 *(Three additional Vitrinli-extension rows — Prometheus `/metrics`, `/api/cache`, SSL/TLS — are excluded from this count entirely: they are removed-on-the-Rust-shell features, not gaps. See the N/A note above the extension matrix.)*
 

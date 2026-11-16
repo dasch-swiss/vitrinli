@@ -207,7 +207,7 @@ Umbrella term for all metadata Vitrinli manages across format conversions for lo
 _Avoid_: sidecar metadata, image metadata
 
 **Embedded metadata**:
-Third-party metadata standards Vitrinli carries through unchanged where possible: EXIF, IPTC, XMP, and ICC color profiles. The propagation path for *rights / provenance / PREMIS* fields per ADR-0011 — Vitrinli's format-handler writers emit these via each format's native carrier (JPEG XMP marker, TIFF `XMLPACKET`, JP2 UUID box, PNG iTXt).
+Third-party metadata standards Vitrinli carries through unchanged where possible: EXIF, IPTC, XMP, and ICC color profiles. The propagation path for *rights / provenance / PREMIS* fields per ADR-0011 — Vitrinli's format-handler writers emit these via each format's native carrier (JPEG XMP marker, TIFF `XMLPACKET`, JP2 UUID box, PNG iTXt). An XMP or IPTC block an input holds only as the raw copy in EXIF IFD0 (`Exif.Image.XMLPacket`, `Exif.Image.IPTCNAA`) is written as the primary block when it parses whole.
 _Avoid_: header metadata
 
 **Essentials packet**:

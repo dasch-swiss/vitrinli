@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -451,8 +452,55 @@ void SipiImage::getDim(size_t &width, size_t &height) const
 
 //============================================================================
 
+namespace {
+// One warning per kind per process; later rejections log at debug. The same
+// file rejects its copy on every request, and a restricted request promotes
+// twice (before the rewrite and in write()).
+void log_rejected_copy(std::atomic<bool> &warned, const char *what, const std::string &reason)
+{
+  if (!warned.exchange(true, std::memory_order_relaxed)) {
+    log_warn("%s (further rejections log at debug): %s", what, reason.c_str());
+  } else {
+    log_debug("%s: %s", what, reason.c_str());
+  }
+}
+
+std::atomic<bool> xmp_copy_warned{ false };
+std::atomic<bool> iptc_copy_warned{ false };
+}// namespace
+
+void SipiImage::promote_ifd0_copies()
+{
+  if (exif == nullptr) { return; }
+  if (xmp == nullptr) {
+    if (const auto bytes = exif->value_bytes("Exif.Image.XMLPacket")) {
+      auto promoted = Xmp::parse_complete(std::string(bytes->begin(), bytes->end()));
+      if (promoted) {
+        xmp = *std::move(promoted);
+      } else {
+        log_rejected_copy(
+          xmp_copy_warned, "EXIF XMLPacket copy not used as the XMP", promoted.error().diagnostic_message());
+      }
+    }
+  }
+  if (iptc == nullptr) {
+    if (const auto bytes = exif->value_bytes("Exif.Image.IPTCNAA")) {
+      auto promoted = Iptc::parse_complete(bytes->data(), static_cast<unsigned int>(bytes->size()));
+      if (promoted) {
+        iptc = *std::move(promoted);
+      } else {
+        log_rejected_copy(
+          iptc_copy_warned, "EXIF IPTCNAA copy not used as the IPTC", promoted.error().diagnostic_message());
+      }
+    }
+  }
+}
+
+//============================================================================
+
 Result<void> SipiImage::write(const std::string &ftype, const OutputSink &sink, const SipiCompressionParams *params)
 {
+  promote_ifd0_copies();
   // .at(): an unknown ftype must throw, not operator[]-insert a null
   // handler and segfault on the virtual call. Callers pass validated
   // format strings; the historical write() docstring advertised "j2k"

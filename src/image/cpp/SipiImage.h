@@ -439,6 +439,16 @@ public:
    */
   void set_exif(std::shared_ptr<Exif> exif_p) { exif = std::move(exif_p); }
 
+  /**
+   * Sets the XMP and IPTC from the raw copies EXIF IFD0 can hold
+   * (Exif.Image.XMLPacket, Exif.Image.IPTCNAA), each only while the image has
+   * no such block and only when the copy parses whole (else logged). The
+   * EXIF encoder never writes the copies, so without this a file that keeps
+   * its rights only there loses them in every output. write() calls it;
+   * a caller that edits metadata before write() calls it first.
+   */
+  void promote_ifd0_copies();
+
   /*!
    * Returns the image's Exif metadata, lazily allocating an empty `Exif`
    * instance first if none exists yet. Absorbs `ensure_exif()`'s
