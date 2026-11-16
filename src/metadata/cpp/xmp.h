@@ -9,7 +9,9 @@
 #include <cstddef>
 #include <iosfwd>
 #include <mutex>
+#include <span>
 #include <string>
+#include <string_view>
 
 #include "error/SipiValueError.h"
 
@@ -29,8 +31,10 @@ extern void xmplock_func(void *pLockData, bool lockUnlock);
  * verbatim, neither parsing nor validating it, because Exiv2's XMP parser
  * is not thread-safe at the Exiv2 version SIPI depends on. The only edits are
  * set_pixel_dimensions() and erase_thumbnails(), text substitutions a
- * size-restricted output applies; split_extended() reads the packet with
- * expat (one parser per call, so thread-safe) to cut it, without changing it.
+ * size-restricted output applies. split_extended() and merge_extended() read
+ * packets with expat (one parser per call, so thread-safe): the first cuts a
+ * packet into StandardXMP and ExtendedXMP for the JPEG writer, the second
+ * joins them again for the JPEG reader.
  */
 class Xmp
 {
@@ -103,12 +107,26 @@ public:
    * Moves whole top-level properties, largest first and rights properties
    * last, out of the packet until the rest fits in `limit` bytes. Every
    * property keeps its bytes. kWriteFailed if the packet is not well-formed
-   * XML, has a DOCTYPE, binds more than 64 namespaces in scope, holds more
-   * than 256 top-level rdf:Description elements, is over 2 GB, or does not
-   * fit even with every property moved; the caller decides what that means
+   * UTF-8 XML, has a DOCTYPE, binds more than 64 namespaces in scope, nests
+   * elements more than 256 deep, has more than one rdf:RDF or more than 256
+   * top-level rdf:Description elements, is over 2 GB, does not fit even with
+   * every property moved, or would need an ExtendedXMP over 16 MiB; the caller decides what that means
    * (the JPEG writer leaves the packet out with a warning).
    */
   [[nodiscard]] Result<Extended> split_extended(std::size_t limit) const;
+
+  /*!
+   * The packet a JPEG holds as `standard`, a StandardXMP, and `parts`, the
+   * payloads of its ExtendedXMP segments after their
+   * "http://ns.adobe.com/xmp/extension/\0" signature (GUID, full length,
+   * offset, bytes). The parts whose GUID is the xmpNote:HasExtendedXMP of
+   * `standard` are joined, their rdf:Description elements are added to
+   * `standard`, and xmpNote:HasExtendedXMP is removed. `standard` comes back
+   * unchanged, with a debug log, if a part is missing or overlaps another,
+   * the parts disagree on the full length or declare more than 16 MiB, or
+   * either packet does not parse as split_extended() requires.
+   */
+  [[nodiscard]] static std::string merge_extended(std::string_view standard, std::span<const std::string_view> parts);
 };
 
 /*!

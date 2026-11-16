@@ -6,18 +6,24 @@
 #include <algorithm>
 #include <cctype>
 #include <climits>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <numeric>
 #include <ostream>
+#include <span>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include <expat.h>
 #include <openssl/evp.h>
 
+#include "logging/logger.h"
 #include "metadata/xmp.h"
 
 /*!
@@ -245,11 +251,15 @@ bool Xmp::erase_thumbnails()
 namespace {
 
   constexpr const char *kRdfNs = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+  constexpr const char *kNoteNs = "http://ns.adobe.com/xmp/note/";
 
   struct Description
   {
     std::string about;
     std::vector<std::pair<std::string, std::string>> bindings;// in scope: prefix ("" = default), URI
+    std::size_t begin;
+    std::size_t tag_end;// first byte after the start tag
+    std::size_t end;
   };
 
   struct Property
@@ -260,21 +270,35 @@ namespace {
     bool rights;
   };
 
-  // Real packets bind a few dozen namespaces and hold a few descriptions;
-  // every description copies the bindings in scope, so both are capped.
+  // Real packets bind a few dozen namespaces with short URIs and hold a few
+  // descriptions; every description copies the bindings in scope, and the
+  // merge writes them onto every description, so all three are capped. An
+  // ExtendedXMP is untrusted input: without the URI cap, 16 MiB of bindings
+  // copied to 256 descriptions is gigabytes.
   constexpr std::size_t kMaxSplitBindings = 64;
+  constexpr std::size_t kMaxNamespaceUriBytes = 512;
   constexpr std::size_t kMaxSplitDescriptions = 256;
+  constexpr std::size_t kMaxDepth = 256;
 
   // The packet's top-level properties: the children of every rdf:Description
   // directly inside rdf:RDF, as expat (namespace mode, ' ' separator) reports them.
   struct Scan
   {
+    enum class Kind : unsigned char { kRdf, kDescription, kOther };
+
+    std::string_view text;
+    bool with_properties = true;
     XML_Parser parser = nullptr;
-    std::vector<std::string> path;
+    std::vector<Kind> path;
     std::vector<std::pair<std::string, std::string>> bindings;
     std::vector<Description> descriptions;
     std::vector<Property> properties;
     std::size_t rdf_content = std::string::npos;// first byte after the rdf:RDF start tag
+    std::size_t rdf_end = std::string::npos;// first byte of the rdf:RDF end tag
+    // xmpNote:HasExtendedXMP, as an attribute of a description or as a property.
+    std::string note;
+    std::size_t note_description = std::string::npos;
+    std::size_t note_property = std::string::npos;
     std::size_t property_depth = 0;
     std::size_t property_tag = 0;
     const char *refused = nullptr;// why the scan stopped the parse
@@ -290,6 +314,10 @@ namespace {
       auto &s = *static_cast<Scan *>(self);
       if (s.bindings.size() == kMaxSplitBindings) {
         s.refuse("more than 64 namespace bindings in scope");
+        return;
+      }
+      if (uri != nullptr && std::char_traits<char>::length(uri) > kMaxNamespaceUriBytes) {
+        s.refuse("a namespace URI over 512 bytes");
         return;
       }
       s.bindings.emplace_back(prefix != nullptr ? prefix : "", uri != nullptr ? uri : "");
@@ -309,52 +337,97 @@ namespace {
       if (it != b.rend()) { b.erase(std::next(it).base()); }
     }
 
-    static void start(void *self, const XML_Char *name, const XML_Char **atts)
+    // Expat's names of the elements and attributes the scan looks for, built
+    // once: an allocation per element would dominate the scan of a large packet.
+    struct Names
+    {
+      std::string rdf = std::string(kRdfNs) + " RDF";
+      std::string description = std::string(kRdfNs) + " Description";
+      std::string about = std::string(kRdfNs) + " about";
+      std::string has_extended_xmp = std::string(kNoteNs) + " HasExtendedXMP";
+    };
+
+    static const Names &names()
+    {
+      static const Names n;
+      return n;
+    }
+
+    static void start(void *self, const XML_Char *name_, const XML_Char **atts)
     {
       auto &s = *static_cast<Scan *>(self);
-      const std::string rdf(kRdfNs);
+      const std::string_view name(name_);
       const auto here = static_cast<std::size_t>(XML_GetCurrentByteIndex(s.parser));
       const auto tag = static_cast<std::size_t>(XML_GetCurrentByteCount(s.parser));
       const std::size_t depth = s.path.size();
-      if (name == rdf + " RDF" && s.rdf_content == std::string::npos) { s.rdf_content = here + tag; }
-      if (name == rdf + " Description" && depth > 0 && s.path.back() == rdf + " RDF") {
+      const Kind kind = name == names().rdf           ? Kind::kRdf
+                        : name == names().description ? Kind::kDescription
+                                                      : Kind::kOther;
+      if (depth == kMaxDepth) {
+        s.refuse("elements nested more than 256 deep");
+        return;
+      }
+      if (kind == Kind::kRdf) {
+        if (s.rdf_content != std::string::npos) {
+          s.refuse("more than one rdf:RDF");
+          return;
+        }
+        s.rdf_content = here + tag;
+      }
+      if (kind == Kind::kDescription && depth > 0 && s.path.back() == Kind::kRdf) {
         if (s.descriptions.size() == kMaxSplitDescriptions) {
           s.refuse("more than 256 rdf:Description elements");
           return;
         }
-        Description d{ "", s.bindings };
+        Description d{ "", s.bindings, here, here + tag, here + tag };
         for (int i = 0; atts[i] != nullptr; i += 2) {
-          if (atts[i] == rdf + " about") { d.about = atts[i + 1]; }
+          if (atts[i] == names().about) { d.about = atts[i + 1]; }
+          if (atts[i] == names().has_extended_xmp && s.note_description == std::string::npos) {
+            s.note = atts[i + 1];
+            s.note_description = s.descriptions.size();
+          }
         }
         s.descriptions.push_back(std::move(d));
-      } else if (depth > 1 && s.path.back() == rdf + " Description" && s.path[depth - 2] == rdf + " RDF") {
+      } else if (s.with_properties && depth > 1 && s.path.back() == Kind::kDescription
+                 && s.path[depth - 2] == Kind::kRdf) {
         static const std::vector<std::string> rights = { "http://purl.org/dc/elements/1.1/ rights",
           "http://purl.org/dc/elements/1.1/ creator",
           "http://ns.adobe.com/photoshop/1.0/ Credit" };
         static const std::vector<std::string> rights_ns = { "http://ns.adobe.com/xap/1.0/rights/ ",
           "http://ns.useplus.org/ldf/xmp/1.0/ ",
           "http://creativecommons.org/ns# " };
-        const std::string n(name);
-        const bool is_rights =
-          std::find(rights.begin(), rights.end(), n) != rights.end()
-          || std::any_of(rights_ns.begin(), rights_ns.end(), [&](const std::string &ns) { return n.starts_with(ns); });
+        const bool is_rights = std::find(rights.begin(), rights.end(), name) != rights.end()
+                               || std::any_of(rights_ns.begin(), rights_ns.end(), [&](const std::string &ns) {
+                                    return name.starts_with(ns);
+                                  });
+        if (name == names().has_extended_xmp && s.note_description == std::string::npos) {
+          s.note_description = s.descriptions.size() - 1;
+          s.note_property = s.properties.size();
+        }
         s.properties.push_back({ here, here + tag, s.descriptions.size() - 1, is_rights });
         s.property_depth = depth + 1;
         s.property_tag = tag;
       }
-      s.path.emplace_back(name);
+      s.path.push_back(kind);
     }
 
     static void end(void *self, const XML_Char *)
     {
       auto &s = *static_cast<Scan *>(self);
-      if (s.path.size() == s.property_depth) {
-        const auto count = static_cast<std::size_t>(XML_GetCurrentByteCount(s.parser));
-        // An empty-element tag reports its end with no bytes of its own.
-        if (count > 0) {
-          s.properties.back().end = static_cast<std::size_t>(XML_GetCurrentByteIndex(s.parser)) + count;
+      const auto here = static_cast<std::size_t>(XML_GetCurrentByteIndex(s.parser));
+      // An empty-element tag reports its end with no bytes of its own.
+      const auto count = static_cast<std::size_t>(XML_GetCurrentByteCount(s.parser));
+      const std::size_t depth = s.path.size();
+      if (depth == s.property_depth) {
+        if (s.properties.size() - 1 == s.note_property && count > 0) {
+          s.note.assign(s.text, s.properties.back().end, here - s.properties.back().end);
         }
+        if (count > 0) { s.properties.back().end = here + count; }
         s.property_depth = 0;
+      } else if (depth > 1 && s.path.back() == Kind::kDescription && s.path[depth - 2] == Kind::kRdf) {
+        if (count > 0) { s.descriptions.back().end = here + count; }
+      } else if (s.path.back() == Kind::kRdf) {
+        s.rdf_end = here;
       }
       s.path.pop_back();
     }
@@ -401,6 +474,102 @@ namespace {
            + R"(" xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP=")" + guid + R"("/>)";
   }
 
+  // The bindings of `d` as attributes for its start tag: the innermost binding
+  // of each prefix, the one in scope.
+  std::vector<std::pair<std::string, std::string>> in_scope(const Description &d)
+  {
+    std::vector<std::pair<std::string, std::string>> out;
+    for (std::size_t b = 0; b < d.bindings.size(); ++b) {
+      const auto &[prefix, uri] = d.bindings[b];
+      if (std::any_of(d.bindings.begin() + static_cast<std::ptrdiff_t>(b) + 1, d.bindings.end(), [&](const auto &e) {
+            return e.first == prefix;
+          })) {
+        continue;
+      }
+      out.emplace_back("xmlns" + (prefix.empty() ? "" : ":" + prefix), uri);
+    }
+    return out;
+  }
+
+  std::string_view trimmed(std::string_view v)
+  {
+    while (!v.empty() && std::isspace(static_cast<unsigned char>(v.front())) != 0) { v.remove_prefix(1); }
+    while (!v.empty() && std::isspace(static_cast<unsigned char>(v.back())) != 0) { v.remove_suffix(1); }
+    return v;
+  }
+
+  // Parses `text` into `scan`; the reason it cannot, or nullptr.
+  const char *parse(std::string_view text, Scan &scan)
+  {
+    if (text.size() > INT_MAX) { return "over 2 GB"; }
+    const std::unique_ptr<XML_ParserStruct, decltype(&XML_ParserFree)> parser(
+      XML_ParserCreateNS("UTF-8", ' '), &XML_ParserFree);
+    if (parser == nullptr) { return "no XML parser"; }
+    scan.text = text;
+    scan.parser = parser.get();
+    XML_SetUserData(parser.get(), &scan);
+    XML_SetNamespaceDeclHandler(parser.get(), Scan::start_ns, Scan::end_ns);
+    XML_SetElementHandler(parser.get(), Scan::start, Scan::end);
+    XML_SetStartDoctypeDeclHandler(parser.get(), Scan::doctype);
+    const auto status = XML_Parse(parser.get(), text.data(), static_cast<int>(text.size()), XML_TRUE);
+    scan.parser = nullptr;
+    if (status != XML_STATUS_OK) {
+      return scan.refused != nullptr ? scan.refused : XML_ErrorString(XML_GetErrorCode(parser.get()));
+    }
+    if (scan.rdf_content == std::string::npos || scan.descriptions.empty()) { return "no rdf:Description"; }
+    return nullptr;
+  }
+
+  struct Attribute
+  {
+    std::string_view name;
+    std::string_view value;// as written, entities unresolved
+    std::size_t begin;// the whitespace before the name
+    std::size_t end;// after the closing quote
+  };
+
+  // The attributes of a start tag that expat accepted as well-formed.
+  std::vector<Attribute> attributes(std::string_view tag, std::size_t &name_end)
+  {
+    const auto space = [&](std::size_t i) { return std::isspace(static_cast<unsigned char>(tag[i])) != 0; };
+    std::size_t i = 1;
+    while (i < tag.size() && !space(i) && tag[i] != '>' && tag[i] != '/') { ++i; }
+    name_end = i;
+    std::vector<Attribute> out;
+    while (i < tag.size()) {
+      const std::size_t begin = i;
+      while (i < tag.size() && space(i)) { ++i; }
+      if (i >= tag.size() || tag[i] == '>' || tag[i] == '/') { break; }
+      const std::size_t name = i;
+      while (i < tag.size() && !space(i) && tag[i] != '=') { ++i; }
+      const std::size_t name_len = i - name;
+      while (i < tag.size() && tag[i] != '"' && tag[i] != '\'') { ++i; }
+      if (i >= tag.size()) { break; }
+      const std::size_t close = tag.find(tag[i], i + 1);
+      if (close == std::string_view::npos) { break; }
+      out.push_back({ tag.substr(name, name_len), tag.substr(i + 1, close - i - 1), begin, close + 1 });
+      i = close + 1;
+    }
+    return out;
+  }
+
+  std::string_view local_name(std::string_view qname)
+  {
+    const auto colon = qname.rfind(':');
+    return colon == std::string_view::npos ? qname : qname.substr(colon + 1);
+  }
+
+  std::uint32_t be32(std::string_view b)
+  {
+    return (std::uint32_t{ static_cast<unsigned char>(b[0]) } << 24)
+           | (std::uint32_t{ static_cast<unsigned char>(b[1]) } << 16)
+           | (std::uint32_t{ static_cast<unsigned char>(b[2]) } << 8) | static_cast<unsigned char>(b[3]);
+  }
+
+  // split_extended() never writes a longer ExtendedXMP, so merge_extended()
+  // takes a longer declared length for a malformed one.
+  constexpr std::uint32_t kMaxExtendedBytes = 16U << 20U;
+
 }// namespace
 
 Result<Xmp::Extended> Xmp::split_extended(std::size_t limit) const
@@ -408,20 +577,8 @@ Result<Xmp::Extended> Xmp::split_extended(std::size_t limit) const
   const auto fail = [](const std::string &why) {
     return std::unexpected(SipiValueError{ ErrorCode::kWriteFailed, "XMP packet cannot be split: " + why });
   };
-  if (__xmpstr.size() > INT_MAX) { return fail("over 2 GB"); }
   Scan scan;
-  const std::unique_ptr<XML_ParserStruct, decltype(&XML_ParserFree)> parser(
-    XML_ParserCreateNS(nullptr, ' '), &XML_ParserFree);
-  if (parser == nullptr) { return fail("no XML parser"); }
-  scan.parser = parser.get();
-  XML_SetUserData(parser.get(), &scan);
-  XML_SetNamespaceDeclHandler(parser.get(), Scan::start_ns, Scan::end_ns);
-  XML_SetElementHandler(parser.get(), Scan::start, Scan::end);
-  XML_SetStartDoctypeDeclHandler(parser.get(), Scan::doctype);
-  if (XML_Parse(parser.get(), __xmpstr.data(), static_cast<int>(__xmpstr.size()), XML_TRUE) != XML_STATUS_OK) {
-    return fail(scan.refused != nullptr ? scan.refused : XML_ErrorString(XML_GetErrorCode(parser.get())));
-  }
-  if (scan.rdf_content == std::string::npos || scan.descriptions.empty()) { return fail("no rdf:Description"); }
+  if (const char *why = parse(__xmpstr, scan)) { return fail(why); }
   const std::string about = scan.descriptions.front().about;
 
   // Rights properties go last; among the rest the largest go first.
@@ -452,22 +609,15 @@ Result<Xmp::Extended> Xmp::split_extended(std::size_t limit) const
     }
     if (body.empty()) { continue; }
     std::string open = R"(<rdf:Description rdf:about=")" + escaped(scan.descriptions[d].about) + '"';
-    const auto &bindings = scan.descriptions[d].bindings;
-    for (std::size_t b = 0; b < bindings.size(); ++b) {
-      const auto &[prefix, uri] = bindings[b];
-      // The innermost binding of a prefix is the one in scope.
-      if (std::any_of(bindings.begin() + static_cast<std::ptrdiff_t>(b) + 1, bindings.end(), [&](const auto &e) {
-            return e.first == prefix;
-          })) {
-        continue;
-      }
+    for (const auto &[attr, uri] : in_scope(scan.descriptions[d])) {
       // The bindings go on the rdf:Description itself, so they name it too.
-      if (prefix == "rdf" && uri != kRdfNs) { return fail("prefix rdf bound to " + uri); }
-      open += " xmlns" + (prefix.empty() ? "" : ":" + prefix) + "=\"" + escaped(uri) + '"';
+      if (attr == "xmlns:rdf" && uri != kRdfNs) { return fail("prefix rdf bound to " + uri); }
+      open += ' ' + attr + "=\"" + escaped(uri) + '"';
     }
     out.extended += open + '>' + body + "</rdf:Description>";
   }
   out.extended += "</rdf:RDF></x:xmpmeta>";
+  if (out.extended.size() > kMaxExtendedBytes) { return fail("ExtendedXMP over 16 MiB"); }
   out.guid = md5_hex(out.extended);
   if (out.guid.size() != 32) { return fail("no MD5"); }
 
@@ -485,6 +635,101 @@ Result<Xmp::Extended> Xmp::split_extended(std::size_t limit) const
     copied = scan.properties[i].end;
   }
   copy_to(__xmpstr.size());
+  return out;
+}
+//============================================================================
+
+std::string Xmp::merge_extended(std::string_view standard, std::span<const std::string_view> parts)
+{
+  const auto kept = [&](const char *why) {
+    log_debug("ExtendedXMP ignored: %s", why);
+    return std::string(standard);
+  };
+  if (parts.empty()) { return std::string(standard); }
+  Scan scan;
+  if (const char *why = parse(standard, scan)) { return kept(why); }
+  const std::string_view note = trimmed(scan.note);
+  if (note.size() != 32) { return kept("no xmpNote:HasExtendedXMP GUID in the StandardXMP"); }
+
+  // Each part: GUID (32), full length (4), offset (4), bytes.
+  struct Piece
+  {
+    std::uint32_t offset;
+    std::string_view bytes;
+  };
+  std::vector<Piece> pieces;
+  std::uint32_t full = 0;
+  for (const std::string_view part : parts) {
+    if (part.size() < 40 || part.substr(0, 32) != note) { continue; }
+    const std::uint32_t length = be32(part.substr(32, 4));
+    if (!pieces.empty() && length != full) { return kept("the parts disagree on the full length"); }
+    full = length;
+    pieces.push_back({ be32(part.substr(36, 4)), part.substr(40) });
+  }
+  if (pieces.empty()) { return kept("no part with the GUID of xmpNote:HasExtendedXMP"); }
+  if (full > kMaxExtendedBytes) { return kept("full length over 16 MiB"); }
+  std::stable_sort(pieces.begin(), pieces.end(), [](const Piece &a, const Piece &b) { return a.offset < b.offset; });
+  // `full` is declared by the parts, so it sizes nothing before they add up.
+  const std::size_t carried = std::accumulate(
+    pieces.begin(), pieces.end(), std::size_t{ 0 }, [](std::size_t n, const Piece &p) { return n + p.bytes.size(); });
+  if (carried != full) { return kept("parts that do not add up to the full length"); }
+  std::string extended;
+  extended.reserve(full);
+  for (const Piece &p : pieces) {
+    if (p.offset != extended.size()) { return kept("parts that overlap or leave a gap"); }
+    if (p.bytes.size() > full - extended.size()) { return kept("a part past the full length"); }
+    extended.append(p.bytes);
+  }
+  if (extended.size() != full) { return kept("a missing part"); }
+  Scan ext;
+  ext.with_properties = false;
+  if (const char *why = parse(extended, ext)) { return kept(why); }
+
+  // Each rdf:Description of the extension, with the bindings in scope
+  // written on it, so it reads the same inside the StandardXMP.
+  std::string merged;
+  for (const Description &d : ext.descriptions) {
+    const std::string_view element = std::string_view(extended).substr(d.begin, d.end - d.begin);
+    std::size_t name_end = 0;
+    const auto own = attributes(element.substr(0, d.tag_end - d.begin), name_end);
+    std::string bindings;
+    for (const auto &[attr, uri] : in_scope(d)) {
+      if (std::none_of(own.begin(), own.end(), [&](const Attribute &a) { return a.name == attr; })) {
+        bindings += ' ' + attr + "=\"" + escaped(uri) + '"';
+      }
+    }
+    merged.append(element.substr(0, name_end));
+    merged += bindings;
+    merged.append(element.substr(name_end));
+  }
+
+  // The StandardXMP without xmpNote:HasExtendedXMP; a description that held
+  // nothing else goes with it.
+  std::size_t cut = 0;
+  std::size_t cut_end = 0;
+  const Description &holder = scan.descriptions[scan.note_description];
+  if (scan.note_property != std::string::npos) {
+    cut = scan.properties[scan.note_property].begin;
+    cut_end = scan.properties[scan.note_property].end;
+  } else {
+    std::size_t name_end = 0;
+    const auto attrs = attributes(standard.substr(holder.begin, holder.tag_end - holder.begin), name_end);
+    const auto it = std::find_if(attrs.begin(), attrs.end(), [&](const Attribute &a) {
+      return local_name(a.name) == "HasExtendedXMP" && trimmed(a.value) == note;
+    });
+    if (it == attrs.end()) { return kept("xmpNote:HasExtendedXMP not found in its start tag"); }
+    const bool alone = holder.end == holder.tag_end && std::all_of(attrs.begin(), attrs.end(), [&](const Attribute &a) {
+      return &a == &*it || a.name == "xmlns" || a.name.starts_with("xmlns:") || local_name(a.name) == "about";
+    });
+    cut = alone ? holder.begin : holder.begin + it->begin;
+    cut_end = alone ? holder.end : holder.begin + it->end;
+  }
+  std::string out;
+  out.reserve(standard.size() + merged.size());
+  out.append(standard.substr(0, cut));
+  out.append(standard.substr(cut_end, scan.rdf_end - cut_end));
+  out += merged;
+  out.append(standard.substr(scan.rdf_end));
   return out;
 }
 //============================================================================
