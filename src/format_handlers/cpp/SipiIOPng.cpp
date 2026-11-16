@@ -389,7 +389,9 @@ Result<bool> SipiIOPng::read(SipiImage *img,
 
   for (int i = 0; i < num_comments; i++) {
     if (strcmp(png_texts[i].key, xmp_tag) == 0) {
-      img->set_xmp(std::make_shared<Xmp>((char *)png_texts[i].text, (int)png_texts[i].text_length));
+      // libpng reports an iTXt chunk's length in itxt_length and leaves text_length 0.
+      const size_t xmp_len = png_texts[i].itxt_length > 0 ? png_texts[i].itxt_length : png_texts[i].text_length;
+      img->set_xmp(std::make_shared<Xmp>(png_texts[i].text, static_cast<int>(xmp_len)));
     } else if (strcmp(png_texts[i].key, iptc_tag) == 0) {
       const size_t iptc_text_len =
         png_texts[i].text_length > 0 ? png_texts[i].text_length : strlen(png_texts[i].text);
