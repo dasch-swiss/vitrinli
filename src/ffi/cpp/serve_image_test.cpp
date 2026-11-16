@@ -809,6 +809,71 @@ TEST(RestrictedImage, CacheKeySeparatesRestrictions)
   EXPECT_EQ(cache.getNfiles(), 3U);
 }
 
+// The Cache key records only whether a watermark was applied, so watermarked
+// output must never use the cache: a hit would hand one caller's watermark to
+// another. An empty watermark is no watermark and still uses the cache.
+TEST(BuildImageResponse, WatermarkedOutputNeverUsesTheCache)
+{
+  const std::string odd_jp2 = fixture(kOddJp2);
+  const std::string first_watermark = fixture("/unit/watermark_correct.tif");
+  const std::string second_watermark = fixture("/unit/gradient-stars.tif");
+  const std::string dir = scratch_dir("cache_watermark");
+  Sipi::SipiCache cache(dir + "/cache");
+  auto eng = bare_engine();
+  eng.cache = &cache;
+
+  auto params = png_params();
+  set_coords(params, 0, 0, 40, 40);
+
+  const auto serve = [&](const char *watermark) {
+    auto req = make_request(odd_jp2, params);
+    req.watermark_path = watermark;
+    return build_image_response(req, eng, kNeverCancelled);
+  };
+
+  auto first = serve(first_watermark.c_str());
+  ASSERT_TRUE(first.has_value());
+  ASSERT_TRUE(std::holds_alternative<StreamBody>(first->body));
+  std::string link;
+  for (const auto &[name, value] : first->headers) {
+    if (name == "Link") { link = value; }
+  }
+  const auto first_bytes = drain(*first);
+  EXPECT_EQ(cache.getNfiles(), 0U);
+
+  // A `/1` entry left on disk, under the key the watermarked request computes
+  // (its canonical Link without the scheme), must never be served.
+  const std::string scheme = "<http://";
+  ASSERT_EQ(link.rfind(scheme, 0), 0U) << link;
+  const std::string wm_key = link.substr(scheme.size(), link.find('>') - scheme.size());
+  ASSERT_TRUE(wm_key.ends_with("/1")) << wm_key;
+  const std::string stale = cache.getNewCacheFileName();
+  {
+    std::ofstream out(stale, std::ios::binary);
+    out.write(reinterpret_cast<const char *>(first_bytes.data()), static_cast<std::streamsize>(first_bytes.size()));
+  }
+  cache.add(odd_jp2, wm_key, stale, 373, 496);
+  ASSERT_EQ(cache.getNfiles(), 1U);
+
+  auto second = serve(second_watermark.c_str());
+  ASSERT_TRUE(second.has_value());
+  ASSERT_TRUE(std::holds_alternative<StreamBody>(second->body)) << "the second watermark was a cache hit";
+  EXPECT_NE(drain(*second), first_bytes);
+  EXPECT_EQ(cache.getNfiles(), 1U);
+
+  auto plain = serve(nullptr);
+  ASSERT_TRUE(plain.has_value());
+  ASSERT_TRUE(std::holds_alternative<StreamBody>(plain->body));
+  drain(*plain);
+  EXPECT_EQ(cache.getNfiles(), 2U);
+
+  auto empty = serve("");
+  ASSERT_TRUE(empty.has_value());
+  EXPECT_TRUE(std::holds_alternative<FileBody>(empty->body)) << "an empty watermark missed the cache";
+  if (empty->on_complete) { empty->on_complete(); }
+  EXPECT_EQ(cache.getNfiles(), 2U);
+}
+
 // The size in the Cache key resolves against the region extent: `pct:50`,
 // `50,` and `50,67` on an 80x100 region are 40x50, 50x63 and 50x67, three
 // images, three entries, restricted or not.

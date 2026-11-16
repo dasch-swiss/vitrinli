@@ -675,6 +675,7 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | Watermark application via HTTP | :white_check_mark: | `server.rs::watermark_applied_via_http` | |
 | Restrict + watermark combined | :white_check_mark: | `server.rs::restrict_plus_watermark` | |
 | Watermark cache key separation | :white_check_mark: | `cache.rs::watermark_cache_separation` | |
+| Watermarked output never uses the cache | :white_check_mark: | `serve_image_test` (`WatermarkedOutputNeverUsesTheCache`) | two watermarks, same coordinates: no cache write, and a `/1` entry already on disk is never read; an empty watermark still caches |
 | CLI watermark mode | :white_check_mark: | `cli.rs::cli_convert_watermark_changes_output_bytes` | asserts a valid JPEG whose bytes differ from a plain convert of the same input |
 | Concurrent cache writes (same key) | :white_check_mark: | `cache.rs::cache_returns_consistent_results` | |
 | Cache eviction during active reads | :white_check_mark: | `cache.rs::cache_eviction_during_read` | |
