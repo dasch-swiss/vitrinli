@@ -485,6 +485,9 @@ namespace {
   // could not be rewritten.
   [[nodiscard]] bool rewrite_restricted_metadata(SipiImage &img)
   {
+    // The XMP and IPTC write() would promote from the EXIF copies get the
+    // same rewrite.
+    img.promote_ifd0_copies();
     bool ok = true;
     if (auto exif = img.getExif(); exif != nullptr) {
       exif->erase_previews();

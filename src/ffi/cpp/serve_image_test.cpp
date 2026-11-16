@@ -13,11 +13,13 @@
 #include <algorithm>
 #include <chrono>
 #include <climits>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -775,6 +777,98 @@ TEST(RestrictedImage, ExifImageResourcesDropPreviewsAndStateTheDeliveredSize)
   const auto refused = serve(slices, 100, 80);
   ASSERT_FALSE(refused.has_value());
   EXPECT_EQ(refused.error(), SipiStatus::InternalError);
+}
+
+// XMP and IPTC held only as the EXIF IFD0 copies are promoted before the
+// restricted rewrite, so they get its treatment, watermarked or not. Vitrinli
+// never writes the copies, so the source's APP1 EXIF segment is spliced in.
+TEST(RestrictedImage, PromotedIfd0CopiesDropPreviewsAndStateTheDeliveredSize)
+{
+  const std::string xmp_pixels = "U0lQSS1QUkVWSUVX";
+  const std::string iptc_pixels = "SIPI-IPTC-PREVIEW";
+  const std::string rights =
+    R"(<dc:rights><rdf:Alt><rdf:li xml:lang="x-default">DaSCH IFD0</rdf:li></rdf:Alt></dc:rights>)";
+  const std::string packet =
+    R"(<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">)"
+    R"(<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/")"
+    R"( xmlns:xmpGImg="http://ns.adobe.com/xap/1.0/g/img/" xmlns:tiff="http://ns.adobe.com/tiff/1.0/" tiff:ImageWidth="512">)"
+    R"(<xmp:Thumbnails><rdf:Alt><rdf:li rdf:parseType="Resource"><xmpGImg:width>512</xmpGImg:width><xmpGImg:image>)"
+    + xmp_pixels + R"(</xmpGImg:image></rdf:li></rdf:Alt></xmp:Thumbnails>)" + rights
+    + R"(</rdf:Description></rdf:RDF></x:xmpmeta>)";
+
+  Exiv2::ExifData data;
+  data["Exif.Image.Copyright"] = "DaSCH";
+  data["Exif.Image.IPTCNAA"] = static_cast<std::uint32_t>(0);
+  Exiv2::IptcData iptc;
+  iptc["Iptc.Application2.Copyright"] = "DaSCH IPTC";
+  Exiv2::DataValue preview(Exiv2::undefined);
+  preview.read(reinterpret_cast<const Exiv2::byte *>(iptc_pixels.data()), iptc_pixels.size());
+  iptc.add(Exiv2::IptcKey("Iptc.Application2.Preview"), &preview);
+  Exiv2::XmpData xmp;
+  xmp.setPacket(packet);
+  xmp.usePacket(true);
+  Exiv2::MemIo io;
+  Exiv2::TiffParser::encode(io, nullptr, 0, Exiv2::littleEndian, data, iptc, xmp);
+  std::vector<std::uint8_t> app1 = { 0xff, 0xe1, 0, 0, 'E', 'x', 'i', 'f', 0, 0 };
+  app1.insert(app1.end(), io.mmap(), io.mmap() + io.size());
+  const std::size_t segment = app1.size() - 2;
+  ASSERT_LT(segment, 65536U);
+  app1[2] = static_cast<std::uint8_t>(segment >> 8);
+  app1[3] = static_cast<std::uint8_t>(segment);
+
+  Sipi::SipiImage src;
+  ASSERT_TRUE(src.read(fixture("/unit/lena512.tif")).has_value());
+  src.set_exif(nullptr);
+  src.set_xmp(nullptr);
+  src.set_iptc(nullptr);
+  const std::string dir = scratch_dir("ifd0_copies");
+  ASSERT_TRUE(src.write("jpg", dir + "/plain.jpg").has_value());
+  std::vector<std::uint8_t> jpeg;
+  {
+    std::ifstream in(dir + "/plain.jpg", std::ios::binary);
+    jpeg.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+  }
+  // After SOI and the JFIF APP0 segment, where APP1 belongs.
+  ASSERT_GT(jpeg.size(), 6U);
+  std::size_t at = 2;
+  if (jpeg[2] == 0xff && jpeg[3] == 0xe0) { at += 2 + ((std::size_t{ jpeg[4] } << 8) | jpeg[5]); }
+  jpeg.insert(jpeg.begin() + static_cast<std::ptrdiff_t>(at), app1.begin(), app1.end());
+  const std::string path = dir + "/ifd0_copies.jpg";
+  {
+    std::ofstream out(path, std::ios::binary);
+    out.write(reinterpret_cast<const char *>(jpeg.data()), static_cast<std::streamsize>(jpeg.size()));
+  }
+  const std::string watermark = fixture("/unit/watermark_correct.tif");
+
+  const auto serve = [&](uint32_t rw, uint32_t rh, const char *wm) {
+    auto params = full_params(SIPI_FORMAT_JPG);
+    set_size(params, SIPI_SIZE_PIXELS_XY, 100, 80);
+    auto req = make_request(path, params);
+    req.restricted_width = rw;
+    req.restricted_height = rh;
+    req.watermark_path = wm;
+    auto result = build_image_response(req, bare_engine(), kNeverCancelled);
+    EXPECT_TRUE(result.has_value());
+    return result.has_value() ? drain(*result) : std::vector<std::uint8_t>{};
+  };
+  const auto has = [](const std::vector<std::uint8_t> &bytes, const std::string &needle) {
+    return std::search(bytes.begin(), bytes.end(), needle.begin(), needle.end()) != bytes.end();
+  };
+
+  // Served unrestricted, the promoted blocks keep their previews.
+  const auto unrestricted = serve(0, 0, nullptr);
+  ASSERT_TRUE(has(unrestricted, xmp_pixels));
+  ASSERT_TRUE(has(unrestricted, iptc_pixels));
+  ASSERT_TRUE(has(unrestricted, rights));
+
+  for (const char *wm : { static_cast<const char *>(nullptr), watermark.c_str() }) {
+    const auto body = serve(100, 80, wm);
+    EXPECT_FALSE(has(body, xmp_pixels)) << (wm != nullptr);
+    EXPECT_FALSE(has(body, iptc_pixels)) << (wm != nullptr);
+    EXPECT_TRUE(has(body, R"(tiff:ImageWidth="100")")) << (wm != nullptr);
+    EXPECT_TRUE(has(body, rights)) << (wm != nullptr);
+    EXPECT_TRUE(has(body, "DaSCH IPTC")) << (wm != nullptr);
+  }
 }
 
 // A restricted and an unrestricted request with the same canonical
