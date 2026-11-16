@@ -537,6 +537,28 @@ fn image_inside_restriction_box_is_served_at_native_size() {
     assert_eq!(info["height"], 512);
 }
 
+#[test]
+fn restricted_region_request_is_served() {
+    // A size-restricted region request runs a whole-image decode, so the shell
+    // moves it from the Tile to the Full admission lane after the preflight
+    // (DEV-7603). The lane itself is covered by the `reclassify_to_full` unit
+    // tests; this checks that the swap still serves the region. `test_restrict`
+    // caps lena512.jp2 to 128x128, and region coordinates are in that space
+    // (ADR-0028).
+    let srv = server();
+    let resp = client()
+        .get(format!(
+            "{}/test_restrict/lena512.jp2/0,0,64,64/max/0/default.jpg",
+            srv.base_url
+        ))
+        .send()
+        .expect("GET restricted region failed");
+    assert_eq!(resp.status().as_u16(), 200);
+    let img = image::load_from_memory(&resp.bytes().expect("read body"))
+        .expect("decode restricted region");
+    assert_eq!(img.dimensions(), (64, 64));
+}
+
 // =============================================================================
 // `stream` permission: parity with `allow` (ADR-0027)
 // =============================================================================
