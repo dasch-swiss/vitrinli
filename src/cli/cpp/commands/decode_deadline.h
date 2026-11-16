@@ -17,16 +17,6 @@
 
 namespace Sipi::cli {
 
-/*!
- * Wall-clock decode deadline for the offline verbs, in milliseconds. Same
- * default as `EngineContext::decode_timeout_ms` at the FFI seam: the verbs
- * decode through the same Kakadu path the server does, so the unpatchable
- * JP2 hang class (DEV-7080) reaches them too, and without a deadline
- * `sipi convert` on a hostile file wedges the operator's shell (or the
- * ingest worker driving it) forever.
- */
-inline constexpr std::size_t kDecodeTimeoutMs = 120000;
-
 //! A decode that finished before its deadline: the image and `read`'s result.
 struct DeadlineDecode
 {
@@ -36,7 +26,11 @@ struct DeadlineDecode
 
 /*!
  * `SipiImage::readSource(path, region, size)` on a fresh image under a
- * deadline of `timeout_ms`. `std::nullopt` on timeout — the decode thread is
+ * deadline of `timeout_ms` (callers pass `Sipi::ffi::kDefaultDecodeTimeoutMs`).
+ * The offline verbs decode through the same Kakadu path the server does, so
+ * the unpatchable JP2 hang class (DEV-7080) reaches them too; without a
+ * deadline `sipi convert` on a hostile file wedges the operator's shell (or
+ * the ingest worker driving it) forever. `std::nullopt` on timeout — the decode thread is
  * abandoned and keeps running until the process exits, so the caller reports
  * and returns non-zero rather than retrying. Exceptions thrown by the decode
  * propagate to the caller as before.

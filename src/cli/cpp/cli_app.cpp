@@ -208,9 +208,9 @@ extern "C" int sipi_cli_main(int argc, char **argv)
   //
   auto run_query = [&]() -> int {
     set_cli_mode(true);
-    auto decoded = Sipi::cli::read_with_deadline(Sipi::cli::kDecodeTimeoutMs, optInFile);
+    auto decoded = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optInFile);
     if (!decoded) {
-      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::cli::kDecodeTimeoutMs).c_str());
+      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs).c_str());
       return EXIT_FAILURE;
     }
     if (auto &r = decoded->status; !r) {
@@ -322,9 +322,9 @@ extern "C" int sipi_cli_main(int argc, char **argv)
     //
     // read the input image
     //
-    auto decoded = Sipi::cli::read_source_with_deadline(Sipi::cli::kDecodeTimeoutMs, optInFile, region, size);
+    auto decoded = Sipi::cli::read_source_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optInFile, region, size);
     if (!decoded) {
-      const std::string msg = Sipi::cli::decode_deadline_message(Sipi::cli::kDecodeTimeoutMs);
+      const std::string msg = Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs);
       log_err("Error reading image: %s", msg.c_str());
       if (optJsonOutput) { Sipi::emit_json_report(std::cout, sentry_ctx, msg, std::string{ "read" }); }
       return EXIT_FAILURE;
@@ -531,18 +531,18 @@ extern "C" int sipi_cli_main(int argc, char **argv)
       return EXIT_FAILURE;
     }
 
-    auto decoded1 = Sipi::cli::read_with_deadline(Sipi::cli::kDecodeTimeoutMs, optCompare[0]);
+    auto decoded1 = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optCompare[0]);
     if (!decoded1) {
-      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::cli::kDecodeTimeoutMs).c_str());
+      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs).c_str());
       return EXIT_FAILURE;
     }
     if (auto &r = decoded1->status; !r) {
       log_err("sipi: unhandled exception: %s", r.error().diagnostic_message().c_str());
       return EXIT_FAILURE;
     }
-    auto decoded2 = Sipi::cli::read_with_deadline(Sipi::cli::kDecodeTimeoutMs, optCompare[1]);
+    auto decoded2 = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optCompare[1]);
     if (!decoded2) {
-      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::cli::kDecodeTimeoutMs).c_str());
+      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs).c_str());
       return EXIT_FAILURE;
     }
     if (auto &r = decoded2->status; !r) {
