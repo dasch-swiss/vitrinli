@@ -261,6 +261,11 @@ pub struct SipiImageErrorReport {
 /// `SipiServeRequest::report_ctx`.
 pub type SipiReportErrorFn = extern "C" fn(ctx: *mut c_void, err: *const SipiImageErrorReport);
 
+/// Decode-admission hook (mirrors `SipiBeforeDecodeFn`): called at most once,
+/// after the cache check and before the decode. Non-zero refuses the decode,
+/// and the engine answers 503. `ctx` is `SipiServeRequest::before_decode_ctx`.
+pub type SipiBeforeDecodeFn = extern "C" fn(ctx: *mut c_void) -> c_int;
+
 /// Flat snapshot of the engine metrics singleton — mirrors `SipiMetricsSnapshot`
 /// in `src/ffi/metrics_snapshot.h`. Monotonic counters are `u64`; gauges are
 /// `i64` (signed: `cache_size_limit_bytes` is `-1` when unlimited). Every field
@@ -317,6 +322,8 @@ pub struct SipiServeRequest {
     pub is_head: c_int,
     pub report_error: Option<SipiReportErrorFn>,
     pub report_ctx: *mut c_void,
+    pub before_decode: Option<SipiBeforeDecodeFn>,
+    pub before_decode_ctx: *mut c_void,
 }
 
 /// Native image shape from a header read — mirrors `SipiImageDims` in
@@ -1519,7 +1526,7 @@ mod serve_request_layout {
     fn repr_c_matches_sipi_ffi_h() {
         assert_eq!(size_of::<usize>(), 8, "layout assumes an LP64 target");
         assert_eq!(align_of::<SipiServeRequest>(), 8);
-        assert_eq!(size_of::<SipiServeRequest>(), 160);
+        assert_eq!(size_of::<SipiServeRequest>(), 176);
         assert_eq!(offset_of!(SipiServeRequest, resolved_path), 0);
         assert_eq!(offset_of!(SipiServeRequest, prefix), 8);
         assert_eq!(offset_of!(SipiServeRequest, identifier), 16);
@@ -1535,6 +1542,8 @@ mod serve_request_layout {
         assert_eq!(offset_of!(SipiServeRequest, is_head), 136);
         assert_eq!(offset_of!(SipiServeRequest, report_error), 144);
         assert_eq!(offset_of!(SipiServeRequest, report_ctx), 152);
+        assert_eq!(offset_of!(SipiServeRequest, before_decode), 160);
+        assert_eq!(offset_of!(SipiServeRequest, before_decode_ctx), 168);
     }
 }
 

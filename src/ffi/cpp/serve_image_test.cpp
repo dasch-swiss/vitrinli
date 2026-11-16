@@ -809,6 +809,70 @@ TEST(RestrictedImage, CacheKeySeparatesRestrictions)
   EXPECT_EQ(cache.getNfiles(), 3U);
 }
 
+// The before-decode hook runs only when a decode starts, and a refusal is a
+// 503 that decodes and caches nothing.
+struct BeforeDecodeCalls
+{
+  int calls = 0;
+  int answer = 0;
+};
+
+int count_before_decode(void *ctx)
+{
+  auto *c = static_cast<BeforeDecodeCalls *>(ctx);
+  ++c->calls;
+  return c->answer;
+}
+
+TEST(BuildImageResponse, BeforeDecodeRunsOnlyForADecode)
+{
+  const std::string odd_jp2 = fixture(kOddJp2);
+  const std::string dir = scratch_dir("cache_before_decode");
+  Sipi::SipiCache cache(dir + "/cache");
+  auto eng = bare_engine();
+  eng.cache = &cache;
+
+  auto params = png_params();
+  set_coords(params, 0, 0, 40, 40);
+  BeforeDecodeCalls hook;
+  const auto request = [&](int is_head) {
+    auto req = make_request(odd_jp2, params, is_head);
+    req.restricted_width = kRw;
+    req.restricted_height = kRh;
+    req.before_decode = count_before_decode;
+    req.before_decode_ctx = &hook;
+    return req;
+  };
+
+  hook.answer = 1;
+  auto refused = build_image_response(request(0), eng, kNeverCancelled);
+  ASSERT_TRUE(refused.has_value());
+  EXPECT_EQ(refused->http_status, 503);
+  EXPECT_TRUE(has_header(*refused, "Retry-After", "1"));
+  EXPECT_TRUE(std::holds_alternative<EmptyBody>(refused->body));
+  EXPECT_EQ(hook.calls, 1);
+  EXPECT_EQ(cache.getNfiles(), 0U);
+
+  auto head = build_image_response(request(1), eng, kNeverCancelled);
+  ASSERT_TRUE(head.has_value());
+  EXPECT_EQ(head->http_status, 200);
+  EXPECT_EQ(hook.calls, 1) << "HEAD called the hook";
+
+  hook.answer = 0;
+  auto miss = build_image_response(request(0), eng, kNeverCancelled);
+  ASSERT_TRUE(miss.has_value());
+  ASSERT_TRUE(std::holds_alternative<StreamBody>(miss->body));
+  drain(*miss);
+  EXPECT_EQ(hook.calls, 2);
+  ASSERT_EQ(cache.getNfiles(), 1U);
+
+  auto hit = build_image_response(request(0), eng, kNeverCancelled);
+  ASSERT_TRUE(hit.has_value());
+  EXPECT_TRUE(std::holds_alternative<FileBody>(hit->body)) << "the second request missed the cache";
+  EXPECT_EQ(hook.calls, 2) << "a cache hit called the hook";
+  if (hit->on_complete) { hit->on_complete(); }
+}
+
 // The Cache key records only whether a watermark was applied, so watermarked
 // output must never use the cache: a hit would hand one caller's watermark to
 // another. An empty watermark is no watermark and still uses the cache.

@@ -757,6 +757,14 @@ std::expected<ServeResponse, SipiStatus>
     }
   }
 
+  if (req.before_decode != nullptr && req.before_decode(req.before_decode_ctx) != 0) {
+    ServeResponse out;
+    out.http_status = 503;
+    out.headers.emplace_back("Retry-After", "1");
+    out.body = EmptyBody{};
+    return out;
+  }
+
   // Estimated peak decode memory for this serve. Recorded for every decode —
   // handed back over the seam accumulator into the shell's OTLP histogram —
   // independently of whether the budget is enforced: the estimate describes the
