@@ -15,7 +15,7 @@ use args::{
     ServerArgs, TlsAuthArgs,
 };
 use clap::Parser;
-use sipi::ServerOverrides;
+use sipi::{ServeKnobs, ServerOverrides};
 use std::process::ExitCode;
 
 impl From<&ServerArgs> for ServerOverrides {
@@ -155,16 +155,15 @@ pub fn run(server_argv: &[String]) -> ExitCode {
     };
 
     let overrides = ServerOverrides::from(&args);
-    sipi::run(
-        args.config,
-        overrides,
-        args.drain_timeout,
-        args.concurrency.nthreads,
-        args.concurrency.tiles_thread_ratio,
-        args.concurrency.max_waiting,
-        args.concurrency.queue_timeout,
-        args.concurrency.preflight_cache_ttl,
-        args.concurrency.preflight_cache_slots,
-        args.concurrency.max_wedged_threads,
-    )
+    let c = &args.concurrency;
+    let knobs = ServeKnobs {
+        nthreads: c.nthreads,
+        tiles_thread_ratio: c.tiles_thread_ratio,
+        max_waiting: c.max_waiting,
+        queue_timeout: c.queue_timeout,
+        preflight_cache_ttl: c.preflight_cache_ttl,
+        preflight_cache_slots: c.preflight_cache_slots,
+        max_wedged_threads: c.max_wedged_threads,
+    };
+    sipi::run(args.config, overrides, args.drain_timeout, knobs)
 }

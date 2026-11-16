@@ -152,6 +152,25 @@ fn parse_csv_list(raw: Option<&str>) -> Vec<String> {
     .unwrap_or_default()
 }
 
+/// The Rust-owned serve knobs, each `None` when unset;
+/// [`crate::routes::AppState::load`] resolves the defaults. Pool sizing:
+/// `--nthreads`, `--tiles-thread-ratio`, `--max-waiting`, `--queue-timeout`
+/// (the worker count, the tiles' share, how many requests may queue for a
+/// worker and how long each waits before the shell sheds with 503). The
+/// preflight access-cache: `--preflight-cache-ttl` (seconds; default 0 =
+/// disabled, the cache is opt-in) and `--preflight-cache-slots`. The shed cap
+/// `--max-wedged-threads` (default `nthreads - 1`, at least 1).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ServeKnobs {
+    pub nthreads: Option<u32>,
+    pub tiles_thread_ratio: Option<f64>,
+    pub max_waiting: Option<u64>,
+    pub queue_timeout: Option<u32>,
+    pub preflight_cache_ttl: Option<u32>,
+    pub preflight_cache_slots: Option<u64>,
+    pub max_wedged_threads: Option<u32>,
+}
+
 /// CLI/env flag overrides layered over the loaded Lua config — one `Option` per
 /// forwarded `server` flag (`None` = neither CLI nor env set it → the Lua config
 /// wins).
@@ -162,8 +181,8 @@ fn parse_csv_list(raw: Option<&str>) -> Vec<String> {
 /// clap; the `hostname`/`sslport` fields below are populated only by the Lua
 /// config parse, because the Lua-built `config` table exposes them to scripts.
 /// `--max-waiting`/`--queue-timeout` are also absent here, but for the opposite
-/// reason: the shell honors them as Rust-owned serve knobs passed straight to
-/// [`crate::run`] (like `--drain-timeout`), not layered onto the engine config.
+/// reason: the shell honors them as Rust-owned serve knobs ([`ServeKnobs`])
+/// passed straight to [`crate::run`], not layered onto the engine config.
 ///
 /// `Debug` is implemented manually: `jwtkey` is a secret and
 /// renders as `[redacted]`, so no `{:?}` of this struct (logs, Sentry
