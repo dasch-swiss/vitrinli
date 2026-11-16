@@ -70,27 +70,6 @@ typedef struct _memtiff
   toff_t fptr;
 } MEMTIFF;
 
-static MEMTIFF *memTiffOpen(tsize_t incsiz = 10240, tsize_t initsiz = 10240)
-{
-  MEMTIFF *memtif;
-  if ((memtif = (MEMTIFF *)malloc(sizeof(MEMTIFF))) == nullptr) { throw Sipi::SipiImageError("malloc failed", errno); }
-
-  memtif->incsiz = incsiz;
-
-  if (initsiz == 0) initsiz = incsiz;
-
-  if ((memtif->data = (unsigned char *)malloc(initsiz * sizeof(unsigned char))) == nullptr) {
-    free(memtif);
-    throw Sipi::SipiImageError("malloc failed", errno);
-  }
-
-  memtif->size = initsiz;
-  memtif->flen = 0;
-  memtif->fptr = 0;
-  return memtif;
-}
-/*===========================================================================*/
-
 static tsize_t memTiffReadProc(thandle_t handle, tdata_t buf, tsize_t size)
 {
   auto *memtif = (MEMTIFF *)handle;
@@ -212,6 +191,26 @@ static void memTiffFree(MEMTIFF *memtif)
 /*===========================================================================*/
 }
 
+static MEMTIFF *memTiffOpen(tsize_t incsiz = 10240, tsize_t initsiz = 10240)
+{
+  MEMTIFF *memtif;
+  if ((memtif = (MEMTIFF *)malloc(sizeof(MEMTIFF))) == nullptr) { throw Sipi::SipiImageError("malloc failed", errno); }
+
+  memtif->incsiz = incsiz;
+
+  if (initsiz == 0) initsiz = incsiz;
+
+  if ((memtif->data = (unsigned char *)malloc(initsiz * sizeof(unsigned char))) == nullptr) {
+    free(memtif);
+    throw Sipi::SipiImageError("malloc failed", errno);
+  }
+
+  memtif->size = initsiz;
+  memtif->flen = 0;
+  memtif->fptr = 0;
+  return memtif;
+}
+/*===========================================================================*/
 
 //
 // the 2 typedefs below are used to extract the EXIF-tags from a TIFF file. This is done
