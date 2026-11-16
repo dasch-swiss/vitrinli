@@ -181,3 +181,36 @@ TEST(TiffExifRational, LensSpecificationMalformedElementFailsWrite)
   EXPECT_EQ(write_result.error().code(), Sipi::ErrorCode::kMetadataParseFailed);
   std::remove(dst.c_str());
 }
+
+// XResolution and YResolution are written from their own source tags; distinct
+// values make a swapped or duplicated tag visible.
+TEST(TiffExifRational, DistinctXAndYResolutionRoundTrip)
+{
+  Sipi::SipiIOTiff::initLibrary();
+  Sipi::SipiImage img;
+  ASSERT_TRUE(img.read(unit_path("image_orientation.jpg")).has_value());
+
+  auto exif = std::make_shared<Sipi::Exif>();
+  exif->addKeyVal(std::string("Exif.Image.XResolution"), Exiv2::Rational{ 300, 1 });
+  exif->addKeyVal(std::string("Exif.Image.YResolution"), Exiv2::Rational{ 150, 1 });
+  img.set_exif(exif);
+
+  const std::string dst = sipi::test::tmp_dir() + "/_tiff_exif_rational_xy_resolution.tif";
+  const auto write_result = img.write("tif", dst);
+  ASSERT_TRUE(write_result.has_value());
+
+  Sipi::SipiImage rt;
+  ASSERT_TRUE(rt.read(dst).has_value());
+  auto rt_exif = rt.getExif();
+  ASSERT_NE(rt_exif, nullptr);
+
+  Exiv2::Rational x_rt;
+  ASSERT_TRUE(rt_exif->getValByKey(std::string("Exif.Image.XResolution"), x_rt));
+  EXPECT_NEAR(static_cast<double>(x_rt.first) / x_rt.second, 300.0, 1e-4);
+
+  Exiv2::Rational y_rt;
+  ASSERT_TRUE(rt_exif->getValByKey(std::string("Exif.Image.YResolution"), y_rt));
+  EXPECT_NEAR(static_cast<double>(y_rt.first) / y_rt.second, 150.0, 1e-4);
+
+  std::remove(dst.c_str());
+}

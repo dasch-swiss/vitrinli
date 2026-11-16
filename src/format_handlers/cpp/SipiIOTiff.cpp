@@ -2047,7 +2047,7 @@ Result<void> SipiIOTiff::write(SipiImage *img, const OutputSink &sink, const Sip
 
     if (exif->getValByKey("Exif.Image.XResolution", f)) { TIFFSetField(tif, TIFFTAG_XRESOLUTION, f); }
 
-    if (exif->getValByKey("Exif.Image.YResolution", f)) { TIFFSetField(tif, TIFFTAG_XRESOLUTION, f); }
+    if (exif->getValByKey("Exif.Image.YResolution", f)) { TIFFSetField(tif, TIFFTAG_YRESOLUTION, f); }
 
     short s;
 
