@@ -126,8 +126,18 @@ pub enum Acquired {
 /// RAII permit held for the duration of one engine dispatch. Dropping it releases
 /// the global permit and (for a full) the full sub-pool permit.
 pub struct Permit {
+    kind: AdmissionKind,
     _global: OwnedSemaphorePermit,
     _full: Option<OwnedSemaphorePermit>,
+}
+
+impl Permit {
+    /// The partition this permit was admitted to. Not derived from the full
+    /// sub-pool permit: in `Basic` mode a `Full` over the cap holds none.
+    #[must_use]
+    pub fn kind(&self) -> AdmissionKind {
+        self.kind
+    }
 }
 
 /// A point-in-time read of the pool's fixed sizing, live occupancy, per-partition
@@ -345,6 +355,7 @@ impl Admission {
         // Fast path: a free global permit.
         if let Ok(g) = Arc::clone(&self.global).try_acquire_owned() {
             return Acquired::Admitted(Permit {
+                kind: AdmissionKind::Tile,
                 _global: g,
                 _full: None,
             });
@@ -358,6 +369,7 @@ impl Admission {
             .await
         {
             Ok(Ok(g)) => Acquired::Admitted(Permit {
+                kind: AdmissionKind::Tile,
                 _global: g,
                 _full: None,
             }),
@@ -385,6 +397,7 @@ impl Admission {
         if let Ok(f) = Arc::clone(&self.full).try_acquire_owned() {
             if let Ok(g) = Arc::clone(&self.global).try_acquire_owned() {
                 return Acquired::Admitted(Permit {
+                    kind: AdmissionKind::Full,
                     _global: g,
                     _full: Some(f),
                 });
@@ -406,6 +419,7 @@ impl Admission {
             let f = Arc::clone(&self.full).acquire_owned().await.ok()?;
             let g = Arc::clone(&self.global).acquire_owned().await.ok()?;
             Some(Permit {
+                kind: AdmissionKind::Full,
                 _global: g,
                 _full: Some(f),
             })
@@ -438,6 +452,7 @@ impl Admission {
         }
         if let Ok(g) = Arc::clone(&self.global).try_acquire_owned() {
             return Acquired::Admitted(Permit {
+                kind: AdmissionKind::Full,
                 _global: g,
                 _full: full_permit,
             });
@@ -452,6 +467,7 @@ impl Admission {
             .await
         {
             Ok(Ok(g)) => Acquired::Admitted(Permit {
+                kind: AdmissionKind::Full,
                 _global: g,
                 _full: full_permit,
             }),
@@ -693,6 +709,54 @@ mod tests {
                 Acquired::TimedOut
             ));
             assert_eq!(a.snapshot().tile_shed_total, 1);
+        });
+    }
+
+    // ── Permit kind and re-classification ────────────────────────────────────
+
+    #[test]
+    fn permit_reports_the_partition_it_was_admitted_to() {
+        let a = Admission::new(cfg(16, 0.5, 0, 50)).unwrap();
+        rt().block_on(async {
+            let t = admitted(a.acquire(AdmissionKind::Tile).await);
+            let f = admitted(a.acquire(AdmissionKind::Full).await);
+            assert_eq!(t.kind(), AdmissionKind::Tile);
+            assert_eq!(f.kind(), AdmissionKind::Full);
+        });
+    }
+
+    #[test]
+    fn basic_mode_full_over_the_cap_is_still_a_full_permit() {
+        // full_max = 1: the second full holds no full sub-pool permit, yet it
+        // was admitted to the Full partition.
+        let mut c = cfg(2, 0.5, 0, 50);
+        c.mode = AdmissionMode::Basic;
+        let a = Admission::new(c).unwrap();
+        rt().block_on(async {
+            let _first = admitted(a.acquire(AdmissionKind::Full).await);
+            let over_cap = admitted(a.acquire(AdmissionKind::Full).await);
+            assert_eq!(a.snapshot().full_shadow_rejected_total, 1);
+            assert_eq!(over_cap.kind(), AdmissionKind::Full);
+        });
+    }
+
+    #[test]
+    fn tile_to_full_swap_needs_the_tile_permit_released_first() {
+        // One worker: the tile holds the only global permit, so a Full acquire
+        // while it is held times out, and succeeds once it is dropped.
+        let a = Admission::new(cfg(1, 0.5, 4, 20)).unwrap();
+        rt().block_on(async {
+            let tile = admitted(a.acquire(AdmissionKind::Tile).await);
+            assert!(matches!(
+                a.acquire(AdmissionKind::Full).await,
+                Acquired::TimedOut
+            ));
+            drop(tile);
+            let full = admitted(a.acquire(AdmissionKind::Full).await);
+            assert_eq!(full.kind(), AdmissionKind::Full);
+            let s = a.snapshot();
+            assert_eq!(s.permits_in_use, 1);
+            assert_eq!(s.full_in_use, 1);
         });
     }
 
