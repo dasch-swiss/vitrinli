@@ -5,6 +5,11 @@
 
 #include "metadata/iptc.h"
 
+#include <cstddef>
+#include <string>
+
+#include <exiv2/error.hpp>
+
 namespace Sipi {
 
 Iptc::Iptc(Exiv2::IptcData data) : iptcData(std::move(data)) {}
@@ -17,6 +22,41 @@ Result<std::shared_ptr<Iptc>> Iptc::parse(const unsigned char *iptc, unsigned in
     return std::unexpected(SipiValueError{ ErrorCode::kMetadataParseFailed, "No valid IPTC data!" });
   }
   return std::shared_ptr<Iptc>(new Iptc(std::move(data)));
+}
+//============================================================================
+
+Result<std::shared_ptr<Iptc>> Iptc::parse_complete(const unsigned char *iptc, unsigned int len)
+{
+  const auto fail = [](const std::string &why) {
+    return std::unexpected(SipiValueError{ ErrorCode::kMetadataParseFailed, "IPTC block does not parse: " + why });
+  };
+  // Each dataset: marker 0x1c, record, number, a 2-byte length, the data. A
+  // length with its top bit set gives the count of length bytes that follow.
+  std::size_t end = len;
+  while (end > 0 && iptc[end - 1] == 0) { --end; }
+  std::size_t datasets = 0;
+  for (std::size_t pos = 0; pos < end; ++datasets) {
+    if (len - pos < 5 || iptc[pos] != 0x1c) { return fail("bytes outside its datasets"); }
+    std::size_t size = (std::size_t{ iptc[pos + 3] } << 8) | iptc[pos + 4];
+    std::size_t header = 5;
+    if ((size & 0x8000) != 0) {
+      const std::size_t n = size & 0x7fff;
+      if (n > 4 || len - pos - header < n) { return fail("a dataset length past the end"); }
+      size = 0;
+      for (std::size_t i = 0; i < n; ++i) { size = (size << 8) | iptc[pos + header + i]; }
+      header += n;
+    }
+    if (len - pos - header < size) { return fail("a dataset past the end"); }
+    pos += header + size;
+  }
+  if (datasets == 0) { return fail("no dataset"); }
+  try {
+    auto parsed = parse(iptc, len);
+    if (parsed && (*parsed)->iptcData.count() != datasets) { return fail("a dataset Exiv2 does not read"); }
+    return parsed;
+  } catch (const Exiv2::Error &err) {
+    return fail(err.what());
+  }
 }
 //============================================================================
 

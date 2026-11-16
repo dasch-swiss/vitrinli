@@ -16,6 +16,7 @@
 #include <numeric>
 #include <ostream>
 #include <span>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -731,6 +732,41 @@ std::string Xmp::merge_extended(std::string_view standard, std::span<const std::
   out += merged;
   out.append(standard.substr(scan.rdf_end));
   return out;
+}
+//============================================================================
+
+Result<std::shared_ptr<Xmp>> Xmp::parse_complete(std::string packet)
+{
+  const auto fail = [](const std::string &why) {
+    return std::unexpected(SipiValueError{ ErrorCode::kMetadataParseFailed, "XMP packet does not parse: " + why });
+  };
+  while (!packet.empty() && packet.back() == '\0') { packet.pop_back(); }
+  if (packet.size() > INT_MAX) { return fail("over 2 GB"); }
+  struct Check
+  {
+    XML_Parser parser = nullptr;
+    bool rdf = false;
+    bool doctype = false;
+  } check;
+  const std::unique_ptr<XML_ParserStruct, decltype(&XML_ParserFree)> parser(
+    XML_ParserCreateNS("UTF-8", ' '), &XML_ParserFree);
+  if (parser == nullptr) { return fail("no XML parser"); }
+  check.parser = parser.get();
+  XML_SetUserData(parser.get(), &check);
+  XML_SetStartElementHandler(parser.get(), [](void *self, const XML_Char *name, const XML_Char **) {
+    if (name == Scan::names().rdf) { static_cast<Check *>(self)->rdf = true; }
+  });
+  XML_SetStartDoctypeDeclHandler(
+    parser.get(), [](void *self, const XML_Char *, const XML_Char *, const XML_Char *, int) {
+      auto &c = *static_cast<Check *>(self);
+      c.doctype = true;
+      XML_StopParser(c.parser, XML_FALSE);
+    });
+  if (XML_Parse(parser.get(), packet.data(), static_cast<int>(packet.size()), XML_TRUE) != XML_STATUS_OK) {
+    return fail(check.doctype ? "a DOCTYPE" : XML_ErrorString(XML_GetErrorCode(parser.get())));
+  }
+  if (!check.rdf) { return fail("no rdf:RDF"); }
+  return std::make_shared<Xmp>(std::move(packet));
 }
 //============================================================================
 
