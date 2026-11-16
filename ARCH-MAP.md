@@ -1,7 +1,7 @@
 ---
 dune_map: true
 schema_version: 2
-date: 2026-11-11
+date: 2026-11-16
 ---
 
 # ARCH-MAP.md — Vitrinli
@@ -35,7 +35,7 @@ image formats, whose registry fan-out is documented, not mechanized.
 
 - **Paths:** `:(glob)src/image/**`, `:(glob)src/BUILD.bazel`, `:(glob)src/nsswitch.conf`
 - **Purpose:** The image engine hub — `SipiImage` is the pixel-buffer + metadata value type that orchestrates decode → encode through the format-handler dispatch, and owns the `//src` package's Bazel wiring. Processing operators (crop/scale/rotate/ICC conversion/watermarking/comparison/arithmetic) are not methods on the class — they are free functions in `image_processing`.
-- **Key entities:** `Sipi::SipiImage`, `SipiImage::io` (static handler registry, *defined* in `format_handlers`), `SipiImage::read`/`readSource`/`write`/`getDim` (decode/encode orchestration), the pixel/metadata mutator surface (`setPixel`/`set_pixels`/`setEs`/`setPhoto`/`set_icc`/`setOrientation`/`essential_metadata`), `Sipi::SipiIO` (abstract), `SipiImgInfo`, `Sipi::SipiImageError`
+- **Key entities:** `Sipi::SipiImage`, `SipiImage::io` (static handler registry, *defined* in `format_handlers`), `SipiImage::read`/`readSource`/`write`/`getDim` (decode/encode orchestration), the pixel/metadata mutator surface (`setPixel`/`set_pixels`/`setEs`/`setPhoto`/`set_icc`/`setOrientation`/`essential_metadata`), `Sipi::SipiIO` (abstract), `SipiImgInfo`, `Sipi::SipiImageError`; `SipiImage::promote_ifd0_copies` (makes the EXIF IFD0 `XMLPacket`/`IPTCNAA` copies the primary XMP/IPTC when those are absent; `write()` and `ffi`'s `rewrite_restricted_metadata` call it, so a pre-write metadata edit must call it first)
 - **Public interface:** `SipiImage` (via `//src/image`), `SipiIO`; consumed by `format_handlers`, `image_processing`, `ffi` (including the `sipi_image_*` handles behind the Lua `SipiImage` bindings), and `cli`.
 - **Local-context kit:** `src/image/cpp/SipiImage.h`, `src/image/cpp/SipiImage.cpp`, `src/image/cpp/SipiIO.h`, `src/image/BUILD.bazel`, `src/BUILD.bazel` (the `:sipi_lib` target), `src/format_handlers/cpp/format_registry.cpp` (where `io` is defined), `docs/adr/0007-sipiimage-decomposition.md`, `CONVENTIONS.md`
 - **Depends on:** error, metadata, iiifparser, format_handlers (`:output_sink` only), util, logging, observability, throttling
@@ -45,7 +45,7 @@ image formats, whose registry fan-out is documented, not mechanized.
   - The four codec handlers mutate `SipiImage` only through its public mutator surface (`pixels_writable()` plus the metadata/geometry setters) — no `friend` declarations remain; the sole surviving friend is `operator<<`. *Enforcement: `structure`* (the mutator surface is a normal public API, not a language reach-in).
   - `image_processing` depends one-way on `//src/image`; `//src/image` never depends back — a facade method forwarding to a free function in `image_processing` would reintroduce the cycle the extraction removes. *Enforcement: `structure`* (`bazel query 'somepath(//src/image, //src/image_processing)'` is empty; see the `image_processing` entry for the CI-only caveat on running this locally).
 - **Durable state:** `SipiImage::io` (static registry, single writer = `format_registry.cpp`).
-- **Fingerprint:** `067b68bce255`
+- **Fingerprint:** `9d39e42f1052`
 
 ### image_processing
 
@@ -86,6 +86,7 @@ image formats, whose registry fan-out is documented, not mechanized.
 - **Depends on:** error, logging, observability; openssl (SHA-256 keying)
 - **Used by:** ffi (`init.cpp` owns it, `serve_image.cpp` uses it)
 - **Boundary rules:**
+  - Watermarked output never reads or writes the cache (`serve_image.cpp` passes a null cache when a watermark is applied): the key does not name the watermark. *Enforcement: `review`* (a `serve_image_test` case pins it).
   - Cache state is exposed **exclusively** through *Metrics*, never Lua bindings; cache-hit responses bypass both Throttling policies (ADR-0008). *Enforcement: `docs-only`* (glossary rule; no mechanical check).
   - The on-disk index is fronted by a fixed `CacheIndexHeader` (magic + version + `sizeof(FileCacheRecord)`); any mismatch → start empty and log once, so a layout change to `FileCacheRecord` MUST bump `kCacheIndexVersion` (ADR-0025). *Enforcement: `structure`* (the load-time header check refuses a mismatched index) + `docs-only` (the version-bump obligation).
   - Cache-hit file reads open with `O_NOFOLLOW` and reject non-regular files (`serve_image.cpp` `full_file_body`), so a symlink planted in the cache dir plus a forged record cannot read arbitrary files (ADR-0025). *Enforcement: `structure`* (the open flag + `S_ISREG` check).
@@ -100,7 +101,7 @@ engine-side memory budget under one component. Supersedes the former
 
 - **Paths:** `:(glob)src/throttling/rust/**` (admission, shell-side), `:(glob)src/throttling/cpp/**` (memory_budget, engine-side).
 - **Purpose:** Vitrinli's load-driven request-rejection (Throttling). Three sub-policies: **Admission** (the two-partition thread pool — tile floor + full hard cap, pre-dispatch), the **Decode memory budget** (the full partition's decode-RAM cap, post-cache, 503/413 under advanced mode), and the **Decode watchdog** (a per-decode wall-clock deadline, `EngineContext::decode_timeout_ms`, which the shell sets at init to `--decode-timeout-ms` or 80 % of the request timeout, `kDefaultDecodeTimeoutMs` (120 s) for the offline verbs; on timeout the wedged worker is detached and counted in the `wedged_threads` gauge, and at `--max-wedged-threads` (`AdmissionConfig::max_wedged_threads`, probed through `wedged_threads`) every `Admission::acquire` sheds with 503 and `/health` fails until restart — the DEV-7080 unpatchable-Kakadu-hang availability guard, enacted at the `decode_guard.cpp` acquire site via `run_with_deadline`/`run_guarded_decode`).
-- **Key entities:** Rust `admission::{Admission, AdmissionKind, AdmissionMode, AdmissionConfig, AdmissionSnapshot, Permit, default_pool_size}` (`//src/throttling/rust:admission`); C++ `Sipi::SipiMemoryBudget` + `MemoryBudgetGuard` + `enum class AdmissionMode { BASIC, ADVANCED }` + `Sipi::estimate_peak_memory` (`//src/throttling/cpp:memory_budget`).
+- **Key entities:** Rust `admission::{Admission, AdmissionKind, AdmissionMode, AdmissionConfig, AdmissionSnapshot, Permit, default_pool_size}` (`//src/throttling/rust:admission`); C++ `Sipi::SipiMemoryBudget` + `MemoryBudgetGuard` + `enum class AdmissionMode { BASIC, ADVANCED }` + `Sipi::estimate_peak_memory` (`//src/throttling/cpp:memory_budget`). `Permit::kind` reports the lane a permit holds (stored, since a Basic-mode Full permit holds no sub-permit).
 - **Public interface:** `Admission` (owned by `server` `AppState`; `classify`/`acquire`/`snapshot`); `SipiMemoryBudget` + `MemoryBudgetGuard` (via `//src/throttling/cpp:memory_budget`).
 - **Local-context kit:** `src/throttling/rust/lib.rs`, `src/throttling/cpp/SipiMemoryBudget.{h,cpp}`, `src/throttling/cpp/SipiPeakMemory.h`, `src/ffi/cpp/decode_guard.{h,cpp}` (the single acquire site: `acquire_full_lane_budget` + `run_guarded_decode`, shared by both decode entry points), `src/ffi/cpp/serve_image.cpp` and `src/ffi/cpp/image_handle.cpp` (the two callers), `src/ffi/cpp/init.cpp` (resolves the config), `src/ffi/cpp/engine_context.h` (`decode_timeout_ms`, `kDefaultDecodeTimeoutMs` shared with the offline CLI verbs, and the other budget defaults), `src/server/rust/src/config.rs` (`resolve_decode_timeout`), `src/server/rust/src/routes.rs` (`AppState`, classify/acquire call sites), `CONTEXT.md` (Throttling), `docs/adr/0022-two-lane-admission-control.md`.
 - **Depends on:** admission (Rust) → `tokio` + `tracing` + `//src/iiifparser/rust:iiif_parser` only (FFI-free; no `//src/ffi`, no C++ engine — DUNE-002). memory_budget (C++) → nothing internal (decoupled from observability by design; the acquire site re-publishes gauges).
@@ -111,7 +112,7 @@ engine-side memory budget under one component. Supersedes the former
   - The shell Semaphore pool (pre-dispatch) and the engine memory budget (post-cache) are two distinct admission layers. *Enforcement: `docs-only`*.
   - `admission_mode`/`tiles_memory_ratio`/`large_decode_threshold_bytes`/`memory_limit` are resolved engine-side and read back over the seam (single authority, DUNE-003). *Enforcement: `docs-only`*.
 - **Durable state:** admission — `Arc<Semaphore>` global + full sub-pool, per-partition `AtomicUsize`/`AtomicU64` wait/shed counters (single writer). memory_budget — `std::atomic<size_t> _used` (CAS-updated). No persistence.
-- **Fingerprint:** `01ceedbf78c6`
+- **Fingerprint:** `bfea9f7877b8`
 
 ### format_handlers
 
@@ -129,7 +130,7 @@ engine-side memory budget under one component. Supersedes the former
   - The JPEG reader joins ExtendedXMP with `Xmp::merge_extended`; it and `Xmp::split_extended` are the two halves of one segment format and one 16 MiB cap, so a change to either changes both. *Enforcement: `static-analysis`* (`formats_test` `JpegMetadataSegments.LargeXmpIsSplit*` round trip).
   - Adding a format touches a shared registry + dispatch fan-out (~4 sites across 3 files, listed by `tools/format-handlers-fanout.sh`). *Enforcement: `docs-only`* (DUNE-005 deferred a descriptor table until a real 5th format; ADR-0006 is the prior art to check first).
 - **Durable state:** `SipiImage::io` (single writer here); no runtime state.
-- **Fingerprint:** `083836c0785d`
+- **Fingerprint:** `ca4be69c2cd3`
 
 ### iiifparser
 
@@ -152,7 +153,7 @@ engine-side memory budget under one component. Supersedes the former
 
 - **Paths:** `:(glob)src/metadata/**`
 - **Purpose:** EXIF / IPTC / XMP / ICC wrappers over exiv2 + lcms2, and the Essentials preservation packet. Sits **below** the image engine (no `SipiImage` dep). The canonical model package (docstring README, Test-seam visibility, colocated tests).
-- **Key entities:** `Exif`/`Iptc`/`Xmp`/`Icc`/`Essentials`, `Icc::iccBytes()` (the single ICC-materialization chokepoint, ADR-0002), `EssentialsFields`, `PhotometricInterpretation`, `Exif::set_pixel_dimensions`/`erase_previews` + `Xmp::set_pixel_dimensions`/`erase_thumbnails` + `Exif::restrict_image_resources` (called only by `ffi`'s `rewrite_restricted_metadata`: a size-restricted output states its delivered size in every size field and drops every embedded preview (EXIF IFD1/SubIFD/maker-note previews, XMP `xmp:Thumbnails` and `xmpGImg:image`, IPTC `Preview`, via `Iptc::erase_preview`; the same inside the EXIF's Photoshop image resources), every other field is kept, and a size field that cannot take the new value, an XMP preview that cannot be removed or image resources that cannot be rewritten fail the request; unrestricted outputs keep the source's tags), `Exif::exifBytes(limit)` + `Xmp::split_extended` (the JPEG writer's one-segment fit: EXIF without its previews, XMP split into ExtendedXMP; otherwise `kWriteFailed`, and the JPEG writer decides; see format_handlers), `Xmp::merge_extended` (the JPEG reader's inverse: joins the ExtendedXMP back into the StandardXMP, or keeps the StandardXMP as it is).
+- **Key entities:** `Exif`/`Iptc`/`Xmp`/`Icc`/`Essentials`, `Icc::iccBytes()` (the single ICC-materialization chokepoint, ADR-0002), `EssentialsFields`, `PhotometricInterpretation`, `Exif::set_pixel_dimensions`/`erase_previews` + `Xmp::set_pixel_dimensions`/`erase_thumbnails` + `Exif::restrict_image_resources` (called only by `ffi`'s `rewrite_restricted_metadata`: a size-restricted output states its delivered size in every size field and drops every embedded preview (EXIF IFD1/SubIFD/maker-note previews, XMP `xmp:Thumbnails` and `xmpGImg:image`, IPTC `Preview`, via `Iptc::erase_preview`; the same inside the EXIF's Photoshop image resources), every other field is kept, and a size field that cannot take the new value, an XMP preview that cannot be removed or image resources that cannot be rewritten fail the request; unrestricted outputs keep the source's tags), `Exif::exifBytes(limit)` + `Xmp::split_extended` (the JPEG writer's one-segment fit: EXIF without its previews, XMP split into ExtendedXMP; otherwise `kWriteFailed`, and the JPEG writer decides; see format_handlers), `Xmp::merge_extended` (the JPEG reader's inverse: joins the ExtendedXMP back into the StandardXMP, or keeps the StandardXMP as it is); `Xmp::merge_extended` (joins a JPEG ExtendedXMP read back into its StandardXMP; the parts are untrusted, so input, namespace URIs and descriptions are capped), `Xmp::parse_complete`/`Iptc::parse_complete`/`Exif::value_bytes` (the check an EXIF IFD0 copy passes before `SipiImage::promote_ifd0_copies` uses it).
 - **Public interface:** the wrapper classes (via `//src/metadata:metadata`); the byte-mutation helper is in `//src/metadata/cpp/internal` (restricted).
 - **Local-context kit:** `src/metadata/BUILD.bazel`, `src/metadata/cpp/icc.h`, `src/metadata/cpp/icc.cpp`, `src/metadata/cpp/internal/BUILD.bazel`, `src/metadata/cpp/internal/icc_normalization.{h,cpp}`, `src/metadata/cpp/internal/icc_lcms2.h`, `src/metadata/cpp/essentials.h`, `docs/adr/0002-icc-profile-determinism-test-only.md`
 - **Depends on:** error (`SipiError`), util, logging; exiv2, lcms2, openssl, protobuf (internal codec), libexpat (`Xmp::split_extended`, `Xmp::merge_extended`)
@@ -162,7 +163,7 @@ engine-side memory budget under one component. Supersedes the former
   - `Icc::iccBytes()` is the single chokepoint every codec-bound ICC profile funnels through; new format handlers must route through it (bypassing it breaks the approval gate). *Enforcement: `static-analysis`* (approval determinism gate) + `docs-only` (the banner).
   - No `SipiImage` dependency — the one former coupling was inverted via `photometric_interpretation.h`. *Enforcement: `structure`* (dep set).
 - **Durable state:** none in-process; the durable artifact is the Essentials packet embedded in image headers (written by format encoders via `Essentials::serialize`).
-- **Fingerprint:** `3caecbad3cb0`
+- **Fingerprint:** `8adc36752a82`
 
 ### scripting
 
@@ -232,7 +233,7 @@ engine-side memory budget under one component. Supersedes the former
   - No C++ exception may cross the boundary — every `sipi_*` wraps in a catch-all (`sipi_guard`). *Enforcement: `review`*.
   - The C ABI is hand-mirrored on the Rust side in **two disjoint** files, partitioned by consumer: `src/server/rust/src/ffi.rs` (serve entries + config getters) and `src/scripting/rust/engine_ffi.rs` (the `sipi_image_*` handle family the Lua bindings call). No `sipi_*` function is declared in both. As with every hand-mirrored `extern "C"` fn decl here, the function *signatures* carry no mechanical guard against `sipi_ffi.h` (only the `#[repr(C)]` struct *layouts* are guarded, above), so a C++ signature change must be mirrored by hand in whichever file owns that function. *Enforcement: `docs-only`*.
 - **Durable state:** `EngineContext` (file-static `g_engine`, single sink `set_engine_context`, sole installer `sipi_init`).
-- **Fingerprint:** `1ebedd8dc7e1`
+- **Fingerprint:** `9b2edbd9b07a`
 
 ### cli
 
@@ -252,13 +253,13 @@ Rust binary entry point under one component.
   - The mimalloc stats `extern "C"` block is deliberately colocated in `main.rs` (drops out with the feature; a version drift is a SIGSEGV, not a build error — read via the `mi_stats_shim.c` C shim). *Enforcement: `docs-only`* (SAFETY comment; decision 4).
   - Same oracle-vocabulary avoidance as `server`. *Enforcement: `docs-only`* (the `CONVENTIONS.md` § Production surface rule).
 - **Durable state:** `LibraryInitialiser` singleton (process-global init, idempotent); the Rust binary owns the process lifecycle, the Sentry client guard, and the minidump reporter guard (none persistent).
-- **Fingerprint:** `4dd2e16983aa`
+- **Fingerprint:** `c7b16697a714`
 
 ### server
 
 - **Paths:** `:(glob)src/server/rust/**`
 - **Purpose:** The production Rust axum HTTP shell — routing, IIIF/info assembly, the streaming response sink, edge path validation, config (Lua or TOML), the Throttling pool, the preflight cache, and OTel telemetry. Shipped as the `sipi` library so a downstream crate can embed it.
-- **Key entities:** `run`/`serve`/`app`, `routes::iiif`/`cors_preflight`/`serve_docroot`, `AppState`, `IMAGE_MIMES`, `iiif_parser::parse_request` (the carved parser crate), the `ffi.rs` `From<iiif_parser::IiifParams> for SipiIiifParams` seam mapping, `info::{image_info_json,bitstream_info_json}`, `preflight_cache::PreflightCache`, the *Permission* dispatch (`ffi::SipiPermType` + `routes::PERMISSIONS`/`permission_from_str`/`permission_str`, dispatched on in `dispatch_engine`'s auth gate, `file_access` and `restricted_dims`), `routes::restriction` (the one restricted-view `(RW, RH)` decision, refusals included, for info.json, knora.json and the image route), `ServerOverrides`, the `ffi.rs` `#[repr(C)]` mirrors + layout-lock tests, the edge-config parsers (`config.rs`: `SIPI_PUBLIC_HOSTS`, `SIPI_REQUEST_TIMEOUT`, `SIPI_BODY_READ_TIMEOUT`), `jwtkey_is_unsafe` (fail-closed startup gate)
+- **Key entities:** `run`/`serve`/`app`, `routes::iiif`/`cors_preflight`/`serve_docroot`, `AppState`, `IMAGE_MIMES`, `iiif_parser::parse_request` (the carved parser crate), the `ffi.rs` `From<iiif_parser::IiifParams> for SipiIiifParams` seam mapping, `info::{image_info_json,bitstream_info_json}`, `preflight_cache::PreflightCache`, the *Permission* dispatch (`ffi::SipiPermType` + `routes::PERMISSIONS`/`permission_from_str`/`permission_str`, dispatched on in `dispatch_engine`'s auth gate, `file_access` and `restricted_dims`), `routes::restriction` (the one restricted-view `(RW, RH)` decision, refusals included, for info.json, knora.json and the image route), `ServerOverrides`, the `ffi.rs` `#[repr(C)]` mirrors + layout-lock tests, the edge-config parsers (`config.rs`: `SIPI_PUBLIC_HOSTS`, `SIPI_REQUEST_TIMEOUT`, `SIPI_BODY_READ_TIMEOUT`), `jwtkey_is_unsafe` (fail-closed startup gate); `routes::reclassify_to_full` (run from the engine's `before_decode` seam hook: a size-restricted request swaps its Tile permit for a Full one after the engine's cache check, ADR-0022 amendment), `engine_wedged_threads` (the probe `Admission` sheds on at `--max-wedged-threads`; `/health` then answers 503), `ServeKnobs` (the Rust-owned serve knobs), `mark_private`/`append_vary` (credential-dependent responses: `Cache-Control: private`, `Vary: Cookie, Authorization`; every IIIF response varies on `Origin`)
 - **Public interface:** crate `sipi` (`//src/server/rust:lib`) — `pub fn run` and `pub fn app`; `ServerOverrides`.
 - **Local-context kit:** `src/server/rust/src/lib.rs`, `src/server/rust/src/routes.rs`, `src/server/rust/src/ffi.rs`, `src/server/rust/src/config.rs`, `src/server/rust/BUILD.bazel`, `src/ffi/cpp/sipi_ffi.h` (the C++ side of the seam)
 - **Depends on:** ffi (`//src/ffi:sipi_ffi`, the first Rust→C++ link; carries the whole engine); iiifparser (`//src/iiifparser/rust:iiif_parser`, the domain-typed URL parser); axum/tokio/opentelemetry/sentry (via the single `@crates` hub)
@@ -271,7 +272,7 @@ Rust binary entry point under one component.
   - Startup fails closed on an unsafe `jwt_secret` (empty, `<32` bytes, or the shipped default) via `jwtkey_is_unsafe` (`lib.rs`); a docroot overlapping a writable/image root and an init-script failure likewise refuse startup. *Enforcement: `static-analysis`* (the `jwtkey_is_unsafe` unit tests + startup boot probes).
   - Request lifetime is edge-bounded by `SIPI_REQUEST_TIMEOUT` (default 60s, to the response head) and `SIPI_BODY_READ_TIMEOUT` (default 10s, request-body read) via tower-http layers; `SIPI_PUBLIC_HOSTS` allowlists `X-Forwarded-Host`/`Host` (empty = reflect verbatim). The header-read timeout and connection cap stay Traefik-side (S2-18). *Enforcement: `docs-only`*.
 - **Durable state:** `AppState` (built once per `serve()`), which owns the two-lane `Admission` pool (`Arc<admission::Admission>`, holding the semaphores + per-partition counters — see the `throttling` component); the opt-in Preflight cache.
-- **Fingerprint:** `9bf74b616fd1`
+- **Fingerprint:** `315380452084`
 
 ## Cross-cutting concerns
 
