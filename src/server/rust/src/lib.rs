@@ -26,7 +26,7 @@ pub mod routes;
 pub mod sink;
 pub mod telemetry;
 
-pub use config::ServerOverrides;
+pub use config::{ServeKnobs, ServerOverrides};
 
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
@@ -108,33 +108,15 @@ static START: OnceLock<Instant> = OnceLock::new();
 /// `config` is the bootstrap config file path — `.lua` (engine Lua VM) or `.toml`
 /// (parsed Rust-side); it selects the base config the `overrides` layer onto.
 /// `drain_timeout` is the Rust-owned graceful-drain deadline in seconds
-/// (default 30). `nthreads`/`max_waiting`/`queue_timeout` are the Rust-owned
-/// engine-pool knobs (`--nthreads`/`--max-waiting`/`--queue-timeout`): the worker
-/// count that sizes the pool, how many requests may queue for a worker, and how
-/// long each waits, before the shell sheds with 503.
-/// `preflight_cache_ttl`/`preflight_cache_slots` are the Rust-owned preflight
-/// access-cache knobs (`--preflight-cache-ttl`/`--preflight-cache-slots`): the
-/// per-`(image, credential)` cache TTL in seconds (default 0 = disabled; the cache
-/// is opt-in) and its slot count. `max_wedged_threads` is the
-/// `--max-wedged-threads` shed cap (default `nthreads - 1`, at least 1).
+/// (default 30). `knobs` are the Rust-owned serve knobs ([`ServeKnobs`]).
 /// Blocks until shutdown; returns the process exit code. Telemetry init lives in
 /// [`server_main`] (inside the runtime) because the OTLP batch exporter needs a
 /// tokio runtime.
-// The Rust-owned serve knobs (pool sizing + preflight-cache tuning) are threaded
-// individually down this entry chain; the arg count is inherent to the seam, not
-// a smell worth a bundling struct here.
-#[allow(clippy::too_many_arguments)]
 pub fn run(
     config: Option<String>,
     overrides: ServerOverrides,
     drain_timeout: Option<u64>,
-    nthreads: Option<u32>,
-    tiles_thread_ratio: Option<f64>,
-    max_waiting: Option<u64>,
-    queue_timeout: Option<u32>,
-    preflight_cache_ttl: Option<u32>,
-    preflight_cache_slots: Option<u64>,
-    max_wedged_threads: Option<u32>,
+    knobs: ServeKnobs,
 ) -> ExitCode {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
@@ -146,35 +128,17 @@ pub fn run(
         }
     };
 
-    rt.block_on(server_main(
-        config,
-        overrides,
-        drain_timeout,
-        nthreads,
-        tiles_thread_ratio,
-        max_waiting,
-        queue_timeout,
-        preflight_cache_ttl,
-        preflight_cache_slots,
-        max_wedged_threads,
-    ))
+    rt.block_on(server_main(config, overrides, drain_timeout, knobs))
 }
 
 /// The async server lifecycle inside the tokio runtime: install telemetry, prove
 /// the FFI seam, install the engine + Lua config, serve, then flush telemetry on
 /// the way out.
-#[allow(clippy::too_many_arguments)]
 async fn server_main(
     config: Option<String>,
     overrides: ServerOverrides,
     drain_timeout: Option<u64>,
-    nthreads: Option<u32>,
-    tiles_thread_ratio: Option<f64>,
-    max_waiting: Option<u64>,
-    queue_timeout: Option<u32>,
-    preflight_cache_ttl: Option<u32>,
-    preflight_cache_slots: Option<u64>,
-    max_wedged_threads: Option<u32>,
+    knobs: ServeKnobs,
 ) -> ExitCode {
     // Stamp the process start for /health uptime before anything else.
     let _ = START.set(Instant::now());
@@ -404,13 +368,7 @@ async fn server_main(
         configured_routes,
         lua_env,
         hook_probes,
-        nthreads,
-        tiles_thread_ratio,
-        max_waiting,
-        queue_timeout,
-        preflight_cache_ttl,
-        preflight_cache_slots,
-        max_wedged_threads,
+        knobs,
     )
     .await;
 
@@ -519,7 +477,6 @@ pub fn app(state: Arc<routes::AppState>, request_timeout: Duration) -> Router {
         .with_state(state)
 }
 
-#[allow(clippy::too_many_arguments)]
 async fn serve(
     port: Option<u16>,
     drain_timeout: Duration,
@@ -527,13 +484,7 @@ async fn serve(
     configured_routes: Option<Vec<ffi::RouteEntry>>,
     lua_env: Option<std::sync::Arc<scripting::LuaEnv>>,
     hook_probes: Option<scripting::HookProbes>,
-    nthreads: Option<u32>,
-    tiles_thread_ratio: Option<f64>,
-    max_waiting: Option<u64>,
-    queue_timeout: Option<u32>,
-    preflight_cache_ttl: Option<u32>,
-    preflight_cache_slots: Option<u64>,
-    max_wedged_threads: Option<u32>,
+    knobs: ServeKnobs,
 ) -> std::io::Result<()> {
     // Read the cached engine config once (image root + prefix_as_path); a
     // not-ready state (no --config) leaves the serve routes returning 503.
@@ -546,13 +497,7 @@ async fn serve(
             configured_routes,
             lua_env,
             hook_probes,
-            nthreads,
-            tiles_thread_ratio,
-            max_waiting,
-            queue_timeout,
-            preflight_cache_ttl,
-            preflight_cache_slots,
-            max_wedged_threads,
+            knobs,
             // Read directly (like `SIPI_RS_PORT` below): CORS is a Rust-shell
             // knob, never a `ServerOverrides`/FFI concern.
             config::allowed_origins_from_env(),
@@ -748,13 +693,7 @@ mod app_tests {
                     None,
                     None,
                     None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
+                    ServeKnobs::default(),
                     Vec::new(),
                     Vec::new(),
                 )

@@ -110,9 +110,7 @@ impl AppState {
     /// script + config-table values); `has_preflight`/`has_file_preflight`
     /// are its boot-frozen hook probes.
     ///
-    /// `nthreads`/`max_waiting`/`queue_timeout` are the
-    /// `--nthreads`/`--max-waiting`/`--queue-timeout` serve knobs (`None` → the
-    /// defaults below).
+    /// `knobs` are the Rust-owned serve knobs (`None` → the defaults below).
     ///
     /// `allowed_origins` is the `SIPI_ALLOWED_ORIGINS` CORS allowlist
     /// ([`crate::config::allowed_origins_from_env`]); empty = opt-out, every
@@ -121,26 +119,26 @@ impl AppState {
     /// `public_hosts` is the `SIPI_PUBLIC_HOSTS` host allowlist
     /// ([`crate::config::public_hosts_from_env`]); empty = opt-out, `forwarded`
     /// trusts `X-Forwarded-Host`/`Host` verbatim.
-    // Startup glue with one parameter per serve knob (like `serve()` in
-    // lib.rs); a config struct would just relocate the list.
-    #[allow(clippy::too_many_arguments)]
     pub fn load(
         configured_routes: Option<Vec<ffi::RouteEntry>>,
         lua: Option<Arc<scripting::LuaEnv>>,
         hook_probes: Option<scripting::HookProbes>,
-        nthreads: Option<u32>,
-        tiles_thread_ratio: Option<f64>,
-        max_waiting: Option<u64>,
-        queue_timeout: Option<u32>,
-        preflight_cache_ttl: Option<u32>,
-        preflight_cache_slots: Option<u64>,
-        max_wedged_threads: Option<u32>,
+        knobs: crate::ServeKnobs,
         allowed_origins: Vec<String>,
         public_hosts: Vec<String>,
     ) -> Result<Self, AdmissionError> {
         // The thread-pool knobs are Rust-owned serve args. `nthreads` (unset or
         // 0 = auto) sizes the global pool from host parallelism; `max_waiting`
         // defaults to 2×workers and `queue_timeout` to 5s.
+        let crate::ServeKnobs {
+            nthreads,
+            tiles_thread_ratio,
+            max_waiting,
+            queue_timeout,
+            preflight_cache_ttl,
+            preflight_cache_slots,
+            max_wedged_threads,
+        } = knobs;
         let resolved_nthreads = nthreads
             .filter(|n| *n > 0)
             .map_or_else(admission::default_pool_size, |n| n as usize);
