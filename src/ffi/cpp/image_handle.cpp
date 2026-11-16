@@ -237,9 +237,19 @@ extern "C" int sipi_image_handle_dims(const SipiImageHandle *img, uint64_t *nx, 
 extern "C" int
   sipi_image_file_dims(const char *path, uint64_t *nx, uint64_t *ny, int *orientation, SipiStrFn err, void *err_ctx)
 {
+  // Under the decode deadline, as `sipi_image_dims` is: the worker owns its
+  // copy of the path, because on timeout it is detached and outlives `path`.
   return Sipi::ffi::sipi_guard([&] {
-    Sipi::SipiImage img;
-    auto shape = img.read_shape(nz(path));
+    const auto timeout = std::chrono::milliseconds(Sipi::ffi::engine_context_or_default().decode_timeout_ms);
+    auto probed = Sipi::ffi::run_with_deadline(timeout, [p = std::string(nz(path))] {
+      const Sipi::SipiImage probe;
+      return probe.read_shape(p);
+    });
+    if (!probed) {
+      emit_str(err, err_ctx, "image decode deadline exceeded");
+      return 1;
+    }
+    auto &shape = *probed;
     if (!shape) {
       emit_str(err, err_ctx, shape.error().client_message());
       return 1;

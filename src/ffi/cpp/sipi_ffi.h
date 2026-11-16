@@ -743,7 +743,9 @@ SIPI_FFI_NODISCARD int sipi_image_handle_dims(const SipiImageHandle *img,
   int *orientation);
 
 /*! Header-only shape probe for a path (`read_shape`, no full decode) — the
- *  path form of `SipiImage.dims`. */
+ *  path form of `SipiImage.dims`. Bounded by the engine's decode deadline: on
+ *  timeout it emits "image decode deadline exceeded" through `err` and returns
+ *  non-zero. */
 SIPI_FFI_NODISCARD int
   sipi_image_file_dims(const char *path, uint64_t *nx, uint64_t *ny, int *orientation, SipiStrFn err, void *err_ctx);
 
