@@ -622,6 +622,10 @@ crate.spec(package = "rustls", version = "0.23.46", default_features = False, fe
 # via `quinn`.
 crate.spec(package = "quinn-proto", version = "0.11.18", default_features = False)
 
+# quinn-udp: RUSTSEC-2026-0538, the receive loop can spin after a truncated
+# datagram, fixed in 0.5.16. Reaches the graph via `quinn`.
+crate.spec(package = "quinn-udp", version = "0.5.16", default_features = False)
+
 # rustls-webpki: RUSTSEC-2026-0382, fixed in 0.103.16. webpki-roots and
 # webpki-root-certs: RUSTSEC-2026-0381/0383, fixed in 1.0.10. All reach the
 # graph via `rustls` / `reqwest`.
