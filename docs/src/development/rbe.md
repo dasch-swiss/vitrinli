@@ -306,9 +306,8 @@ Bazel 9; parse the JSON directly.)
 On a warm cache the two approaches are essentially equal. RBE is slower cold because all
 three legs share one worker and each has to rebuild the shared exec-config toolchain from
 scratch concurrently (only ~220–430 cross-leg cache hits on a cold run). The cache-only
-setup has no shared bottleneck. A ~6–9 minute fixed per-leg overhead (`ci-setup`
-provisioning, LFS pull, Docker Scout) is identical either way and cannot be accelerated
-by RBE.
+setup has no shared bottleneck. The fixed per-leg overhead (`ci-setup` provisioning,
+LFS pull) is identical either way and cannot be accelerated by RBE.
 
 **RBE buys no per-PR speed on a single worker. Its value is cross-compilation and the
 ability to scale out workers.**
@@ -370,18 +369,6 @@ cores has the most impact.
 
 Cross legs execute very few actions remotely on a warm cache (almost everything hits the
 shared AC), which is why their warm wall-clock drops to ~2.4–2.9 min.
-
-## Docker Scout warm-cache fix
-
-Docker Scout inspects `daschswiss/sipi:latest` from the local Docker daemon. The image
-is loaded as a side effect of the `:docker_smoke` test's own `docker load` step. On a
-warm cache the smoke test is a cache hit and never runs — the image is absent and Docker
-Scout fails with `No such image`.
-
-The fix: `bazel-test-smoke` in `ci.yml` runs `bazel run //src:image_load` explicitly
-before the test. This both loads the image into the daemon and materialises the OCI
-tarball on disk under `--remote_download_minimal` (where it would otherwise not be
-fetched). The smoke test then finds the image regardless of its cache state.
 
 ## Local use from macOS
 
@@ -481,9 +468,8 @@ would remove the risk; both are infra changes.
    `.github/actions/bazel-rbe` to obtain the `$RBE_FLAGS` string — no Nix involved.
 2. Passes `$RBE_FLAGS` to every `just bazel-*` invocation.
 3. Runs `just bazel-test` (unit + approval + e2e).
-4. On Linux: runs `just bazel-test-smoke` (which first calls `bazel run //src:image_load`).
+4. On Linux: runs `just bazel-test-smoke`.
 5. On Linux: runs `just image-scan` (grype CVE gate over the same image).
-6. On linux-amd64 PRs: runs Docker Scout.
 
 `ci.yml`'s path-gated `sanitizer` job, plus `coverage.yml`,
 `fuzz.yml`, and `publish.yml`, all go
