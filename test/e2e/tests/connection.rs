@@ -1,7 +1,7 @@
 mod common;
 
 use common::server;
-use sipi_e2e::{http_client, test_data_dir, SipiServer};
+use sipi_e2e::{http_client, test_data_dir, Signal, SipiServer};
 use std::io::{Read as _, Write as _};
 use std::net::TcpStream;
 use std::time::Duration;
@@ -170,8 +170,7 @@ fn graceful_shutdown() {
     let _ = resp.bytes();
 
     // Send SIGTERM to the server process
-    let pid = nix::unistd::Pid::from_raw(srv.pid() as i32);
-    nix::sys::signal::kill(pid, nix::sys::signal::Signal::SIGTERM).expect("failed to send SIGTERM");
+    srv.signal(Signal::SIGTERM).expect("failed to send SIGTERM");
 
     // Wait a bit for shutdown
     std::thread::sleep(Duration::from_secs(2));

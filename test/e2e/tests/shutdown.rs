@@ -1,6 +1,4 @@
-use nix::sys::signal::{self, Signal};
-use nix::unistd::Pid;
-use sipi_e2e::{http_client, test_data_dir, SipiServer};
+use sipi_e2e::{http_client, test_data_dir, Signal, SipiServer};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -14,7 +12,6 @@ fn fresh_server() -> SipiServer {
 fn graceful_shutdown_completes_inflight_request() {
     let srv = fresh_server();
     let base_url = srv.base_url.clone();
-    let pid = srv.pid();
 
     // Fire an image request in a background thread.
     // JP2 decoding takes enough time to overlap with the SIGTERM.
@@ -29,8 +26,7 @@ fn graceful_shutdown_completes_inflight_request() {
 
     // Brief delay to ensure the request is in-flight, then SIGTERM
     thread::sleep(Duration::from_millis(50));
-    let pid_t = Pid::from_raw(i32::try_from(pid).expect("PID overflows i32"));
-    signal::kill(pid_t, Signal::SIGTERM).expect("SIGTERM failed");
+    srv.signal(Signal::SIGTERM).expect("SIGTERM failed");
 
     // The in-flight request should complete (drain phase allows it)
     let result = handle.join().expect("request thread panicked");
@@ -75,8 +71,7 @@ fn server_exits_cleanly_after_sigterm() {
     assert_eq!(resp.status().as_u16(), 200);
 
     // Send SIGTERM
-    let pid = Pid::from_raw(i32::try_from(srv.pid()).expect("PID overflows i32"));
-    signal::kill(pid, Signal::SIGTERM).expect("SIGTERM failed");
+    srv.signal(Signal::SIGTERM).expect("SIGTERM failed");
 
     // Wait for clean exit (up to 10s, covering drain_timeout + buffer)
     let deadline = Instant::now() + Duration::from_secs(10);
@@ -110,8 +105,7 @@ fn new_requests_rejected_during_drain() {
     let base_url = srv.base_url.clone();
 
     // Send SIGTERM to start drain phase
-    let pid = Pid::from_raw(i32::try_from(srv.pid()).expect("PID overflows i32"));
-    signal::kill(pid, Signal::SIGTERM).expect("SIGTERM failed");
+    srv.signal(Signal::SIGTERM).expect("SIGTERM failed");
 
     // Brief delay for the server to enter drain mode (stop accepting)
     thread::sleep(Duration::from_millis(200));
