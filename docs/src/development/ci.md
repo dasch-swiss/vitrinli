@@ -112,6 +112,17 @@ Cargo-format lockfile — see "Dependency advisory scanning" below for
 what it covers. Self-contained (no Bazel/RBE setup); not currently a
 required branch-protection check.
 
+### Static analysis
+
+The `docs` job also runs the repository's grep gates, so they need no
+runner of their own.
+`just test-signal-lint` fails if anything under `test/` looks a PID up
+by port or name (`lsof`, `fuser`, `pgrep`, `pkill`, `killall`), or sends
+a signal anywhere but `SipiServer::signal` in `test/e2e/src/lib.rs`: on
+the RBE workers build actions run as the same user as the NativeLink
+server, so a test that signals a PID it did not spawn can take the
+backend down. A `git grep` error fails the gate.
+
 ### CI environment provisioning
 
 Every Bazel-invoking job in `ci.yml` (and in `publish.yml`,
@@ -146,7 +157,8 @@ and the build short-circuits. Internal PRs are unaffected.
 Branch rulesets require the three `test / *` legs
 (`test / linux-amd64`, `test / linux-arm64`, `test / darwin-arm64`)
 plus the `asan-ubsan / amd64` job. The `docs` job, the `dependency-audit`
-job and the `changes` gate itself are not required checks. (The
+job and the `changes` gate itself are not
+required checks. (The
 asan-ubsan job was previously split into `asan-ubsan-unit / amd64` +
 `asan-ubsan-e2e / amd64`; the ruleset must be updated to the merged name.)
 

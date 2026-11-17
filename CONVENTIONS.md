@@ -398,6 +398,7 @@ A change is tested when its behavior is covered at the lowest layer that can rea
 - **Test data:** images live in `test/_test_data/images/` (Git LFS); shared C++ fixture generators in `test/unit/fixtures/`. A test that needs its own files writes them to `TEST_TMPDIR`, never into the source tree.
 - **Hot paths:** a change to a decode/encode hot path needs a co-located Google Benchmark and a before/after `just bench-compare` ([`docs/src/development/benchmarking.md`](docs/src/development/benchmarking.md)).
 - Run one target with `bazel test //src/<mod>:<target> --test_output=streamed` or `bazel test //test/e2e:<name> --test_output=streamed`.
+- **Signals:** a test signals only a server it spawned, through `SipiServer::signal` (`test/e2e/src/lib.rs`); the harness owns `nix::sys::signal` and does not expose the PID. A test never looks a PID up by port or name (`lsof`, `fuser`, `pgrep`, `pkill`, `killall`): the lookup also returns unrelated processes, and on the RBE workers build actions run as the same user as the NativeLink server, so the signal lands. A busy port is skipped, not freed (`allocate_ports`). *Enforcement: `structure`* (no PID leaves the harness) + *`static-analysis`* (`just test-signal-lint`, a step of the CI `docs` job; a lexical gate, so a PID taken from `/proc` or a shell string still needs `review`).
 
 ## Commit Conventions
 
@@ -424,6 +425,7 @@ These must be clean before a commit. CI gates each of them, but the Rust lint ga
 | Any code | `just bazel-test` (or the affected targets), green |
 | `flake.nix`, `MODULE.bazel`, a `BUILD.bazel`, a justfile build recipe | `just bazel-build` and `just bazel-coverage`, on macOS at minimum ([Build Completeness Invariant](#build-completeness-invariant)) |
 | Rust dependencies (`MODULE.bazel` crate specs, `Cargo.Bazel.lock`) | `just audit` |
+| `test/` | `just test-signal-lint` |
 | Every commit | `just commit-lint` (lints `origin/main..HEAD`) |
 
 C++ formatting follows `.clang-format`; no CI gate checks it, so format the lines you change.
