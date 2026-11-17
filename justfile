@@ -180,6 +180,27 @@ audit:
     cargo audit --file Cargo.Bazel.lock --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2026-0387 --ignore RUSTSEC-2026-0446 --ignore RUSTSEC-2026-0447 --ignore RUSTSEC-2026-0448 --ignore RUSTSEC-2026-0455 --ignore RUSTSEC-2026-0552 --ignore RUSTSEC-2026-0553 --ignore RUSTSEC-2026-0554
     osv-scanner scan source --lockfile=Cargo.lock:Cargo.Bazel.lock --config=osv-scanner.toml
 
+# Fail if a test can signal a process it did not spawn: a PID lookup by port or
+# name (it also finds the NativeLink server on the RBE workers), or a signal sent
+# anywhere but `SipiServer::signal`. See CONVENTIONS.md § Testing Conventions.
+test-signal-lint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -d test/e2e/src
+    rc=0
+    git grep -nE '\b(lsof|fuser|pgrep|pkill|killall)\b|\bnix::(sys::signal|unistd::Pid)\b|\blibc::kill\b|\bPid::from_raw\b' \
+        -- test/ ':!test/e2e/src/lib.rs' || rc=$?
+    rc2=0
+    git grep -nwE 'lsof|fuser|pgrep|pkill|killall' -- test/e2e/src/lib.rs || rc2=$?
+    if [ "$rc" -gt 1 ] || [ "$rc2" -gt 1 ]; then
+        echo "test-signal-lint: git grep failed" >&2
+        exit 2
+    fi
+    if [ "$rc" -eq 0 ] || [ "$rc2" -eq 0 ]; then
+        echo "Signal a server only through SipiServer::signal; never look a PID up. A busy port is skipped by allocate_ports, never freed (CONVENTIONS.md § Testing Conventions)." >&2
+        exit 1
+    fi
+
 # Lint commit messages with commitlint-rs — the CI `commit-lint` gate. Enforces
 # the type allowlist + mandatory scope from `.commitlintrc.yml` on every commit in
 # `<from>..HEAD` (`from` defaults to origin/main). `commitlint` is in the Nix dev
