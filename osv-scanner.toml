@@ -35,3 +35,19 @@ reason = "actix-http 3.13.5 unbounded decompression exhausts memory and CPU; fix
 [[IgnoredVulns]]
 id = "RUSTSEC-2026-0455"
 reason = "actix-http 3.13.5 large-window Brotli bodies bypass decompression memory limits; fixed in 3.20.3. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0552"
+reason = "actix-http 3.13.5 bare LF in chunked trailers can consume pipelined requests or stall body decoding; fixed in 3.21.1. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0553"
+reason = "actix-http 3.13.5 malformed quoted chunk extensions can end HTTP/1.1 request bodies early; fixed in 3.21.3. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0554"
+reason = "actix-http 3.13.5 partial requests on keep-alive connections can bypass the request header timeout; fixed in 3.21.2. Not compiled into Vitrinli: `actix-http` and `actix-web` are in Cargo.Bazel.lock only because Cargo locks every optional dependency, and `sentry` lists `sentry-actix` behind its `actix` feature. MODULE.bazel enables `sentry` without that feature, so no actix crate is built or linked. Revisit if a `sentry` feature list ever gains `actix`."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0543"
+reason = "chrono 0.4.45 is unmaintained; an informational advisory with no vulnerability and no fixed release. cargo-audit only warns on it. chrono is compiled: `init-tracing-opentelemetry`'s `metrics` feature enables `opentelemetry-stdout`, which depends on chrono. Revisit at the next opentelemetry* lockstep bump, or when `opentelemetry-stdout` drops chrono."
