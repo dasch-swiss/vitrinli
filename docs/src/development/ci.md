@@ -75,11 +75,6 @@ none of them wait on a separate lint gate. Every leg runs:
    step built, and fails on any High/Critical CVE with a fixed version
    in the OS packages (distroless base + `bookworm.lock.json`).
    `.grype.yaml` documents the false positives it ignores.
-4. **Docker Scout** (linux-amd64 PRs only, one leg — a single PR
-   comment, informational, never fails the job):
-   `Docker Scout — compare to production`,
-   `Docker Scout — CVE report (SARIF)`, and
-   `Upload SARIF to GitHub Security`.
 
 The standalone `lint` job is gone. Its lint checks —
 `bazel-rustfmt-check` and `bazel-clippy-check` — now run as extra
@@ -223,9 +218,7 @@ This closes one gap, not the whole dependency surface: `dependency-audit`
 does not see the native `http_archive` / `cc_library` pins below —
 they have no lockfile-based advisory feed. The OS/runtime packages in the
 *image layers* are gated by `just image-scan` in the `test` job (grype, fails on
-fixed High/Critical) and reported by Docker Scout (`ci.yml`'s PR-time report and
-`publish.yml`'s release-time Critical gate). Neither reaches these
-statically-linked libraries. A failing `image-scan` is fixed by bumping the
+fixed High/Critical). It does not reach these statically-linked libraries. A failing `image-scan` is fixed by bumping the
 snapshot in `bazel/distroless/bookworm.yaml` (then `bazel run @bookworm//:lock`)
 or the `distroless_base` digest in `MODULE.bazel`.
 
@@ -291,12 +284,8 @@ Gate model:
    - `publish-docker / {amd64, arm64}` — rebuilds the per-arch
      image, extracts the `.debug` file via
      `just bazel-docker-extract-debug ${arch}`, pushes via
-     `just bazel-docker-push-${arch}`, records the image with Docker
-     Scout, runs a Docker Scout CVE gate (`only-severities: critical`,
-     `exit-code: true` — fails the job on any Critical finding in the
-     image layers; see "Dependency advisory scanning" above for what
-     this does and doesn't cover), uploads SBOM, pushes debug
-     symbols to Sentry. It does not repeat the smoke test —
+     `just bazel-docker-push-${arch}`, and pushes debug symbols to
+     Sentry. It does not repeat the smoke test —
      `validate-docker` already validated the same commit.
    - `manifest` — needs `publish-docker`; runs
      `just bazel-docker-publish-manifest` (`crane index append`) to

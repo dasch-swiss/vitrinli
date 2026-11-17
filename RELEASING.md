@@ -16,8 +16,8 @@ automated release.
 3. Merging the release PR pushes a `vX.Y.Z` tag.
 4. The tag triggers [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
    - `validate-docker` — per-arch Nix-built Docker image + smoke test.
-   - `publish-docker` — push images to Docker Hub, generate SBOM, upload
-     debug symbols to Sentry.
+   - `publish-docker` — push images to Docker Hub, upload debug symbols to
+     Sentry.
    - `manifest` — multi-arch Docker manifest combining amd64 + arm64.
    - `docs` — mkdocs deploy to https://sipi.io.
    - `sentry` — release finalisation.
