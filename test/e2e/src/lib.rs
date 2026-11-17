@@ -1,7 +1,8 @@
-use nix::sys::signal::{self, Signal};
+use nix::sys::signal;
+pub use nix::sys::signal::Signal;
 use nix::unistd::Pid;
 use std::io::{BufRead, BufReader};
-use std::net::TcpStream;
+use std::net::{TcpListener, TcpStream};
 use std::os::unix::process::ExitStatusExt as _;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -27,11 +28,27 @@ fn next_port() -> &'static AtomicU16 {
 }
 
 /// Allocate a pair of (http_port, ssl_port) for a test server instance.
+///
+/// A pair with a port already bound, by a stale server from an earlier run
+/// or by anything else, is skipped and never freed. The harness signals only
+/// processes it spawned: finding a PID by port also finds unrelated
+/// processes, such as a remote-execution server whose client connection has
+/// that port at its far end.
 pub fn allocate_ports() -> (u16, u16) {
-    let http = next_port().fetch_add(2, Ordering::SeqCst);
-    assert!(http < 65534, "port counter overflow");
-    let ssl = http + 1;
-    (http, ssl)
+    loop {
+        let http = next_port().fetch_add(2, Ordering::SeqCst);
+        assert!(http < 65534, "no free port pair below 65534");
+        let ssl = http + 1;
+        if port_is_free(http) && port_is_free(ssl) {
+            return (http, ssl);
+        }
+    }
+}
+
+/// Probes the address the server binds (`0.0.0.0`); the probe listener is
+/// dropped at once, before the server starts.
+fn port_is_free(port: u16) -> bool {
+    TcpListener::bind(("0.0.0.0", port)).is_ok()
 }
 
 /// A spawned server's `Child` plus everything a shutdown check needs: the
@@ -199,13 +216,6 @@ impl SipiServer {
         extra_env: &[(&str, &str)],
     ) -> Self {
         let (http_port, ssl_port) = allocate_ports();
-
-        // If a stale sipi from a previous test run is still holding these
-        // ports, terminate it gracefully (SIGTERM, then SIGKILL on timeout).
-        // Forced SIGKILL bypasses C++ destructors and orphans static-singleton
-        // heap, which ASan reports as a leak — see the asan-flake fix.
-        kill_process_on_port(http_port);
-        kill_process_on_port(ssl_port);
 
         eprintln!(
             "[test-harness] Starting sipi: bin={} config={} ports={}/{} cwd={} extra_args={:?} extra_env={:?}",
@@ -456,9 +466,13 @@ impl SipiServer {
         )
     }
 
-    /// Get the OS PID of the server process.
-    pub fn pid(&self) -> u32 {
-        self.pid
+    /// Send `sig` to this server. Tests signal a process only through here, so
+    /// the target is always a child this harness spawned.
+    pub fn signal(&self, sig: Signal) -> nix::Result<()> {
+        signal::kill(
+            Pid::from_raw(i32::try_from(self.pid).expect("PID overflows i32")),
+            sig,
+        )
     }
 
     /// Check if the server process has exited. Returns the exit status if so.
@@ -1101,56 +1115,6 @@ pub fn run_conversions(tasks: Vec<ConversionTask>, threads: usize) {
         failures.len(),
         failures.join("\n  - ")
     );
-}
-
-/// Terminate any process listening on the given port (cleanup from previous
-/// test runs). Sends SIGTERM first and polls for exit; falls back to SIGKILL
-/// only if the process is still alive after the deadline. Forced SIGKILL
-/// bypasses destructors and leaks singleton-owned heap that ASan flags.
-fn kill_process_on_port(port: u16) {
-    let Ok(output) = Command::new("lsof")
-        .args(["-ti", &format!(":{}", port)])
-        .output()
-    else {
-        return;
-    };
-    let pids: Vec<Pid> = String::from_utf8_lossy(&output.stdout)
-        .split_whitespace()
-        .filter_map(|s| s.parse::<i32>().ok())
-        .map(Pid::from_raw)
-        .collect();
-    if pids.is_empty() {
-        return;
-    }
-
-    // SIGTERM all candidates at once, then poll each.
-    for pid in &pids {
-        signal::kill(*pid, Signal::SIGTERM).ok();
-    }
-
-    let deadline = Instant::now() + Duration::from_millis(1500);
-    let mut had_to_escalate = false;
-    for pid in &pids {
-        // Poll for exit via `kill -0` (signal None). Returns Err(ESRCH)
-        // once the process is gone; Err(EPERM) means the PID is still
-        // alive but owned by another user — treat as still-alive.
-        loop {
-            match signal::kill(*pid, None) {
-                Err(nix::errno::Errno::ESRCH) => break, // gone
-                _ if Instant::now() >= deadline => {
-                    signal::kill(*pid, Signal::SIGKILL).ok();
-                    had_to_escalate = true;
-                    break;
-                }
-                _ => std::thread::sleep(Duration::from_millis(50)),
-            }
-        }
-    }
-
-    if had_to_escalate {
-        // SIGKILL'd a process — give the OS a beat to release the port.
-        std::thread::sleep(Duration::from_millis(200));
-    }
 }
 
 /// Build a reqwest blocking client that accepts self-signed certs.
