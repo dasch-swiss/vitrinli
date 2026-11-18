@@ -1,5 +1,62 @@
 # Changelog
 
+## [10.1.1](https://github.com/dasch-swiss/vitrinli/compare/v10.1.0...v10.1.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **deps:** Raise quinn-udp to 0.5.16 past RUSTSEC-2026-0538 ([878af8b](https://github.com/dasch-swiss/vitrinli/commit/878af8b78175d8a187ca748834c2f814749404fb))
+* **e2e:** Signal only spawned servers and skip busy ports ([bfe6494](https://github.com/dasch-swiss/vitrinli/commit/bfe649495ea67a5320737a791517adbd49ebe9ec))
+* **ffi:** Apply the restricted rewrite to XMP and IPTC promoted from EXIF IFD0 ([ec4b58f](https://github.com/dasch-swiss/vitrinli/commit/ec4b58f5046998c9855291501bbe3310d0a8c54f))
+* **ffi:** Bound the Lua SipiImage.dims probe by the decode deadline ([a4a69da](https://github.com/dasch-swiss/vitrinli/commit/a4a69da069f8c9c38588af3718d3567f7fbd3c17))
+* **ffi:** Never cache watermarked image responses ([4657bf8](https://github.com/dasch-swiss/vitrinli/commit/4657bf89db78241943a8da004d5243a5bff77255))
+* **format_handlers:** Read a PNG's XMP from the whole iTXt chunk ([b49156a](https://github.com/dasch-swiss/vitrinli/commit/b49156a90baf1e1564aad4776467b8c348e05d07))
+* **format_handlers:** Read ExtendedXMP back from JPEG ([a7366e3](https://github.com/dasch-swiss/vitrinli/commit/a7366e3d2cbc39e04763df253d5601dc4c2317ea))
+* **format_handlers:** Write a TIFF's YResolution from the source YResolution ([4e3001d](https://github.com/dasch-swiss/vitrinli/commit/4e3001d0e7ba1c5022353747101f81d58d566a6d))
+* **image:** Write XMP and IPTC held only in EXIF IFD0 copies as the primary blocks ([2ce984f](https://github.com/dasch-swiss/vitrinli/commit/2ce984fe695ff69857747c8e56bd718db0b2b2a5))
+* **metadata:** Join ExtendedXMP back into its StandardXMP ([3f0aee3](https://github.com/dasch-swiss/vitrinli/commit/3f0aee36bdab5ad3a093c853fdcaf5c9cfb97299))
+* **metadata:** Read and check the raw XMP and IPTC copies EXIF IFD0 holds ([ccbbae5](https://github.com/dasch-swiss/vitrinli/commit/ccbbae549be70186f10d27cd6085a837bd443f61))
+* **server,ffi,cli:** Bound the server decode deadline below the request timeout ([e31323a](https://github.com/dasch-swiss/vitrinli/commit/e31323a26646508c531a221aadf4b05a4de4c75f))
+* **server,ffi:** Run size-restricted image decodes in the Full admission lane ([f5f9ae0](https://github.com/dasch-swiss/vitrinli/commit/f5f9ae0ba7792524c3cd627faed8f2ffb1635af3))
+* **server:** Keep credential-dependent responses out of shared caches ([fe6c6a2](https://github.com/dasch-swiss/vitrinli/commit/fe6c6a29ee756f7c41c6b47bc43f6d6dd30381f8))
+* **throttling,server,cli:** Shed all admissions and fail /health at the wedged-thread cap ([636bd0d](https://github.com/dasch-swiss/vitrinli/commit/636bd0d6fe8e32ad0754f88533e1e5612d3477f4))
+
+
+### Code Refactoring
+
+* **cli:** Take the offline decode deadline from the ffi constant ([d46a37d](https://github.com/dasch-swiss/vitrinli/commit/d46a37d4575cde281b771917a1e9f4d20590bf76))
+* **ffi:** Name the default decode deadline once ([794b414](https://github.com/dasch-swiss/vitrinli/commit/794b414430d23f1e0e04461e135f1b1deca60fdd))
+* **format_handlers:** Give memTiffOpen C++ linkage ([96238c5](https://github.com/dasch-swiss/vitrinli/commit/96238c51312dc3ac860c8c87012921245ea0949a))
+* **server,cli:** Pass the serve knobs as one ServeKnobs struct ([bd92f4d](https://github.com/dasch-swiss/vitrinli/commit/bd92f4d7bc7497668fe429507c55e9297f19735f))
+* **throttling:** Report the partition a permit was admitted to ([d6a6283](https://github.com/dasch-swiss/vitrinli/commit/d6a6283f40e9236be9a8e436b7333114be140f8f))
+
+
+### Documentation
+
+* **docs:** Map the bug-fix stack in ARCH-MAP and CONTEXT ([0c4b77a](https://github.com/dasch-swiss/vitrinli/commit/0c4b77a1df2a76fcdb5ff1e7d9db835db69fb8b7))
+* **metadata:** Record that input caps do not bound copied parse state ([bc9e106](https://github.com/dasch-swiss/vitrinli/commit/bc9e106bbb6f8f2a0ea5335e2493932f35bfaca0))
+* **specs:** Add the extended-xmp thread journal ([98f6275](https://github.com/dasch-swiss/vitrinli/commit/98f6275d683d46064ec08caad55f606515ff382e))
+* **specs:** Journal of the headers unit of the Linear bug-fix plan ([67f385a](https://github.com/dasch-swiss/vitrinli/commit/67f385af5a08446ddf58ddd80d65a8ebabe9428c))
+* **specs:** Journal the admission unit of the Linear bug-fix plan ([4bc7001](https://github.com/dasch-swiss/vitrinli/commit/4bc7001a0c69f245123991ef6881f67d2875552c))
+* **specs:** Journal the deadline unit of the Linear bug-fix plan ([7325d3f](https://github.com/dasch-swiss/vitrinli/commit/7325d3f9c55d79a991103a38376f456fb36d7142))
+* **specs:** Journal the ifd0-rights unit ([88569ce](https://github.com/dasch-swiss/vitrinli/commit/88569ce3b0ed9b30c2b75168ad3fdd0a1a20817c))
+* **specs:** Journal the tiff-writer unit ([befba35](https://github.com/dasch-swiss/vitrinli/commit/befba35c750d993b6a7a79de7df3a75c512e740a))
+* **specs:** Journal the watermark-cache unit ([534cb44](https://github.com/dasch-swiss/vitrinli/commit/534cb4433216cec085de38c060e7c40d9a3f21e7))
+* **specs:** Plan the open Linear bug fixes as parallel threads ([36f954a](https://github.com/dasch-swiss/vitrinli/commit/36f954acd13fb296d548a5e9ed9900eb62ed49e0))
+* **throttling:** Record the Full-lane swap for size-restricted requests ([6e049b5](https://github.com/dasch-swiss/vitrinli/commit/6e049b5d144cd3036e4eb94fab7383b344f15a71))
+
+
+### Tests
+
+* **throttling:** Serve a size-restricted region request after the lane swap ([ece026b](https://github.com/dasch-swiss/vitrinli/commit/ece026b20740a2feda75b9322fa826dde7c4a612))
+
+
+### Miscellaneous Chores
+
+* **ci:** Drop Docker Scout from CI ([c3e8885](https://github.com/dasch-swiss/vitrinli/commit/c3e8885a1f8aeed39f1139747083cdae1875b97c))
+* **ci:** Fail CI when a test can signal a process it did not spawn ([82e0604](https://github.com/dasch-swiss/vitrinli/commit/82e060459cfc77e3057702b9ee12d2e2d188baa3))
+* **deps:** Ignore the new actix-http and chrono advisories ([2144610](https://github.com/dasch-swiss/vitrinli/commit/2144610e920fe7fc094dc21c894c883b8a1bcebe))
+
 ## [10.1.0](https://github.com/dasch-swiss/vitrinli/compare/v10.0.1...v10.1.0) (2026-11-12)
 
 
