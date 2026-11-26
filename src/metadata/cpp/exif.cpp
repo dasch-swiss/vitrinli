@@ -13,6 +13,7 @@
 #include <numeric>
 #include <optional>
 #include <set>
+#include <sstream>
 #include <string>
 
 #include <exiv2/iptc.hpp>
@@ -556,13 +557,23 @@ Exiv2::URational Exif::toURational(float f)
 
 std::ostream &operator<<(std::ostream &outstr, Exif &rhs)
 {
-  auto end = rhs.exifData.end();
-  for (auto i = rhs.exifData.begin(); i != end; ++i) {
-    const char *tn = i->typeName();
-    outstr << std::setw(44) << std::setfill(' ') << std::left << i->key() << " "
-           << "0x" << std::setw(4) << std::setfill('0') << std::right << std::hex << i->tag() << " " << std::setw(9)
+  for (const auto &datum : rhs.exifData) {
+    // Rendering a value can throw (a charset conversion Exiv2 cannot do); one
+    // such value must not fail the whole print.
+    std::string value;
+    try {
+      std::ostringstream rendered;
+      rendered << datum.value();
+      value = rendered.str();
+    } catch (const std::exception &err) {
+      log_warn("Exif value of %s cannot be converted to text: %s", datum.key().c_str(), err.what());
+      value = "<unconvertible>";
+    }
+    const char *tn = datum.typeName();
+    outstr << std::setw(44) << std::setfill(' ') << std::left << datum.key() << " "
+           << "0x" << std::setw(4) << std::setfill('0') << std::right << std::hex << datum.tag() << " " << std::setw(9)
            << std::setfill(' ') << std::left << (tn ? tn : "Unknown") << " " << std::dec << std::setw(3)
-           << std::setfill(' ') << std::right << i->count() << "  " << std::dec << i->value() << "\n";
+           << std::setfill(' ') << std::right << datum.count() << "  " << value << "\n";
   }
   return outstr;
 }

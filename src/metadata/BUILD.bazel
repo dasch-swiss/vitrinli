@@ -173,3 +173,19 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+# Co-located unit test for the Exif printer: a UserComment that cannot be
+# converted to text prints a placeholder instead of throwing.
+cc_test(
+    name = "exif_charset_test",
+    srcs = ["cpp/exif_charset_test.cpp"],
+    # exiv2's Exifdatum value conversion reaches iconv(), explicit on macOS.
+    linkopts = select({
+        "@platforms//os:macos": ["-liconv"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":metadata",
+        "@googletest//:gtest_main",
+    ],
+)
