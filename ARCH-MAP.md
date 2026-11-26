@@ -1,7 +1,7 @@
 ---
 dune_map: true
 schema_version: 2
-date: 2026-11-16
+date: 2026-11-27
 ---
 
 # ARCH-MAP.md — Vitrinli
@@ -35,7 +35,7 @@ image formats, whose registry fan-out is documented, not mechanized.
 
 - **Paths:** `:(glob)src/image/**`, `:(glob)src/BUILD.bazel`, `:(glob)src/nsswitch.conf`
 - **Purpose:** The image engine hub — `SipiImage` is the pixel-buffer + metadata value type that orchestrates decode → encode through the format-handler dispatch, and owns the `//src` package's Bazel wiring. Processing operators (crop/scale/rotate/ICC conversion/watermarking/comparison/arithmetic) are not methods on the class — they are free functions in `image_processing`.
-- **Key entities:** `Sipi::SipiImage`, `SipiImage::io` (static handler registry, *defined* in `format_handlers`), `SipiImage::read`/`readSource`/`write`/`getDim` (decode/encode orchestration), the pixel/metadata mutator surface (`setPixel`/`set_pixels`/`setEs`/`setPhoto`/`set_icc`/`setOrientation`/`essential_metadata`), `Sipi::SipiIO` (abstract), `SipiImgInfo`, `Sipi::SipiImageError`; `SipiImage::promote_ifd0_copies` (makes the EXIF IFD0 `XMLPacket`/`IPTCNAA` copies the primary XMP/IPTC when those are absent; `write()` and `ffi`'s `rewrite_restricted_metadata` call it, so a pre-write metadata edit must call it first)
+- **Key entities:** `Sipi::SipiImage`, `SipiImage::io` (static handler registry, *defined* in `format_handlers`), `SipiImage::read`/`readSource`/`write`/`getDim` (decode/encode orchestration), `SipiImage::read_metadata` (header and metadata only, no pixel decode; `sipi query` reads with it) over the shared `read_dispatch` (extension first, then every other handler, same `kUnsupportedFormat` error as `read`), the pixel/metadata mutator surface (`setPixel`/`set_pixels`/`setEs`/`setPhoto`/`set_icc`/`setOrientation`/`essential_metadata`), `Sipi::SipiIO` (abstract; pure virtuals `read`, `read_shape`, `read_metadata`, `write`), `SipiImgInfo`, `Sipi::SipiImageError`; `SipiImage::promote_ifd0_copies` (makes the EXIF IFD0 `XMLPacket`/`IPTCNAA` copies the primary XMP/IPTC when those are absent; `write()` and `ffi`'s `rewrite_restricted_metadata` call it, so a pre-write metadata edit must call it first)
 - **Public interface:** `SipiImage` (via `//src/image`), `SipiIO`; consumed by `format_handlers`, `image_processing`, `ffi` (including the `sipi_image_*` handles behind the Lua `SipiImage` bindings), and `cli`.
 - **Local-context kit:** `src/image/cpp/SipiImage.h`, `src/image/cpp/SipiImage.cpp`, `src/image/cpp/SipiIO.h`, `src/image/BUILD.bazel`, `src/BUILD.bazel` (the `:sipi_lib` target), `src/format_handlers/cpp/format_registry.cpp` (where `io` is defined), `docs/adr/0007-sipiimage-decomposition.md`, `CONVENTIONS.md`
 - **Depends on:** error, metadata, iiifparser, format_handlers (`:output_sink` only), util, logging, observability, throttling
@@ -45,7 +45,7 @@ image formats, whose registry fan-out is documented, not mechanized.
   - The four codec handlers mutate `SipiImage` only through its public mutator surface (`pixels_writable()` plus the metadata/geometry setters) — no `friend` declarations remain; the sole surviving friend is `operator<<`. *Enforcement: `structure`* (the mutator surface is a normal public API, not a language reach-in).
   - `image_processing` depends one-way on `//src/image`; `//src/image` never depends back — a facade method forwarding to a free function in `image_processing` would reintroduce the cycle the extraction removes. *Enforcement: `structure`* (`bazel query 'somepath(//src/image, //src/image_processing)'` is empty; see the `image_processing` entry for the CI-only caveat on running this locally).
 - **Durable state:** `SipiImage::io` (static registry, single writer = `format_registry.cpp`).
-- **Fingerprint:** `9d39e42f1052`
+- **Fingerprint:** `163c1524b114`
 
 ### image_processing
 
@@ -118,7 +118,7 @@ engine-side memory budget under one component. Supersedes the former
 
 - **Paths:** `:(glob)src/format_handlers/**`
 - **Purpose:** The four `SipiIO` codec handlers (TIFF, JPEG2000/Kakadu, JPEG, PNG), the codec-agnostic `output_sink`, the `SipiImage::io` registry definition, and the codec fuzz harnesses under `fuzz/` (per-format `*_decode_fuzz` + `*_roundtrip_fuzz` `cc_fuzz_test` targets, corpus-replayed on every platform).
-- **Key entities:** `SipiIOTiff`/`SipiIOJ2k`/`SipiIOJpeg`/`SipiIOPng`, `OutputSink`/`SinkStream`, `read_watermark` (declared/called in `image_processing`, *defined* here), `SipiImage::io` (defined in `format_registry.cpp`)
+- **Key entities:** `SipiIOTiff`/`SipiIOJ2k`/`SipiIOJpeg`/`SipiIOPng` (each `read` and `read_metadata` wraps one private `read_image(..., decode_pixels)`, so the header a metadata read reports is the header a full read leaves), `kdu_failure`/`discard_kdu_error_text` (`SipiIOJ2k.cpp`: every `catch (kdu_exception)` that returns an error builds it with `kdu_failure`, which appends this thread's Kakadu error text; a catch that recovers discards it), `OutputSink`/`SinkStream`, `read_watermark` (declared/called in `image_processing`, *defined* here), `SipiImage::io` (defined in `format_registry.cpp`)
 - **Public interface:** the `SipiIO` overrides (reached only through `SipiImage`'s dispatch); `output_sink` is a separate leaf target `//src/format_handlers:output_sink`.
 - **Local-context kit:** `src/format_handlers/BUILD.bazel`, `src/format_handlers/cpp/format_registry.cpp`, `src/format_handlers/cpp/SipiIOTiff.{h,cpp}`, `src/format_handlers/cpp/output_sink.h`, `src/image/cpp/SipiImage.h` (`io` decl + the public mutator surface), `tools/format-handlers-fanout.sh`, `src/image_processing/cpp/processing.h` (the `read_watermark` declaration) + `src/image_processing/cpp/compose.cpp` (its sole caller — the declare-there/define-here reciprocal for a `read_watermark` signature change) (the new-format edit-site list)
 - **Depends on:** error, image (`//src/image`, one-way), image_processing (the `read_watermark` declaration + pixel-operator fixtures its tests drive), metadata, observability, logging, util, output_sink; codecs `@kakadu` `@tiff` `@libpng` `@libjpeg_turbo`
@@ -128,9 +128,10 @@ engine-side memory budget under one component. Supersedes the former
   - Byte-exact cross-arch output invariant — the encode paths are pinned byte-for-byte by `//test/approval:approvaltests` across all platforms; math feeding the encoder must be architecture-independent (fixed-point over float). *Enforcement: `static-analysis`* (CI approval gate; file-head banners in SipiIOTiff/J2k/Png.cpp).
   - The JPEG writer owns the one-segment fit policy: a metadata block that `Exif::exifBytes(limit)` or `Xmp::split_extended` cannot fit is left out with a `log_warn` naming block, size and reason, and the write succeeds; those functions only report `kWriteFailed`. *Enforcement: `static-analysis`* (`formats_test` `JpegMetadataSegments.*LeftOutWithAWarning`).
   - The JPEG reader joins ExtendedXMP with `Xmp::merge_extended`; it and `Xmp::split_extended` are the two halves of one segment format and one 16 MiB cap, so a change to either changes both. *Enforcement: `static-analysis`* (`formats_test` `JpegMetadataSegments.LargeXmpIsSplit*` round trip).
+  - Kakadu error text is per thread (`thread_local` in `KduSipiError`): a returned J2K error carries the text Kakadu raised on the calling thread only; text raised on a `kdu_thread_env` worker is logged but not returned. *Enforcement: `review`* (the `kdu_failure` comment).
   - Adding a format touches a shared registry + dispatch fan-out (~4 sites across 3 files, listed by `tools/format-handlers-fanout.sh`). *Enforcement: `docs-only`* (DUNE-005 deferred a descriptor table until a real 5th format; ADR-0006 is the prior art to check first).
 - **Durable state:** `SipiImage::io` (single writer here); no runtime state.
-- **Fingerprint:** `ca4be69c2cd3`
+- **Fingerprint:** `bd4909f40eab`
 
 ### iiifparser
 
@@ -153,7 +154,7 @@ engine-side memory budget under one component. Supersedes the former
 
 - **Paths:** `:(glob)src/metadata/**`
 - **Purpose:** EXIF / IPTC / XMP / ICC wrappers over exiv2 + lcms2, and the Essentials preservation packet. Sits **below** the image engine (no `SipiImage` dep). The canonical model package (docstring README, Test-seam visibility, colocated tests).
-- **Key entities:** `Exif`/`Iptc`/`Xmp`/`Icc`/`Essentials`, `Icc::iccBytes()` (the single ICC-materialization chokepoint, ADR-0002), `EssentialsFields`, `PhotometricInterpretation`, `Exif::set_pixel_dimensions`/`erase_previews` + `Xmp::set_pixel_dimensions`/`erase_thumbnails` + `Exif::restrict_image_resources` (called only by `ffi`'s `rewrite_restricted_metadata`: a size-restricted output states its delivered size in every size field and drops every embedded preview (EXIF IFD1/SubIFD/maker-note previews, XMP `xmp:Thumbnails` and `xmpGImg:image`, IPTC `Preview`, via `Iptc::erase_preview`; the same inside the EXIF's Photoshop image resources), every other field is kept, and a size field that cannot take the new value, an XMP preview that cannot be removed or image resources that cannot be rewritten fail the request; unrestricted outputs keep the source's tags), `Exif::exifBytes(limit)` + `Xmp::split_extended` (the JPEG writer's one-segment fit: EXIF without its previews, XMP split into ExtendedXMP; otherwise `kWriteFailed`, and the JPEG writer decides; see format_handlers), `Xmp::merge_extended` (the JPEG reader's inverse: joins the ExtendedXMP back into the StandardXMP, or keeps the StandardXMP as it is); `Xmp::merge_extended` (joins a JPEG ExtendedXMP read back into its StandardXMP; the parts are untrusted, so input, namespace URIs and descriptions are capped), `Xmp::parse_complete`/`Iptc::parse_complete`/`Exif::value_bytes` (the check an EXIF IFD0 copy passes before `SipiImage::promote_ifd0_copies` uses it).
+- **Key entities:** `Exif`/`Iptc`/`Xmp`/`Icc`/`Essentials`, `Icc::iccBytes()` (the single ICC-materialization chokepoint, ADR-0002), `operator<<(std::ostream &, Exif &)` (prints `<unconvertible>` with a `log_warn` for a value Exiv2 cannot convert, never throws; `sipi query` prints through it), `Iptc::parse` (`kMetadataParseFailed` naming Exiv2's decode code; IPTC parse failures stay fatal), `EssentialsFields`, `PhotometricInterpretation`, `Exif::set_pixel_dimensions`/`erase_previews` + `Xmp::set_pixel_dimensions`/`erase_thumbnails` + `Exif::restrict_image_resources` (called only by `ffi`'s `rewrite_restricted_metadata`: a size-restricted output states its delivered size in every size field and drops every embedded preview (EXIF IFD1/SubIFD/maker-note previews, XMP `xmp:Thumbnails` and `xmpGImg:image`, IPTC `Preview`, via `Iptc::erase_preview`; the same inside the EXIF's Photoshop image resources), every other field is kept, and a size field that cannot take the new value, an XMP preview that cannot be removed or image resources that cannot be rewritten fail the request; unrestricted outputs keep the source's tags), `Exif::exifBytes(limit)` + `Xmp::split_extended` (the JPEG writer's one-segment fit: EXIF without its previews, XMP split into ExtendedXMP; otherwise `kWriteFailed`, and the JPEG writer decides; see format_handlers), `Xmp::merge_extended` (the JPEG reader's inverse: joins the ExtendedXMP back into the StandardXMP, or keeps the StandardXMP as it is); `Xmp::merge_extended` (joins a JPEG ExtendedXMP read back into its StandardXMP; the parts are untrusted, so input, namespace URIs and descriptions are capped), `Xmp::parse_complete`/`Iptc::parse_complete`/`Exif::value_bytes` (the check an EXIF IFD0 copy passes before `SipiImage::promote_ifd0_copies` uses it).
 - **Public interface:** the wrapper classes (via `//src/metadata:metadata`); the byte-mutation helper is in `//src/metadata/cpp/internal` (restricted).
 - **Local-context kit:** `src/metadata/BUILD.bazel`, `src/metadata/cpp/icc.h`, `src/metadata/cpp/icc.cpp`, `src/metadata/cpp/internal/BUILD.bazel`, `src/metadata/cpp/internal/icc_normalization.{h,cpp}`, `src/metadata/cpp/internal/icc_lcms2.h`, `src/metadata/cpp/essentials.h`, `docs/adr/0002-icc-profile-determinism-test-only.md`
 - **Depends on:** error (`SipiError`), util, logging; exiv2, lcms2, openssl, protobuf (internal codec), libexpat (`Xmp::split_extended`, `Xmp::merge_extended`)
@@ -163,7 +164,7 @@ engine-side memory budget under one component. Supersedes the former
   - `Icc::iccBytes()` is the single chokepoint every codec-bound ICC profile funnels through; new format handlers must route through it (bypassing it breaks the approval gate). *Enforcement: `static-analysis`* (approval determinism gate) + `docs-only` (the banner).
   - No `SipiImage` dependency — the one former coupling was inverted via `photometric_interpretation.h`. *Enforcement: `structure`* (dep set).
 - **Durable state:** none in-process; the durable artifact is the Essentials packet embedded in image headers (written by format encoders via `Essentials::serialize`).
-- **Fingerprint:** `8adc36752a82`
+- **Fingerprint:** `0adb1555204c`
 
 ### scripting
 
@@ -209,20 +210,20 @@ engine-side memory budget under one component. Supersedes the former
 
 - **Paths:** `:(glob)src/logging/**`
 - **Purpose:** A generic, non-`Sipi::` logging primitive (free functions + set-once flags + per-request thread-local trace context) any module may depend on. Pure stdlib.
-- **Key entities:** `log_debug`/`log_info`/`log_warn`/`log_err`, `enum LogLevel`, `set_log_trace_context`/`set_outbound_traceparent`, `set_json_mode`
+- **Key entities:** `log_debug`/`log_info`/`log_warn`/`log_err`, `enum LogLevel`, `set_log_trace_context`/`set_outbound_traceparent`, `set_json_mode`, `set_correlation_id`/`get_correlation_id` (in CLI mode the first line of each log call starts with `[<id>] `; server mode has no prefix)
 - **Public interface:** `logger.h` (via `//src/logging:logging`, `include_prefix="logging"`).
 - **Local-context kit:** `src/logging/BUILD.bazel`, `src/logging/cpp/logger.h`, `src/logging/cpp/logger.cpp`
 - **Depends on:** (stdlib only)
 - **Used by:** nearly every C++ component
 - **Boundary rules:** the one module whose per-target `layering_check` passes today (no vendored includes). *Enforcement: `static-analysis`* (layering_check enabled on this target only; deferred elsewhere — DEV-6353).
-- **Durable state:** module-level statics (`g_log_level`, `g_json_mode`) + thread-locals (`g_trace_id`/`g_span_id`/`g_outbound_traceparent`); writers are the `set_*` functions.
-- **Fingerprint:** `b70ae38e6109`
+- **Durable state:** module-level statics (`g_log_level`, `g_json_mode`, `g_correlation_id`, set once by `cli` before any thread starts) + thread-locals (`g_trace_id`/`g_span_id`/`g_outbound_traceparent`); writers are the `set_*` functions.
+- **Fingerprint:** `2e7a48860d2c`
 
 ### ffi
 
 - **Paths:** `:(glob)src/ffi/**`
 - **Purpose:** The hand-mirrored `extern "C"` seam the Rust shell drives the C++ engine through — serve entries, the engine-context install (`sipi_init`), the metrics snapshot, edge probes, the `sipi_image_*` opaque image handle family (the Rust Lua `SipiImage` bindings' callee), and the shared `LibraryInitialiser`. Config parsing is NOT here: the shell parses both config flavors (TOML via `config_file.rs`, Lua via `//src/scripting/rust`) and `sipi_init` consumes only the resolved `SipiServerConfig` override channel.
-- **Key entities:** `sipi_serve_image`/`sipi_serve_file`/`sipi_init`/`sipi_metrics_snapshot`/`sipi_cli_main` (defined in `cli`), the `sipi_image_*` handle family, `SipiResponse` (streamed sink), `SipiIiifParams`/`SipiServeRequest`/`SipiMetricsSnapshot` (`#[repr(C)]` mirrors; `SipiServeRequest.restricted_width`/`restricted_height` carry the shell-decided (RW, RH), both 0 when unrestricted, and the engine refuses a half-set pair, an axis below 2 or dims larger than the image), `SipiPermType` (the eight-value *Permission* enum, hand-mirrored with paired value asserts; appended to, never renumbered), `EngineContext` + `set_engine_context`, `LibraryInitialiser`, `Sipi::SipiConf`, `Sipi::parseSizeString` (the Lua-flavoured config object `sipi_init` constructs and populates)
+- **Key entities:** `sipi_serve_image`/`sipi_serve_file`/`sipi_init`/`sipi_metrics_snapshot`/`sipi_cli_main`/`sipi_cli_set_correlation_id` (both defined in `cli`), the `sipi_image_*` handle family, `SipiResponse` (streamed sink), `SipiIiifParams`/`SipiServeRequest`/`SipiMetricsSnapshot` (`#[repr(C)]` mirrors; `SipiServeRequest.restricted_width`/`restricted_height` carry the shell-decided (RW, RH), both 0 when unrestricted, and the engine refuses a half-set pair, an axis below 2 or dims larger than the image), `SipiPermType` (the eight-value *Permission* enum, hand-mirrored with paired value asserts; appended to, never renumbered), `EngineContext` + `set_engine_context`, `LibraryInitialiser`, `Sipi::SipiConf`, `Sipi::parseSizeString` (the Lua-flavoured config object `sipi_init` constructs and populates)
 - **Public interface:** `sipi_ffi.h` (`include_prefix="ffi"` + `strip_include_prefix="/src/ffi/cpp"` → `#include "ffi/sipi_ffi.h"`), mirrored by hand in `src/server/rust/src/ffi.rs`.
 - **Local-context kit:** `src/ffi/cpp/sipi_ffi.h`, `src/ffi/cpp/serve_image.cpp`, `src/ffi/cpp/engine_context.{h,cpp}`, `src/ffi/cpp/init.cpp`, `src/ffi/cpp/metrics_snapshot.h`, `src/ffi/cpp/SipiConf.{h,cpp}`, `src/ffi/cpp/image_handle.cpp` (defines the `sipi_image_*` family), `src/ffi/BUILD.bazel`, `src/server/rust/src/ffi.rs` (the primary Rust mirror)
 - **Depends on:** image, format_handlers, iiifparser (transitive), metadata, util, observability, logging; curl, exiv2
@@ -233,7 +234,7 @@ engine-side memory budget under one component. Supersedes the former
   - No C++ exception may cross the boundary — every `sipi_*` wraps in a catch-all (`sipi_guard`). *Enforcement: `review`*.
   - The C ABI is hand-mirrored on the Rust side in **two disjoint** files, partitioned by consumer: `src/server/rust/src/ffi.rs` (serve entries + config getters) and `src/scripting/rust/engine_ffi.rs` (the `sipi_image_*` handle family the Lua bindings call). No `sipi_*` function is declared in both. As with every hand-mirrored `extern "C"` fn decl here, the function *signatures* carry no mechanical guard against `sipi_ffi.h` (only the `#[repr(C)]` struct *layouts* are guarded, above), so a C++ signature change must be mirrored by hand in whichever file owns that function. *Enforcement: `docs-only`*.
 - **Durable state:** `EngineContext` (file-static `g_engine`, single sink `set_engine_context`, sole installer `sipi_init`).
-- **Fingerprint:** `9b2edbd9b07a`
+- **Fingerprint:** `496f203133f6`
 
 ### cli
 
@@ -242,10 +243,10 @@ Rust binary entry point under one component.
 
 - **Paths:** `:(glob)src/cli/cpp/**` (offline verbs, engine-side), `:(glob)src/cli/rust/**` (the `sipi` binary entry point, shell-side), `:(glob)src/cli/BUILD.bazel`.
 - **Purpose:** C++: the offline verbs (convert/verify/query/compare/health) behind the `sipi_cli_main` FFI entry, and the thin `main` in `sipi.cpp`. Server mode was deleted with the oracle (Phase 7). Rust: the default `sipi` binary (`//src/cli/rust:sipi`) — owns `main`, the clap `server` verb, Sentry init + the out-of-process minidump reporter (not in ASan builds), and the mimalloc allocator; dispatches offline verbs to the C++ `sipi_cli_main`.
-- **Key entities:** C++: `sipi_cli_main` (extern "C"), `Sipi::cli::cmd_convert_access_file`/`cmd_convert_service_file`/`cmd_verify`/`cmd_health`, `LibraryInitialiser::instance()`, `Sipi::emit_json_report`, `Sipi::emit_json_cli_arg_error` (the `--json` report emitter). Rust: `main`, `commands::server::run`, `ServerArgs` (clap flatten groups), `impl From<&ServerArgs> for ServerOverrides` (exhaustive destructure, DUNE-006), `mod allocator` (mimalloc `extern "C"` block), `init_sentry`.
-- **Public interface:** `sipi_cli_main` (the sole export `cli/rust` links); `//src/cli:sipi` binary (offline verbs); `//src/cli/rust:sipi` binary (the deployed `sipi` binary); clap `ServerArgs`.
+- **Key entities:** C++: `sipi_cli_main` (extern "C"), `Sipi::cli::cmd_convert_access_file`/`cmd_convert_service_file`/`cmd_verify`/`cmd_health`, `LibraryInitialiser::instance()`, `Sipi::emit_json_report`, `Sipi::emit_json_cli_arg_error` (the `--json` report emitter; every document carries `correlation_id`, every error document an `error_code`), `Sipi::error_code_name` (total `switch` over `ErrorCode`, no `default`), `read_with_deadline`/`read_metadata_with_deadline` (`commands/decode_deadline.h`). Rust: `main`, `commands::server::run`, `ServerArgs` (clap flatten groups), `impl From<&ServerArgs> for ServerOverrides` (exhaustive destructure, DUNE-006), `mod allocator` (mimalloc `extern "C"` block), `init_sentry`, `correlation_id`/`is_valid_correlation_id` (`run_cli` resolves the ID once: `SIPI_CORRELATION_ID` when it matches `[A-Za-z0-9._:-]{1,128}`, else 32 random hex characters; sets the Sentry tag and calls `sipi_cli_set_correlation_id`).
+- **Public interface:** `sipi_cli_main` and `sipi_cli_set_correlation_id` (the two exports `cli/rust` links; the ID is validated on the Rust side only, and C++ splices it into the fallback JSON as is); `//src/cli:sipi` binary (offline verbs); `//src/cli/rust:sipi` binary (the deployed `sipi` binary); clap `ServerArgs`.
 - **Local-context kit:** `src/cli/cpp/cli_app.cpp`, `src/cli/cpp/sipi.cpp`, `src/cli/cpp/SipiReport.{h,cpp}`, `src/cli/BUILD.bazel`, `src/cli/cpp/commands/BUILD.bazel`, `src/cli/cpp/commands/convert_service_file.h`, `src/cli/rust/src/main.rs`, `src/cli/rust/src/commands/server/mod.rs`, `src/cli/rust/src/commands/server/args/mod.rs`, `src/cli/rust/BUILD.bazel`, `docs/adr/0009-file-taxonomy.md`, `docs/adr/0019-mimalloc-production-allocator.md`, `docs/adr/0018-minidump-crash-memory-accepted-risk.md`
-- **Depends on:** C++: image (`sipi_lib`), ffi (`sipi_cli_main` contract, shared `startup`), cli11, jansson. Rust: server (`sipi::run`), the C++ `cli_app` (`sipi_cli_main`), mimalloc (vendored static, Linux-non-ASan), sentry(+minidump, non-ASan).
+- **Depends on:** C++: image (`sipi_lib`), error, logging, ffi (`sipi_cli_main` contract, shared `startup`), cli11, jansson. Rust: server (`sipi::run`), the C++ `cli_app` (`sipi_cli_main`), mimalloc (vendored static, Linux-non-ASan), sentry(+minidump, non-ASan).
 - **Used by:** (top of the binary graph) — `//src/cli/rust:sipi` is the deployed entry point.
 - **Boundary rules:**
   - C++: one `.cpp`/`.h` per `sipi <verb> <noun>` in `commands/`; CLI11 stays in `cli_app.cpp` and never leaks into `commands/` (which take plain `*Args` structs). `//src/cli/cpp/commands` visibility scoped to `//src/cli:__pkg__`. *Enforcement: `structure`* (visibility) + `docs-only` (the one-file-per-verb convention).
@@ -253,7 +254,7 @@ Rust binary entry point under one component.
   - The mimalloc stats `extern "C"` block is deliberately colocated in `main.rs` (drops out with the feature; a version drift is a SIGSEGV, not a build error — read via the `mi_stats_shim.c` C shim). *Enforcement: `docs-only`* (SAFETY comment; decision 4).
   - Same oracle-vocabulary avoidance as `server`. *Enforcement: `docs-only`* (the `CONVENTIONS.md` § Production surface rule).
 - **Durable state:** `LibraryInitialiser` singleton (process-global init, idempotent); the Rust binary owns the process lifecycle, the Sentry client guard, and the minidump reporter guard (none persistent).
-- **Fingerprint:** `c7b16697a714`
+- **Fingerprint:** `1820f15552c3`
 
 ### server
 
