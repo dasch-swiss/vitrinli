@@ -15,8 +15,18 @@ use std::fs::{self, File};
 use std::io::{self, BufWriter, Write};
 use std::process::ExitCode;
 
+// An LFS-tracked input in a checkout without `git lfs pull` is pointer text;
+// embedding it would ship a binary with unusable assets.
+const LFS_POINTER_PREFIX: &[u8] = b"version https://git-lfs.github.com/spec/";
+
 fn run(input: &str, output: &str, symbol: &str) -> io::Result<()> {
     let bytes = fs::read(input)?;
+    if bytes.starts_with(LFS_POINTER_PREFIX) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input is a Git LFS pointer, not the file; a file that bin2c compiles in must be a plain git object (exempt it from LFS in .gitattributes)",
+        ));
+    }
     let mut out = BufWriter::new(File::create(output)?);
     writeln!(out, "unsigned char {symbol}[] = {{")?;
     for (i, b) in bytes.iter().enumerate() {
