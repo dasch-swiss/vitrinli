@@ -158,6 +158,7 @@ Per-module Bazel packages co-locate their unit tests alongside the sources
 - `//src/image_processing:image_processing_test` — scale/rotate/crop, channel-count and equality/pixel-delta regressions, and the engine-direct IIIF transform matrix
 - `//src/format_handlers:formats_test`, `//src/format_handlers:output_sink_test` — per-format read/write/read_shape regression suites (TIFF, JPEG, PNG, J2K) + the write sink
 - `//src/format_handlers:tiff_codecs_test` — libtiff ingest-codec coverage proof (JPEG/LZMA/ZSTD/WebP/JBIG compiled in)
+- `//src/format_handlers:tiff_read_buffer_test` — TIFF reader pixels per layout (strip/tiled, 8/16-bit, planar) and its peak heap: one full-size pixel buffer for contiguous 8- and 16-bit images
 - `//src/cache:cache_test` — LRU cache: indexing, crash recovery, persistence, add/check/remove, dual-limit eviction, blocked-file handling
 - `//src/logging:logger_test` — logger
 - `//src/throttling/cpp:memory_budget_test` — decode memory budget: CAS accounting, RAII guard, peak-memory estimator

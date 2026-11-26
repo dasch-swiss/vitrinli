@@ -132,9 +132,9 @@ inline std::uint16_t read_u16le(const uint8_t *data, std::size_t offset)
 // Sized for the slowest configuration that runs this harness, not for RSS.
 // The ASan-paired fuzz pass builds at `-O0` (`build:asan` forces
 // `--compilation_mode=dbg`), where libc++ destroys a byte vector with one
-// non-inlined call per element and the TIFF handler holds two full-size
-// pixel buffers at once — so an admitted decode costs roughly 60 ms per MB
-// of geometry even when libtiff rejects the first scanline. libFuzzer's
+// non-inlined call per element and the TIFF handler allocates a full-size
+// pixel buffer before the first scanline — so an admitted decode costs up to
+// roughly 60 ms per MB of geometry even when libtiff rejects that scanline. libFuzzer's
 // per-input timeout is 25 s (`fuzz.yml`); 64 MiB keeps the worst case near
 // 4 s. Larger geometries add no coverage: more scanlines run the same code.
 inline constexpr std::uint64_t kMaxHarnessDecodeBytes = 64ULL * 1024 * 1024;
