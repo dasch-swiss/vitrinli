@@ -485,3 +485,35 @@ TEST_F(LoggerTest, OutboundTraceparentRejectsMalformed)
   }
   set_outbound_traceparent(nullptr);
 }
+
+// ================================================================
+// Correlation ID
+// ================================================================
+
+TEST_F(LoggerTest, CliModeLineStartsWithTheCorrelationId)
+{
+  set_cli_mode(true);
+  set_log_level(LL_DEBUG);
+  set_correlation_id("e2e-123");
+
+  auto err = capture_stderr([]() { log_err("first line\nsecond line"); });
+  EXPECT_EQ(err, "[e2e-123] first line\nsecond line\n");
+  auto out = capture_stdout([]() { log_info("info line"); });
+  EXPECT_EQ(out, "[e2e-123] info line\n");
+
+  set_correlation_id("");
+  auto plain = capture_stderr([]() { log_err("no id"); });
+  EXPECT_EQ(plain, "no id\n");
+}
+
+TEST_F(LoggerTest, ServerModeLineHasNoCorrelationId)
+{
+  set_cli_mode(false);
+  set_log_level(LL_DEBUG);
+  set_correlation_id("e2e-123");
+
+  auto out = capture_stdout([]() { log_info("server line"); });
+  set_correlation_id("");
+  EXPECT_TRUE(valid_json(out.c_str()));
+  EXPECT_EQ(out.find("e2e-123"), std::string::npos) << out;
+}
