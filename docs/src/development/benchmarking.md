@@ -25,7 +25,7 @@ co-located with the module it measures:
 | Tier | Source | What it times |
 |------|--------|---------------|
 | `parse` | `src/iiifparser/cpp/value_objects/parse_benchmark.cpp` | The five IIIF URL component parsers + the full per-request parse. Pure CPU, no fixtures. |
-| `decode` | `src/format_handlers/cpp/decode_benchmark.cpp` | `SipiImage::read()` across the input-format matrix (tiled-pyramid TIFF none/zstd/webp, JP2, plain-JPEG and flat-TIFF slow baselines) in two access shapes: full-resolution tile and `!256,256` thumbnail; plus a full decode of the ISO/IEC 15444-4 `file3.jp2` (chroma subsampled 2x2), read from the source tree. |
+| `decode` | `src/format_handlers/cpp/decode_benchmark.cpp` | `SipiImage::read()` across the input-format matrix (tiled-pyramid TIFF none/zstd/webp, JP2, plain-JPEG and flat-TIFF slow baselines) in two access shapes: full-resolution tile and `!256,256` thumbnail; plus full decodes of two source-tree files: the ISO/IEC 15444-4 `file3.jp2` (chroma subsampled 2x2) and `sample_with_icc.png` (the PNG path). |
 | `process` | `src/image_processing/cpp/process_benchmark.cpp` | The operators between decode and encode: `scaleFast`/`scaleMedium`/`scale`, `rotate` (90° fast path + 45° general), `crop`, `to8bps`, `convertToIcc`, `removeChannel`. |
 | `encode` | `src/format_handlers/cpp/encode_benchmark.cpp` | `SipiImage::write()` for the four formats Vitrinli emits: JPEG (Q75/Q90), PNG, TIFF, JPEG2000. |
 

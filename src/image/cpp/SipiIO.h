@@ -236,6 +236,23 @@ public:
    */
   [[nodiscard]] virtual Result<SipiImgInfo> read_shape(const std::string &filepath) = 0;
 
+  /*!
+   * Read the header and the embedded metadata of a file into `img`, without
+   * decoding pixels. On success `img` holds the geometry, photometric
+   * interpretation, extra samples, orientation and the EXIF, XMP, IPTC and
+   * ICC objects that a full `read(img, filepath)` leaves, and no pixel buffer.
+   * The `bool` and the error follow `read`: `false` for a file this handler
+   * does not recognise, an error for a recognised file that fails, and an
+   * embedded metadata parse failure is fatal, as in `read`.
+   *
+   * Each handler implements it on the code path of its `read`, so that the
+   * two cannot drift apart.
+   *
+   * \param img Pointer to SipiImage instance
+   * \param filepath Image file path
+   */
+  [[nodiscard]] virtual Result<bool> read_metadata(SipiImage *img, const std::string &filepath) = 0;
+
 
   /*!
    * Write an image using the given file format implemented by the subclass. A

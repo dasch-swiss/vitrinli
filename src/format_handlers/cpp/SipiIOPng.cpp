@@ -225,6 +225,29 @@ Result<bool> SipiIOPng::read(SipiImage *img,
   bool force_bps_8,
   ScalingQuality scaling_quality)
 {
+  return read_image(
+    img, filepath, std::move(region), std::move(size), force_bps_8, scaling_quality, /*decode_pixels=*/true);
+}
+
+Result<bool> SipiIOPng::read_metadata(SipiImage *img, const std::string &filepath)
+{
+  return read_image(img,
+    filepath,
+    nullptr,
+    nullptr,
+    false,
+    { ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH },
+    /*decode_pixels=*/false);
+}
+
+Result<bool> SipiIOPng::read_image(SipiImage *img,
+  const std::string &filepath,
+  std::shared_ptr<SipiRegion> region,
+  std::shared_ptr<SipiSize> size,
+  bool force_bps_8,
+  ScalingQuality scaling_quality,
+  bool decode_pixels)
+{
   SIPI_ZONE_N("SipiIOPng::read");
   unsigned char header[PNG_BYTES_TO_CHECK];
   png_structp png_ptr;
@@ -414,6 +437,11 @@ Result<bool> SipiIOPng::read(SipiImage *img,
     } else {
       fprintf(stderr, "PNG-COMMENT: key=\"%s\" text=\"%s\"\n", png_texts[i].key, png_texts[i].text);
     }
+  }
+
+  if (!decode_pixels) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+    return true;
   }
 
   size_t sll = png_get_rowbytes(png_ptr, info_ptr);

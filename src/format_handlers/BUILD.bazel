@@ -135,7 +135,8 @@ cc_binary(
 # four handlers, the error paths each codec throws on truncated/malformed
 # input, the crafted-malformed-TIFF decode-path regressions, EXIF
 # rational zero-denominator validation on TIFF write, Kakadu's text in J2K
-# errors, and the PNG alpha layout after libpng's tRNS/bKGD transforms).
+# errors, the PNG alpha layout after libpng's tRNS/bKGD transforms, and the
+# `read` versus `read_metadata` output equality across the fixture kinds).
 cc_test(
     name = "formats_test",
     srcs = [
@@ -156,6 +157,7 @@ cc_test(
         "cpp/malformed_tiff_test.cpp",
         "cpp/png_alpha_layout_test.cpp",
         "cpp/png_metadata_roundtrip_test.cpp",
+        "cpp/read_metadata_equality_test.cpp",
         "cpp/select_pyramid_level_test.cpp",
         "cpp/tiff_bilevel_regression_test.cpp",
         "cpp/tiff_exif_rational_test.cpp",

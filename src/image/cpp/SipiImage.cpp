@@ -271,19 +271,16 @@ void SipiImage::set_pixels(std::vector<byte> &&buf, size_t nx_p, size_t ny_p, si
 
 
 /*!
- * Reads the image from a file by calling the appropriate reader, selected by
- * the file's extension and falling back to every other registered handler in
- * turn on a mismatch. Returns a `SipiValueError` if no handler recognises the
- * file, or immediately propagates a handler's decode failure without
- * considering the fallback handlers.
+ * Runs `handler_read` with the handler selected by the file's extension,
+ * falling back to every other registered handler in turn on a mismatch.
+ * Returns a `SipiValueError` if no handler recognises the file, or
+ * immediately propagates a handler's failure without considering the
+ * fallback handlers. `read` and `read_metadata` share it, so both pick the
+ * same handler and fail with the same error.
  */
-Result<void> SipiImage::read(const std::string &filepath,
-  const std::shared_ptr<SipiRegion> &region,
-  const std::shared_ptr<SipiSize> &size,
-  bool force_bps_8,
-  ScalingQuality scaling_quality)
+Result<void> SipiImage::read_dispatch(const std::string &filepath,
+  const std::function<Result<bool>(SipiIO &handler)> &handler_read)
 {
-  SIPI_ZONE_N("SipiImage::read");
   size_t pos = filepath.find_last_of('.');
   std::string fext = filepath.substr(pos + 1);
   std::string _fext;
@@ -303,7 +300,7 @@ Result<void> SipiImage::read(const std::string &filepath,
     dispatched_key = "jpx";
   }
   if (!dispatched_key.empty()) {
-    auto result = io[dispatched_key]->read(this, filepath, region, size, force_bps_8, scaling_quality);
+    auto result = handler_read(*io[dispatched_key]);
     if (!result) { return std::unexpected(result.error()); }
     got_file = *result;
   }
@@ -317,7 +314,7 @@ Result<void> SipiImage::read(const std::string &filepath,
   if (!got_file) {
     for (auto const &iterator : io) {
       if (iterator.first == dispatched_key) continue;
-      auto result = iterator.second->read(this, filepath, region, size, force_bps_8, scaling_quality);
+      auto result = handler_read(*iterator.second);
       if (!result) { return std::unexpected(result.error()); }
       if ((got_file = *result)) break;
     }
@@ -333,6 +330,23 @@ Result<void> SipiImage::read(const std::string &filepath,
       "Error reading file " + filepath + ": no registered format handler recognised it (tried: " + tried_keys + ")"));
   }
   return {};
+}
+
+Result<void> SipiImage::read(const std::string &filepath,
+  const std::shared_ptr<SipiRegion> &region,
+  const std::shared_ptr<SipiSize> &size,
+  bool force_bps_8,
+  ScalingQuality scaling_quality)
+{
+  SIPI_ZONE_N("SipiImage::read");
+  return read_dispatch(filepath,
+    [&](SipiIO &handler) { return handler.read(this, filepath, region, size, force_bps_8, scaling_quality); });
+}
+
+Result<void> SipiImage::read_metadata(const std::string &filepath)
+{
+  SIPI_ZONE_N("SipiImage::read_metadata");
+  return read_dispatch(filepath, [&](SipiIO &handler) { return handler.read_metadata(this, filepath); });
 }
 
 //============================================================================

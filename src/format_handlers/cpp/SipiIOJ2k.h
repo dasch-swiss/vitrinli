@@ -42,6 +42,18 @@ namespace Sipi {
 /*! Class which implements the JPEG2000-reader/writer */
 class SipiIOJ2k : public SipiIO
 {
+private:
+  // The one read path behind `read` and `read_metadata`. With `decode_pixels`
+  // false it leaves the header effects that the pixel steps of a full read
+  // have, and stops before the first pixel is decoded.
+  [[nodiscard]] Result<bool> read_image(SipiImage *img,
+    const std::string &filepath,
+    std::shared_ptr<SipiRegion> region,
+    std::shared_ptr<SipiSize> size,
+    bool force_bps_8,
+    ScalingQuality scaling_quality,
+    bool decode_pixels);
+
 public:
   ~SipiIOJ2k() override = default;
   ;
@@ -68,6 +80,14 @@ public:
    * \param filepath Pathname of the image file
    */
   [[nodiscard]] Result<SipiImgInfo> read_shape(const std::string &filepath) override;
+
+  /*!
+   * Read the header and embedded metadata only (see `SipiIO::read_metadata`).
+   *
+   * \param img Pointer to SipiImage instance
+   * \param filepath Image file path
+   */
+  [[nodiscard]] Result<bool> read_metadata(SipiImage *img, const std::string &filepath) override;
 
   /*!
    * Write a JPEG2000 image to the given OutputSink (file/stdout, or a streamed

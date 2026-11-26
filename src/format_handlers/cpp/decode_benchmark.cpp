@@ -23,8 +23,8 @@
 // measured path by design (decision recorded in the plan: no in-memory
 // decode seam exists, and adding one would be new public API).
 //
-// Plus decode_full_subsampled_jp2: a full decode of the ISO/IEC 15444-4
-// file3.jp2 (chroma subsampled 2x2), read from the source tree.
+// Plus full decodes of two source-tree files: decode_full_subsampled_jp2 (the
+// ISO/IEC 15444-4 file3.jp2, chroma subsampled 2x2) and decode_full_png.
 //
 // HTJ2K is absent from the matrix: Kakadu's HT block coder is
 // license-gated (FBC_ENABLED) and the production build cannot decode it.
@@ -112,18 +112,16 @@ SIPI_DECODE_BENCH(flat_tiff, "flat.tif");
 
 #undef SIPI_DECODE_BENCH
 
-// Full decode of the ISO/IEC 15444-4 conformance file file3.jp2 (480x640,
-// sYCC, chroma subsampled 2x2): the planar pull + upsampling path in
-// SipiIOJ2k::read. It lives in the source tree, not @sipi_bench_fixtures, so it
-// resolves from SIPI_WORKSPACE_ROOT, which `just bench` exports.
-void decode_full_subsampled_jp2(benchmark::State &state)
+// Full decode of a source-tree file, resolved from SIPI_WORKSPACE_ROOT, which
+// `just bench` exports.
+void decode_full(benchmark::State &state, const std::string &workspace_relative_path)
 {
   const char *root = std::getenv("SIPI_WORKSPACE_ROOT");
   if (root == nullptr) {
     std::fprintf(stderr, "SIPI_WORKSPACE_ROOT not set — run via `just bench decode`\n");
     std::exit(1);
   }
-  const std::string path = std::string{ root } + "/test/_test_data/images/iso-15444-4/testfiles_jp2/file3.jp2";
+  const std::string path = std::string{ root } + "/" + workspace_relative_path;
   int64_t bytes = 0;
   for (auto _ : state) {
     Sipi::SipiImage img;
@@ -134,6 +132,18 @@ void decode_full_subsampled_jp2(benchmark::State &state)
   }
   state.SetBytesProcessed(state.iterations() * bytes);
 }
+
+// The ISO/IEC 15444-4 conformance file file3.jp2 (480x640, sYCC, chroma
+// subsampled 2x2): the planar pull + upsampling path in SipiIOJ2k::read.
+void decode_full_subsampled_jp2(benchmark::State &state)
+{
+  decode_full(state, "test/_test_data/images/iso-15444-4/testfiles_jp2/file3.jp2");
+}
 BENCHMARK(decode_full_subsampled_jp2)->Unit(benchmark::kMillisecond);
+
+// An 8-bit RGB PNG with an embedded ICC profile (256x489): the PNG read path,
+// which @sipi_bench_fixtures has no file for.
+void decode_full_png(benchmark::State &state) { decode_full(state, "test/_test_data/images/unit/sample_with_icc.png"); }
+BENCHMARK(decode_full_png)->Unit(benchmark::kMillisecond);
 
 }// namespace
