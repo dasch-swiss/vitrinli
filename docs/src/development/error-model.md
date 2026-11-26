@@ -162,6 +162,13 @@ userdata surface, and `sipi_cli_main`'s bare `catch (...)` around
 around its own `read` calls — it exercises the same decode path directly,
 outside any seam.
 
+Every `catch (kdu_exception&)` in `SipiIOJ2k` that returns a `Result` error
+appends Kakadu's own message text, in parentheses, to that error's message.
+The installed Kakadu error handler keeps the text per thread, because one
+handler instance serves every concurrent read and write. An error raised on
+a Kakadu worker thread (`kdu_thread_env`) is logged but its text is not in
+the returned error.
+
 ## Error-variant principle
 
 Enumerate failure variants per operation; never collapse distinct failures into
