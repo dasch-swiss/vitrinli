@@ -99,7 +99,7 @@ sqlite3, libexpat, libmagic, Lua, curl, OpenSSL,
 protobuf. Native `cc_library`: libtiff (codecs re-enabled + JBIG via jbigkit),
 exiv2, lcms2, jansson, jbigkit, and Kakadu (requires license).
 
-**System Dependencies:** Threads (pthread), iconv (macOS only).
+**System Dependencies:** Threads (pthread), iconv (a separate library on macOS only; glibc has it in libc).
 
 ### Important Files
 
