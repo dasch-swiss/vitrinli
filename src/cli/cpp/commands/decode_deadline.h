@@ -17,7 +17,7 @@
 
 namespace Sipi::cli {
 
-//! A decode that finished before its deadline: the image and `read`'s result.
+//! A read that finished before its deadline: the image and the read's result.
 struct DeadlineDecode
 {
   SipiImage img;
@@ -42,6 +42,10 @@ struct DeadlineDecode
 
 //! `SipiImage::read(path)` under a deadline; same contract as above.
 [[nodiscard]] std::optional<DeadlineDecode> read_with_deadline(std::size_t timeout_ms, const std::string &path);
+
+//! `SipiImage::read_metadata(path)` under a deadline; same contract as above.
+[[nodiscard]] std::optional<DeadlineDecode> read_metadata_with_deadline(std::size_t timeout_ms,
+  const std::string &path);
 
 //! The operator-facing message for a decode that hit `timeout_ms`.
 [[nodiscard]] std::string decode_deadline_message(std::size_t timeout_ms);

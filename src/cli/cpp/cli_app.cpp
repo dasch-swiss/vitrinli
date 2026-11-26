@@ -221,7 +221,7 @@ extern "C" int sipi_cli_main(int argc, char **argv)
   auto run_query = [&]() -> int {
     set_cli_mode(true);
     if (optJsonOutput) { set_json_mode(true); }
-    auto decoded = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optInFile);
+    auto decoded = Sipi::cli::read_metadata_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optInFile);
     if (!decoded) {
       const std::string msg = Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs);
       log_err("sipi: %s", msg.c_str());
@@ -863,7 +863,7 @@ extern "C" int sipi_cli_main(int argc, char **argv)
   cmd_verify_preservation->callback([&]() { sipi_exit_code = stub_preservation_file("verify"); });
 
   // ----- query -----------------------------------------------------------
-  CLI::App *cmd_query = sipiopt.add_subcommand("query", "Dump image information.");
+  CLI::App *cmd_query = sipiopt.add_subcommand("query", "Print image header and metadata (no pixel decode).");
   cmd_query->add_option("file", optInFile, "File to query.")->check(CLI::ExistingFile);
   attach_output_opts(cmd_query);
   cmd_query->callback([&]() { sipi_exit_code = run_query(); });

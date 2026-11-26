@@ -36,6 +36,15 @@ std::optional<DeadlineDecode> read_with_deadline(std::size_t timeout_ms, const s
   });
 }
 
+std::optional<DeadlineDecode> read_metadata_with_deadline(std::size_t timeout_ms, const std::string &path)
+{
+  return ffi::run_with_deadline(std::chrono::milliseconds(timeout_ms), [path] {
+    SipiImage img;
+    auto status = img.read_metadata(path);
+    return DeadlineDecode{ std::move(img), std::move(status) };
+  });
+}
+
 std::string decode_deadline_message(std::size_t timeout_ms)
 {
   return "decode exceeded the " + std::to_string(timeout_ms) + " ms deadline; the wedged decode thread is abandoned";

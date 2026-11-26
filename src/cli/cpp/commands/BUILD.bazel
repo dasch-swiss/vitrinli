@@ -74,6 +74,7 @@ cc_test(
     srcs = [
         "convert_access_file_test.cpp",
         "convert_service_file_test.cpp",
+        "decode_deadline_test.cpp",
         "health_test.cpp",
         "verify_test.cpp",
     ],

@@ -70,6 +70,8 @@ ADR-0012).
 /path/to/sipi query infile
 ```
 
+`query` reads the header and the embedded metadata only; it does not decode the pixels.
+
 #### Compare two Images pixelwise
 The images may have different formats: if the have exactely the same pixels, they are considered identical). Metadata
 is ignored for comparison:
