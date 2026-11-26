@@ -18,8 +18,9 @@ Iptc::Iptc(Exiv2::IptcData data) : iptcData(std::move(data)) {}
 Result<std::shared_ptr<Iptc>> Iptc::parse(const unsigned char *iptc, unsigned int len)
 {
   Exiv2::IptcData data;
-  if (Exiv2::IptcParser::decode(data, iptc, (uint32_t)len) != 0) {
-    return std::unexpected(SipiValueError{ ErrorCode::kMetadataParseFailed, "No valid IPTC data!" });
+  if (const int rc = Exiv2::IptcParser::decode(data, iptc, (uint32_t)len); rc != 0) {
+    return std::unexpected(SipiValueError{ ErrorCode::kMetadataParseFailed,
+      "IPTC block does not parse: Exiv2 rejected the block (decode code " + std::to_string(rc) + ")" });
   }
   return std::shared_ptr<Iptc>(new Iptc(std::move(data)));
 }
