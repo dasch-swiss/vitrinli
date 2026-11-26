@@ -800,6 +800,59 @@ pub fn cli_tmp_path(name: &str) -> PathBuf {
     PathBuf::from(dir).join(name)
 }
 
+/// `jpeg` with one more APPn segment (`marker` 0xE0..=0xEF) carrying
+/// `payload`, placed after the existing APPn segments. The JPEG reader keeps
+/// the last Exif APP1 it sees, so an inserted Exif segment wins over one the
+/// file already has.
+pub fn jpeg_with_app_segment(jpeg: &[u8], marker: u8, payload: &[u8]) -> Vec<u8> {
+    assert!(
+        (0xE0..=0xEF).contains(&marker),
+        "not an APPn marker: {marker:#04x}"
+    );
+    assert_eq!(&jpeg[..2], &[0xFF, 0xD8], "input is not a JPEG");
+    let seg_len = u16::try_from(payload.len() + 2).expect("APPn payload over 65533 bytes");
+    let mut pos = 2;
+    while jpeg[pos] == 0xFF && (0xE0..=0xEF).contains(&jpeg[pos + 1]) {
+        pos += 2 + usize::from(u16::from_be_bytes([jpeg[pos + 2], jpeg[pos + 3]]));
+    }
+    let mut out = Vec::with_capacity(jpeg.len() + payload.len() + 4);
+    out.extend_from_slice(&jpeg[..pos]);
+    out.extend_from_slice(&[0xFF, marker]);
+    out.extend_from_slice(&seg_len.to_be_bytes());
+    out.extend_from_slice(payload);
+    out.extend_from_slice(&jpeg[pos..]);
+    out
+}
+
+/// An APP1 Exif payload (`Exif\0\0` and a little-endian TIFF structure) whose
+/// only field is `Exif.Photo.UserComment` with the raw bytes `comment`: the
+/// 8-byte charset id followed by the text in that charset.
+pub fn exif_app1_with_user_comment(comment: &[u8]) -> Vec<u8> {
+    const IFD0: u32 = 8;
+    const EXIF_IFD: u32 = IFD0 + 18;
+    const COMMENT: u32 = EXIF_IFD + 18;
+    let count = u32::try_from(comment.len()).expect("comment too long");
+    let mut out = b"Exif\0\0II".to_vec();
+    out.extend_from_slice(&42u16.to_le_bytes());
+    out.extend_from_slice(&IFD0.to_le_bytes());
+    // IFD0: one entry, the ExifIFD pointer (tag 0x8769, LONG).
+    out.extend_from_slice(&1u16.to_le_bytes());
+    out.extend_from_slice(&0x8769u16.to_le_bytes());
+    out.extend_from_slice(&4u16.to_le_bytes());
+    out.extend_from_slice(&1u32.to_le_bytes());
+    out.extend_from_slice(&EXIF_IFD.to_le_bytes());
+    out.extend_from_slice(&0u32.to_le_bytes());
+    // ExifIFD: one entry, UserComment (tag 0x9286, UNDEFINED).
+    out.extend_from_slice(&1u16.to_le_bytes());
+    out.extend_from_slice(&0x9286u16.to_le_bytes());
+    out.extend_from_slice(&7u16.to_le_bytes());
+    out.extend_from_slice(&count.to_le_bytes());
+    out.extend_from_slice(&COMMENT.to_le_bytes());
+    out.extend_from_slice(&0u32.to_le_bytes());
+    out.extend_from_slice(comment);
+    out
+}
+
 /// Decode `file<i>.jp2` from the ISO 15444-4 conformance set to TIFF and assert
 /// the output exists and is non-empty (port of `test_iso_15444_4_decode_jp2`).
 pub fn assert_jp2_decode(i: u32) {

@@ -1,7 +1,7 @@
 use insta::assert_snapshot;
 use sipi_e2e::{
-    apply_sanitizer_env, cli_convert, cli_run, cli_tmp_path, repo_root, sipi_bin_path,
-    test_data_dir,
+    apply_sanitizer_env, cli_convert, cli_run, cli_tmp_path, exif_app1_with_user_comment,
+    jpeg_with_app_segment, repo_root, sipi_bin_path, test_data_dir,
 };
 use std::process::Command;
 
@@ -206,6 +206,39 @@ fn cli_query_dumps_image_info() {
     assert!(
         stdout.contains("nx    = 512") && stdout.contains("ny    = 512"),
         "expected nx/ny = 512 for the lena512 fixture, got:\n{stdout}"
+    );
+}
+
+#[test]
+fn cli_query_prints_ucs2_user_comment() {
+    // Photoshop writes Exif.Photo.UserComment as charset `Unicode` in UCS-2LE.
+    // Printing it needs a charset conversion; `sipi query` must print the
+    // converted text and exit 0.
+    let source = std::fs::read(test_data_dir().join("images/unit/MaoriFigure.jpg"))
+        .expect("read MaoriFigure.jpg");
+    let mut comment = b"UNICODE\0".to_vec();
+    for unit in "Grüße".encode_utf16() {
+        comment.extend_from_slice(&unit.to_le_bytes());
+    }
+    let jpeg = jpeg_with_app_segment(&source, 0xE1, &exif_app1_with_user_comment(&comment));
+    let path = cli_tmp_path("sipi_cli_query_ucs2_user_comment.jpg");
+    std::fs::write(&path, jpeg).expect("write test JPEG");
+
+    let result = cli_run(&["query", path.to_str().unwrap()]);
+    let _ = std::fs::remove_file(&path);
+    let stdout = String::from_utf8_lossy(&result.stdout);
+    assert!(
+        result.status.success(),
+        "sipi query must succeed on a UCS-2LE UserComment; stderr:\n{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let line = stdout
+        .lines()
+        .find(|l| l.starts_with("Exif.Photo.UserComment"))
+        .unwrap_or_else(|| panic!("no UserComment line in:\n{stdout}"));
+    assert!(
+        line.ends_with("charset=Unicode Grüße"),
+        "expected the converted comment, got: {line}"
     );
 }
 
