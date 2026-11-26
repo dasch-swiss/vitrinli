@@ -443,4 +443,44 @@ TEST(JpegMetadataSegments, ExifThatDoesNotFitWithoutItsPreviewsIsLeftOutWithAWar
   EXPECT_EQ(exiv2_read(png)->exifData()["Exif.Image.Copyright"].toString(), "DaSCH");
 }
 
+TEST(JpegMetadataSegments, IptcBlockThatDoesNotParseFailsTheReadNamingTheFile)
+{
+  Sipi::SipiImage img;
+  ASSERT_TRUE(img.read(kSource).has_value());
+  const std::string plain = scratch("garbage_iptc_source.jpg");
+  ASSERT_TRUE(img.write("jpg", plain).has_value());
+
+  // An APP13 Photoshop 3.0 segment with one 8BIM IPTC resource (0x0404) whose
+  // dataset claims an extended length of 0x7fff length bytes, which
+  // IptcParser::decode rejects with a non-zero code.
+  const std::vector<unsigned char> iptc{ 0x1c, 0x02, 0x05, 0xff, 0xff, 0x00, 0x00, 0x00 };
+  std::vector<unsigned char> payload{ 'P', 'h', 'o', 't', 'o', 's', 'h', 'o', 'p', ' ', '3', '.', '0', 0 };
+  payload.insert(payload.end(), { '8', 'B', 'I', 'M', 0x04, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00 });
+  payload.push_back(static_cast<unsigned char>(iptc.size()));
+  payload.insert(payload.end(), iptc.begin(), iptc.end());
+  const std::size_t seglen = payload.size() + 2;
+  std::vector<unsigned char> segment{
+    0xff, 0xed, static_cast<unsigned char>(seglen >> 8), static_cast<unsigned char>(seglen & 0xff)
+  };
+  segment.insert(segment.end(), payload.begin(), payload.end());
+
+  auto jpeg = file_bytes(plain);
+  ASSERT_GE(jpeg.size(), 2U);
+  jpeg.insert(jpeg.begin() + 2, segment.begin(), segment.end());
+  const std::string path = scratch("garbage_iptc.jpg");
+  {
+    std::ofstream out(path, std::ios::binary);
+    out.write(reinterpret_cast<const char *>(jpeg.data()), static_cast<std::streamsize>(jpeg.size()));
+  }
+
+  Sipi::SipiImage reread;
+  const auto r = reread.read(path);
+  ASSERT_FALSE(r.has_value());
+  EXPECT_EQ(r.error().code(), Sipi::ErrorCode::kMetadataParseFailed);
+  const std::string &msg = r.error().raw_message();
+  const std::string prefix = path + ": IPTC block does not parse: Exiv2 rejected the block (decode code ";
+  EXPECT_EQ(msg.rfind(prefix, 0), 0U) << msg;
+  EXPECT_TRUE(msg.ends_with(")")) << msg;
+}
+
 }// namespace
