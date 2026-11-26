@@ -38,6 +38,16 @@ void set_json_mode(bool enabled);
 bool is_json_mode();
 
 /*!
+ * The correlation ID of a CLI run: the ID a caller finds the run's log lines
+ * and its `--json` document by. Process-wide, set once by the Rust CLI before
+ * any offline verb runs (and before any thread starts), never re-set. In CLI
+ * mode, the first line of each log call starts with `[<id>] `; server mode is
+ * unchanged. Empty (the default) means no prefix.
+ */
+void set_correlation_id(const std::string &id);
+[[nodiscard]] const std::string &get_correlation_id();
+
+/*!
  * Stamp this thread's server-mode JSON log lines with the active distributed
  * trace context (W3C lowercase-hex `trace_id` / `span_id`), so the C++ engine's
  * logs correlate to the Rust shell's OpenTelemetry trace. The Rust shell sets it

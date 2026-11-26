@@ -32,6 +32,7 @@ static thread_local std::string g_span_id;
 // inject". Distinct from the log ids above: propagation needs the full header
 // (incl. the sampling flag), log lines need only the raw ids.
 static thread_local std::string g_outbound_traceparent;
+static std::string g_correlation_id;
 
 void set_cli_mode(bool cli) { g_cli_mode = cli; }
 bool is_cli_mode() { return g_cli_mode; }
@@ -112,6 +113,9 @@ void set_outbound_traceparent(const char *traceparent)
 }
 
 std::string get_outbound_traceparent() { return g_outbound_traceparent; }
+
+void set_correlation_id(const std::string &id) { g_correlation_id = id; }
+const std::string &get_correlation_id() { return g_correlation_id; }
 
 std::string escape_json_str(const std::string &s)
 {
@@ -235,6 +239,7 @@ void log_vformat(LogLevel ll, const char *message, va_list args)
     // stays reserved for the single JSON document. Outside --json,
     // errors→stderr, others→stdout (legacy behaviour).
     std::string msg = vformat(message, args);
+    if (!g_correlation_id.empty()) { msg.insert(0, "[" + g_correlation_id + "] "); }
     if (g_json_mode.load(std::memory_order_relaxed) || ll >= LL_ERR) {
       fprintf(stderr, "%s\n", msg.c_str());
     } else {
