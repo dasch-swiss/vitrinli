@@ -118,15 +118,16 @@ In command line mode, Vitrinli supports the following options:
 - `-w <filepath>`, `--watermark <filepath>`: Overlays a watermark to the output image. <filepath> must be a single
   channel, gray valued TIFF. That is, the TIFF file must have the following tag values: SAMPLESPERPIXEL = 1,
   BITSPERSAMPLE = 8, PHOTOMETRIC = PHOTOMETRIC_MINISBLACK.
-- `--json`: Emit a single structured JSON document to stdout instead of human-readable output. The document mirrors
-  the internal `ImageContext` that is otherwise sent to Sentry and includes the input/output paths, the decoded image
-  properties, and — on failure — a `phase` (`cli_args` | `read` | `convert` | `write`) with the `error_message`.
-  Useful for programmatic consumers and for debugging when no Sentry DSN is configured. Stderr carries any log output
-  so stdout stays reserved for the single JSON document. Attached only to the `query`, `compare`, and `verify`
-  subcommands per the D5 option-availability matrix; convert flows do not expose `--json`.
-  See [`json-output.md`](json-output.md) for the full schema and worked examples. Example:
+- `--json`: On `convert` and `convert access-file`, emit a single structured JSON document to stdout instead of
+  human-readable output, on success and on failure. The document mirrors the internal `ImageContext` that is otherwise
+  sent to Sentry and includes the input/output paths, the decoded image properties, a `correlation_id`, and — on
+  failure — a `phase` (`cli_args` | `read` | `convert` | `write` | `unknown`), an `error_code` and the
+  `error_message`. `query` and `compare` keep their text output on success and emit only the error document.
+  Stderr carries any log output so stdout stays reserved for the JSON document. A caller passes its own correlation ID
+  in `SIPI_CORRELATION_ID`. See [`json-output.md`](json-output.md) for the full schema, the error codes, the
+  4xx/5xx rule for callers, and worked examples. Example:
   ```bash
-  sipi query --json input.jpg | jq '.image.bps'
+  sipi convert input.jpg out.jp2 --json | jq '.image.bps'
   ```
   
 #### JPEG2000 Specific Options

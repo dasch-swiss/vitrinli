@@ -668,6 +668,12 @@ SIPI_FFI_NODISCARD int sipi_mimetype(const char *resolved_path, SipiStrFn emit, 
  *  exit code (no `exit()`/`abort()` from inside the FFI). */
 SIPI_FFI_NODISCARD int sipi_cli_main(int argc, char **argv);
 
+/*! Set the correlation ID of a CLI run, for the log prefix and the `--json`
+ *  documents of `sipi_cli_main`. Called once, before it. `id` is NUL-terminated
+ *  and copied; the caller passes only `[A-Za-z0-9._:-]` (it is spliced raw into
+ *  a JSON fallback document). NULL clears it. */
+void sipi_cli_set_correlation_id(const char *id);
+
 /*! Stamp the C++ engine's server-mode JSON logs on the CALLING thread with the
  *  active trace context (W3C lowercase-hex `trace_id` / `span_id`), so engine
  *  logs correlate to the Rust shell's OpenTelemetry trace. The shell sets it

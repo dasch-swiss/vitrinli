@@ -26,7 +26,7 @@ binary keeps only its own binary-specific flag (`--build-id=sha1`) and the
 distroless libc++ static-link bracket.
 """
 
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 cc_library(
     name = "sipi_report",
@@ -36,9 +36,27 @@ cc_library(
     strip_include_prefix = "/src/cli/cpp",
     visibility = ["//src/cli:__subpackages__"],
     deps = [
+        # error_code_name's ErrorCode.
+        "//src/error",
         # populate_from_image.h's observability::ImageContext, the struct
         # the report mirrors.
         "//src/image",
+        # get_correlation_id, carried by every document.
+        "//src/logging",
+        "@jansson//:jansson",
+    ],
+)
+
+# Colocated unit test (ADR-0003).
+cc_test(
+    name = "sipi_report_test",
+    srcs = ["cpp/SipiReport_test.cpp"],
+    deps = [
+        ":sipi_report",
+        "//src/error",
+        "//src/image",
+        "//src/logging",
+        "@googletest//:gtest_main",
         "@jansson//:jansson",
     ],
 )

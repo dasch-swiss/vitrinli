@@ -674,7 +674,7 @@ Two Rust-shell features the C++-era gap list assumed are permanently **removed**
 | JPEG CMYK with APP14 (Photoshop) — inverted before ICC | :white_check_mark: | unit | regression test |
 | JPEG CMYK without APP14 (raw) — not inverted | :white_check_mark: | unit | regression test (negative case) |
 | JPEG with APP13 before APP1 + non-ASCII IPTC | :white_check_mark: | unit + `heritage_jpeg.rs` | heritage collection regression |
-| CLI `--json` output contract | :white_check_mark: | unit + rust-e2e (`cli_json.rs`) | success + error payloads, single-document stdout |
+| CLI `--json` output contract | :white_check_mark: | unit (`sipi_report_test`, `logger_test`) + rust-e2e (`cli_json.rs`) | success + error payloads, single-document stdout, `error_code` and `correlation_id`, the log prefix |
 | CLI `query` / `compare` / `verify` subcommands | :white_check_mark: | `cli.rs::cli_query_dumps_image_info`, `cli_compare_identical_files_reports_match`, `cli_compare_differing_files_reports_mismatch`, `cli_verify_pipeline_service_and_access_files` | the verify pipeline test exercises `convert service-file` → `verify service-file` → `convert access-file` → `verify access-file` end to end |
 | Watermark application via HTTP | :white_check_mark: | `server.rs::watermark_applied_via_http` | |
 | Restrict + watermark combined | :white_check_mark: | `server.rs::restrict_plus_watermark` | |

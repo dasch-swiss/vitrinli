@@ -7,6 +7,8 @@
 
 #include <jansson.h>
 
+#include "logging/logger.h"
+
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -44,13 +46,47 @@ json_t *build_image_object(const observability::ImageContext &ctx)
     ctx.orientation.c_str());
 }
 
+/*! The document for a jansson failure, built without jansson. The
+ * correlation ID is spliced raw: its only setter passes a value of
+ * `[A-Za-z0-9._:-]` (the Rust CLI validates `SIPI_CORRELATION_ID`). `phase`
+ * and `error_code` are names from the code, never user text. An error
+ * document keeps its phase and code, so a message jansson rejects (one
+ * that is not valid UTF-8, such as a Latin-1 path) does not turn an input
+ * error into an internal one. */
+void emit_fallback_error(std::ostream &out,
+  const std::string &phase,
+  const std::string &error_code,
+  const char *message)
+{
+  out << "{\"status\": \"error\", \"mode\": \"cli\", \"phase\": \"" << phase << "\", " << "\"error_code\": \""
+      << error_code << "\", \"correlation_id\": \"" << get_correlation_id() << "\", " << "\"error_message\": \""
+      << message << "\"}\n";
+}
+
 }// namespace
+
+const char *error_code_name(ErrorCode code)
+{
+  switch (code) {
+  case ErrorCode::kDecodeFailed: return "decode_failed";
+  case ErrorCode::kUnsupportedFormat: return "unsupported_format";
+  case ErrorCode::kMalformedInput: return "malformed_input";
+  case ErrorCode::kWriteFailed: return "write_failed";
+  case ErrorCode::kClientAbort: return "client_abort";
+  case ErrorCode::kShapeProbeFailed: return "shape_probe_failed";
+  case ErrorCode::kMetadataParseFailed: return "metadata_parse_failed";
+  case ErrorCode::kInvalidRequestParameter: return "invalid_request_parameter";
+  }
+  return "internal";
+}
 
 void emit_json_report(std::ostream &out,
   const observability::ImageContext &ctx,
   std::optional<std::string> error_message,
-  std::optional<std::string> phase)
+  std::optional<std::string> phase,
+  std::string error_code)
 {
+  const std::string correlation_id = get_correlation_id();
   const bool is_error = error_message.has_value();
   const bool omit_image = phase.has_value() && *phase == "cli_args";
 
@@ -62,15 +98,16 @@ void emit_json_report(std::ostream &out,
     // ownership transfer is confirmed.
     JsonPtr image{ build_image_object(ctx), &json_decref };
     if (image == nullptr) {
-      out << "{\"status\": \"error\", \"mode\": \"cli\", \"phase\": \"internal\", "
-          << "\"error_message\": \"SipiReport: failed to build image object\"}\n";
+      emit_fallback_error(out, "internal", "internal", "SipiReport: failed to build image object");
       return;
     }
-    root.reset(json_pack("{s:s, s:s, s:s, s:s, s:s, s:I, s:o}",
+    root.reset(json_pack("{s:s, s:s, s:s, s:s, s:s, s:s, s:I, s:o}",
       "status",
       "ok",
       "mode",
       "cli",
+      "correlation_id",
+      correlation_id.c_str(),
       "input_file",
       ctx.input_file.c_str(),
       "output_file",
@@ -87,13 +124,17 @@ void emit_json_report(std::ostream &out,
     }
   } else {
     // Error payload.
-    root.reset(json_pack("{s:s, s:s, s:s, s:s, s:s, s:s, s:s, s:I}",
+    root.reset(json_pack("{s:s, s:s, s:s, s:s, s:s, s:s, s:s, s:s, s:s, s:I}",
       "status",
       "error",
       "mode",
       "cli",
+      "correlation_id",
+      correlation_id.c_str(),
       "phase",
       phase.value_or("").c_str(),
+      "error_code",
+      error_code.c_str(),
       "error_message",
       error_message->c_str(),
       "input_file",
@@ -115,8 +156,10 @@ void emit_json_report(std::ostream &out,
 
   if (root == nullptr) {
     // Defensive: json_pack failed (should not happen with the shapes above).
-    out << "{\"status\": \"error\", \"mode\": \"cli\", \"phase\": \"internal\", "
-        << "\"error_message\": \"SipiReport: json_pack failed\"}\n";
+    emit_fallback_error(out,
+      is_error ? phase.value_or("") : std::string{ "internal" },
+      is_error ? error_code : std::string{ "internal" },
+      "SipiReport: json_pack failed");
     return;
   }
 
@@ -130,7 +173,7 @@ void emit_json_report(std::ostream &out,
 void emit_json_cli_arg_error(std::ostream &out, const std::string &err)
 {
   observability::ImageContext empty;
-  emit_json_report(out, empty, err, std::string{ "cli_args" });
+  emit_json_report(out, empty, err, std::string{ "cli_args" }, "cli_args");
 }
 
 }// namespace Sipi

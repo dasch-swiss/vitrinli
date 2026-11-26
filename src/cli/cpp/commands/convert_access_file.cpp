@@ -103,10 +103,11 @@ SizeOrError build_size(const ConvertAccessFileArgs &req)
 void report_error(const observability::ImageContext &ctx,
   const std::string &phase,
   const std::string &message,
+  const std::string &error_code,
   bool json_output)
 {
   log_err("Error %s image: %s", phase.c_str(), message.c_str());
-  if (json_output) { emit_json_report(std::cout, ctx, message, phase); }
+  if (json_output) { emit_json_report(std::cout, ctx, message, phase, error_code); }
 }
 
 [[nodiscard]] Result<void> apply_orientation_topleft(SipiImage &img)
@@ -196,31 +197,34 @@ int cmd_convert_access_file(const ConvertAccessFileArgs &args)
   //
   auto decoded = read_source_with_deadline(args.decode_timeout_ms, args.input_path, region, size);
   if (!decoded) {
-    report_error(sentry_ctx, "read", decode_deadline_message(args.decode_timeout_ms), args.json_output);
+    report_error(sentry_ctx, "read", decode_deadline_message(args.decode_timeout_ms), "internal", args.json_output);
     return EXIT_FAILURE;
   }
   SipiImage img = std::move(decoded->img);
   if (auto &r = decoded->status; !r) {
     observability::populate_from_image(sentry_ctx, img);
-    report_error(sentry_ctx, "read", r.error().diagnostic_message(), args.json_output);
+    report_error(
+      sentry_ctx, "read", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
     return EXIT_FAILURE;
   }
   try {
     if (format == "jpg") {
       if (auto r = Sipi::processing::to8bps(img); !r) {
         observability::populate_from_image(sentry_ctx, img);
-        report_error(sentry_ctx, "read", r.error().diagnostic_message(), args.json_output);
+        report_error(
+          sentry_ctx, "convert", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
         return EXIT_FAILURE;
       }
       if (auto r = Sipi::processing::convertToIcc(img, Icc(PredefinedProfiles::icc_sRGB), 8); !r) {
         observability::populate_from_image(sentry_ctx, img);
-        report_error(sentry_ctx, "read", r.error().diagnostic_message(), args.json_output);
+        report_error(
+          sentry_ctx, "convert", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
         return EXIT_FAILURE;
       }
     }
   } catch (const std::exception &err) {
     observability::populate_from_image(sentry_ctx, img);
-    report_error(sentry_ctx, "read", err.what(), args.json_output);
+    report_error(sentry_ctx, "convert", err.what(), "internal", args.json_output);
     return EXIT_FAILURE;
   }
 
@@ -249,38 +253,42 @@ int cmd_convert_access_file(const ConvertAccessFileArgs &args)
     if (args.set_topleft) {
       if (auto r = apply_orientation_topleft(img); !r) {
         observability::populate_from_image(sentry_ctx, img);
-        report_error(sentry_ctx, "convert", r.error().diagnostic_message(), args.json_output);
+        report_error(
+          sentry_ctx, "convert", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
         return EXIT_FAILURE;
       }
     }
     if (!args.icc.empty() && args.icc != "none") {
       if (auto r = apply_icc(img, args.icc); !r) {
         observability::populate_from_image(sentry_ctx, img);
-        report_error(sentry_ctx, "convert", r.error().diagnostic_message(), args.json_output);
+        report_error(
+          sentry_ctx, "convert", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
         return EXIT_FAILURE;
       }
     }
     if (!args.mirror.empty() || args.rotate != 0.0F) {
       if (auto r = apply_rotate_mirror(img, args.rotate, args.mirror); !r) {
         observability::populate_from_image(sentry_ctx, img);
-        report_error(sentry_ctx, "convert", r.error().diagnostic_message(), args.json_output);
+        report_error(
+          sentry_ctx, "convert", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
         return EXIT_FAILURE;
       }
     }
     if (!args.watermark.empty()) {
       if (auto r = Sipi::processing::add_watermark(img, args.watermark); !r) {
         observability::populate_from_image(sentry_ctx, img);
-        report_error(sentry_ctx, "convert", r.error().diagnostic_message(), args.json_output);
+        report_error(
+          sentry_ctx, "convert", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
         return EXIT_FAILURE;
       }
     }
   } catch (const SipiImageError &err) {
     observability::populate_from_image(sentry_ctx, img);
-    report_error(sentry_ctx, "convert", err.what(), args.json_output);
+    report_error(sentry_ctx, "convert", err.what(), "internal", args.json_output);
     return EXIT_FAILURE;
   } catch (const std::exception &err) {
     observability::populate_from_image(sentry_ctx, img);
-    report_error(sentry_ctx, "convert", err.what(), args.json_output);
+    report_error(sentry_ctx, "convert", err.what(), "internal", args.json_output);
     return EXIT_FAILURE;
   }
 
@@ -296,16 +304,17 @@ int cmd_convert_access_file(const ConvertAccessFileArgs &args)
   try {
     if (auto r = img.write(format, args.output_path, &params); !r) {
       observability::populate_from_image(sentry_ctx, img);
-      report_error(sentry_ctx, "write", r.error().diagnostic_message(), args.json_output);
+      report_error(
+        sentry_ctx, "write", r.error().diagnostic_message(), error_code_name(r.error().code()), args.json_output);
       return EXIT_FAILURE;
     }
   } catch (const SipiImageError &err) {
     observability::populate_from_image(sentry_ctx, img);
-    report_error(sentry_ctx, "write", err.what(), args.json_output);
+    report_error(sentry_ctx, "write", err.what(), "internal", args.json_output);
     return EXIT_FAILURE;
   } catch (const std::exception &err) {
     observability::populate_from_image(sentry_ctx, img);
-    report_error(sentry_ctx, "write", err.what(), args.json_output);
+    report_error(sentry_ctx, "write", err.what(), "internal", args.json_output);
     return EXIT_FAILURE;
   }
 
