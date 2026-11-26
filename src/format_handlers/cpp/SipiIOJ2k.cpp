@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cctype>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -31,9 +32,11 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <source_location>
 #include <span>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <cstring>
@@ -296,58 +299,99 @@ static kdu_core::kdu_byte sipi_essentials_uuid[] = { 0x7B, 0x28, 0xA6, 0x46, 0xB
 // 0xa7, 0xae, 0xd6, 0x8e, 0x34, 0x45, 0x18, 0x09};
 
 
-/*!
- * Local class for handling kakadu warnings
- */
+// Kakadu calls an installed message handler on the thread that raised the
+// message, and the one handler instance below serves every concurrent read
+// and write. Message text must therefore stay per thread: a shared buffer
+// races and mixes the text of unrelated errors. An error raised on a
+// kdu_thread_env worker leaves its text on that worker, so the caller's
+// returned error lacks it; the log line still carries it.
+static thread_local std::string kdu_warning_text;
+static thread_local std::string kdu_error_text;
+static thread_local std::string kdu_last_error_text;
+
 class KduSipiWarning : public kdu_core::kdu_message
 {
-private:
-  std::string msg;
+  const char *lead_in;
 
 public:
-  KduSipiWarning() : kdu_message() { msg = "KAKADU-WARNING: "; }
+  explicit KduSipiWarning(const char *lead_in_p) : lead_in(lead_in_p) {}
 
-  KduSipiWarning(const char *lead_in) : kdu_message(), msg(lead_in) {}
-
-  void put_text(const char *str) override { msg += str; }
+  void put_text(const char *str) override { kdu_warning_text += str; }
 
   void flush(bool end_of_message = false) override
   {
-    if (end_of_message) { log_warn("%s", msg.c_str()); }
+    if (end_of_message) {
+      log_warn("%s%s", lead_in, kdu_warning_text.c_str());
+      kdu_warning_text.clear();
+    }
   }
 };
 //=============================================================================
 
 /*!
- * Local class for handling kakadu errors. It overrides the "exit()" call and
- * throws a kdu_exception...
+ * Kakadu error handler: logs the message, keeps it as this thread's last
+ * error text for `kdu_failure()`, and throws a kdu_exception in place
+ * of Kakadu's default exit().
  */
 class KduSipiError : public kdu_core::kdu_message
 {
-private:
-  std::string msg;
+  const char *lead_in;
 
 public:
-  KduSipiError() : kdu_message() { msg = "KAKADU-ERROR: "; }
+  explicit KduSipiError(const char *lead_in_p) : lead_in(lead_in_p) {}
 
-  KduSipiError(const char *lead_in) : kdu_message(), msg(lead_in) {}
-
-  void put_text(const char *str) override { msg += str; }
+  void put_text(const char *str) override { kdu_error_text += str; }
 
   void flush(bool end_of_message = false) override
   {
     if (end_of_message) {
-      log_err("%s", msg.c_str());
+      kdu_last_error_text = lead_in + std::exchange(kdu_error_text, {});
+      log_err("%s", kdu_last_error_text.c_str());
       throw KDU_ERROR_EXCEPTION;
     }
   }
-
-  void setMsg(const std::string &msg);
 };
 //=============================================================================
 
 static KduSipiWarning kdu_sipi_warn("Kakadu-library: ");
 static KduSipiError kdu_sipi_error("Kakadu-library: ");
+
+/*!
+ * The error a `catch (kdu_exception)` returns: `msg` with this thread's last
+ * Kakadu error text appended in parentheses, whitespace runs folded to one
+ * space. It consumes that text, so a later error never carries it. Every
+ * catch that returns an error builds it here; a catch that recovers calls
+ * `discard_kdu_error_text()`.
+ */
+static SipiValueError
+  kdu_failure(ErrorCode code, std::string msg, const std::source_location &loc = std::source_location::current())
+{
+  const std::string text = std::exchange(kdu_last_error_text, {});
+  std::string folded;
+  for (const char c : text) {
+    if (std::isspace(static_cast<unsigned char>(c)) != 0) {
+      if (!folded.empty() && folded.back() != ' ') { folded += ' '; }
+    } else {
+      folded += c;
+    }
+  }
+  while (!folded.empty() && folded.back() == ' ') { folded.pop_back(); }
+  if (!folded.empty()) { msg += " (" + folded + ")"; }
+  return SipiValueError{ code, std::move(msg), 0, loc };
+}
+
+static void discard_kdu_error_text() { kdu_last_error_text.clear(); }
+
+/*!
+ * Installs the handlers for one read, shape probe or write, and drops error
+ * text that an earlier call on this thread left behind.
+ */
+static void install_kdu_handlers()
+{
+  kdu_customize_warnings(&kdu_sipi_warn);
+  kdu_customize_errors(&kdu_sipi_error);
+  discard_kdu_error_text();
+}
 
 static bool is_jpx(const char *fname)
 {
@@ -385,8 +429,7 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
   int num_threads = kakadu_thread_count();
 
   // Custom messaging services
-  kdu_customize_warnings(&kdu_sipi_warn);
-  kdu_customize_errors(&kdu_sipi_error);
+  install_kdu_handlers();
 
   kdu_core::kdu_compressed_source *input = nullptr;
   kdu_supp::kdu_simple_file_source file_in;
@@ -447,8 +490,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
     jpx_open_result = jpx_in.open(&jp2_ultimate_src, true);
   } catch (kdu_exception&) {
     jp2_ultimate_src.close();
-    return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt JP2/JPX structure" });
+    return std::unexpected(kdu_failure(
+      ErrorCode::kMalformedInput, "Cannot read JPEG2000 file \"" + filepath + "\": corrupt JP2/JPX structure"));
   }
   if (jpx_open_result < 0) {// if < 0, not compatible with JP2 or JPX. Try opening as a raw code-stream.
     jp2_ultimate_src.close();
@@ -559,8 +602,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
       // open_stream() returned before the throw; the codestream is not
       // created yet). jp2_ultimate_src is released by its destructor on
       // unwind, as on the normal path.
-      return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-        "Cannot read JPEG2000 file \"" + filepath + "\": no usable codestream in JP2/JPX container" });
+      return std::unexpected(kdu_failure(ErrorCode::kMalformedInput,
+        "Cannot read JPEG2000 file \"" + filepath + "\": no usable codestream in JP2/JPX container"));
     }
   }
 
@@ -576,8 +619,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
     codestream.set_fast();// No errors expected in input
     maximal_reduce = codestream.get_min_dwt_levels();
   } catch (kdu_exception&) {
-    return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt or truncated codestream" });
+    return std::unexpected(kdu_failure(
+      ErrorCode::kMalformedInput, "Cannot read JPEG2000 file \"" + filepath + "\": corrupt or truncated codestream"));
   }
 
   //
@@ -739,8 +782,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
       }
     }
   } catch (kdu_exception &) {
-    return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt component subsampling data" });
+    return std::unexpected(kdu_failure(ErrorCode::kMalformedInput,
+      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt component subsampling data"));
   }
 
   //
@@ -931,8 +974,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
     }
     decompressor.start(codestream, false, false, env_ref);
   } catch (kdu_exception&) {
-    return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (decompressor start failed)" });
+    return std::unexpected(kdu_failure(ErrorCode::kMalformedInput,
+      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (decompressor start failed)"));
   }
   std::vector<int> stripe_heights(nc, dims.size.y);
   // Sample-interleaved output with each component at its mapped channel. A
@@ -970,8 +1013,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
       }
     } catch (kdu_exception&) {
       log_err("Error while decompressing image: %s.", filepath.c_str());
-      return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-        "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (stripe decode failed)" });
+      return std::unexpected(kdu_failure(ErrorCode::kMalformedInput,
+        "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (stripe decode failed)"));
     }
     break;
   }
@@ -999,8 +1042,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
       }
     } catch (kdu_exception&) {
       log_err("Error while decompressing image: %s.", filepath.c_str());
-      return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-        "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (stripe decode failed)" });
+      return std::unexpected(kdu_failure(ErrorCode::kMalformedInput,
+        "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (stripe decode failed)"));
     }
     break;
   }
@@ -1028,8 +1071,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
       }
     } catch (kdu_exception&) {
       log_err("Error while decompressing image: %s.", filepath.c_str());
-      return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-        "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (stripe decode failed)" });
+      return std::unexpected(kdu_failure(ErrorCode::kMalformedInput,
+        "Cannot read JPEG2000 file \"" + filepath + "\": corrupt codestream (stripe decode failed)"));
     }
     break;
   }
@@ -1109,8 +1152,7 @@ Result<SipiImgInfo> SipiIOJ2k::read_shape(const std::string &filepath)
     return info;
   }
 
-  kdu_customize_warnings(&kdu_sipi_warn);
-  kdu_customize_errors(&kdu_sipi_error);
+  install_kdu_handlers();
 
   kdu_supp::jp2_family_src jp2_ultimate_src;
   kdu_supp::jpx_source jpx_in;
@@ -1156,8 +1198,8 @@ Result<SipiImgInfo> SipiIOJ2k::read_shape(const std::string &filepath)
   try {
     jpx_open_result = jpx_in.open(&jp2_ultimate_src, true);
   } catch (kdu_exception &) {
-    return std::unexpected(SipiValueError{ ErrorCode::kShapeProbeFailed,
-      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt JP2/JPX structure" });
+    return std::unexpected(kdu_failure(
+      ErrorCode::kShapeProbeFailed, "Cannot read JPEG2000 file \"" + filepath + "\": corrupt JP2/JPX structure"));
   }
   if (jpx_open_result < 0) {// if < 0, not compatible with JP2 or JPX.  Try opening as a raw code-stream.
     jp2_ultimate_src.close();
@@ -1250,8 +1292,8 @@ Result<SipiImgInfo> SipiIOJ2k::read_shape(const std::string &filepath)
       jpx_stream = jpx_in.access_codestream(stream_id);
       input = jpx_stream.open_stream();
     } catch (kdu_exception &) {
-      return std::unexpected(SipiValueError{ ErrorCode::kShapeProbeFailed,
-        "Cannot read JPEG2000 file \"" + filepath + "\": no usable codestream in JP2/JPX container" });
+      return std::unexpected(kdu_failure(ErrorCode::kShapeProbeFailed,
+        "Cannot read JPEG2000 file \"" + filepath + "\": no usable codestream in JP2/JPX container"));
     }
   }
 
@@ -1279,8 +1321,8 @@ Result<SipiImgInfo> SipiIOJ2k::read_shape(const std::string &filepath)
     info.nc = codestream.get_num_components();
     info.bps = codestream.get_bit_depth(0);
   } catch (kdu_exception &) {
-    return std::unexpected(SipiValueError{ ErrorCode::kShapeProbeFailed,
-      "Cannot read JPEG2000 file \"" + filepath + "\": corrupt or truncated codestream" });
+    return std::unexpected(kdu_failure(
+      ErrorCode::kShapeProbeFailed, "Cannot read JPEG2000 file \"" + filepath + "\": corrupt or truncated codestream"));
   }
   info.height = tmp_height;
   info.width = tmp_width;
@@ -1385,8 +1427,17 @@ Result<void> SipiIOJ2k::write(SipiImage *img, const OutputSink &sink, const Sipi
   const bool streaming = is_streaming_sink(sink);
   const std::string filepath = streaming ? std::string("<http response>") : std::get<FilePath>(sink).path;
 
-  kdu_customize_warnings(&kdu_sipi_warn);
-  kdu_customize_errors(&kdu_sipi_error);
+  install_kdu_handlers();
+
+  // Kakadu needs a colour description whose colour count equals the colour
+  // channels, and every colour space this writer sets has 1, 3 or 4 colours.
+  // Another layout is sipi's own error, not a bad input.
+  const size_t colour_channels = img->getNc() - img->getEs().size();
+  if (colour_channels != 1 && colour_channels != 3 && colour_channels != 4) {
+    return std::unexpected(SipiValueError{ ErrorCode::kWriteFailed,
+      "Cannot write JPEG2000 image: no colour description for nc=" + std::to_string(img->getNc()) + ", extra samples="
+        + std::to_string(img->getEs().size()) + ", bps=" + std::to_string(img->getBps()) + ", file=" + filepath });
+  }
 
   int num_threads = kakadu_thread_count();
 
@@ -1756,6 +1807,7 @@ Result<void> SipiIOJ2k::write(SipiImage *img, const OutputSink &sink, const Sipi
         }
         }
       } catch (kdu_exception e) {
+        discard_kdu_error_text();
         if (es.is_set()) es.fields_mut().use_icc = true;
         guess_colour_by_nc();
       } catch (const SipiError &e) {
@@ -1909,11 +1961,11 @@ Result<void> SipiIOJ2k::write(SipiImage *img, const OutputSink &sink, const Sipi
       return std::unexpected(
         SipiValueError{ ErrorCode::kClientAbort, "Client aborted HTTP response during JPEG2000 write" });
     }
-    return std::unexpected(SipiValueError{ ErrorCode::kWriteFailed,
+    return std::unexpected(kdu_failure(ErrorCode::kWriteFailed,
       "Failed writing JPEG2000 image (Kakadu exception " + std::to_string(e) + ")" + ", file=" + filepath
-        + ", dimensions=" + std::to_string(img->getNx()) + "x" + std::to_string(img->getNy()) + ", channels="
-        + std::to_string(img->getNc()) + ", bps=" + std::to_string(img->getBps())
-        + ", colorspace=" + to_string(img->getPhoto()) });
+        + ", dimensions=" + std::to_string(img->getNx()) + "x" + std::to_string(img->getNy())
+        + ", channels=" + std::to_string(img->getNc()) + ", bps=" + std::to_string(img->getBps())
+        + ", colorspace=" + to_string(img->getPhoto())));
   }
   return {};
 }

@@ -314,10 +314,9 @@ Result<bool> SipiIOPng::read(SipiImage *img,
   case PNG_COLOR_TYPE_GRAY_ALPHA: {// implies nc = 2, (bit depths 8, 16)
     png_set_expand_gray_1_2_4_to_8(png_ptr);
     img->setPhoto(PhotometricInterpretation::MINISBLACK);
-    img->addEs(ExtraSamples::ASSOCALPHA);
     break;
   }
-  case PNG_COLOR_TYPE_PALETTE: {// might have an alpha channel – we check further below...
+  case PNG_COLOR_TYPE_PALETTE: {// tRNS may add alpha: see the extra sample after png_read_update_info
     png_set_palette_to_rgb(png_ptr);
     img->setPhoto(PhotometricInterpretation::RGB);
     break;
@@ -328,7 +327,6 @@ Result<bool> SipiIOPng::read(SipiImage *img,
   }
   case PNG_COLOR_TYPE_RGBA: {// implies nc = 4, (bit_depths 8, 16)
     img->setPhoto(PhotometricInterpretation::RGB);
-    img->addEs(ExtraSamples::ASSOCALPHA);
     break;
   }
   }
@@ -348,6 +346,9 @@ Result<bool> SipiIOPng::read(SipiImage *img,
     return std::unexpected(r.error());
   }
   img->set_geometry(width, height, decoded_nc, decoded_bps);
+  // The alpha channel follows the decoded layout, not the colour type: tRNS
+  // adds one, and bKGD composites the image and removes it.
+  if (decoded_nc == 2 || decoded_nc == 4) { img->addEs(ExtraSamples::ASSOCALPHA); }
 
   //
   // check for ICC profiles...
@@ -423,7 +424,6 @@ Result<bool> SipiIOPng::read(SipiImage *img,
 
   png_read_image(png_ptr, row_pointers.data());
   png_read_end(png_ptr, info_ptr);
-  if (color_type == PNG_COLOR_TYPE_PALETTE && img->getNc() == 4) { img->addEs(ExtraSamples::ASSOCALPHA); }
 
   png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 

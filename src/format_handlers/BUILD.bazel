@@ -133,8 +133,9 @@ cc_binary(
 # JPEG marker parsing + write, J2K palette + oversized-dimension + embedded-
 # metadata decode, the shared `SipiImgInfo`/`read_shape` surface across all
 # four handlers, the error paths each codec throws on truncated/malformed
-# input, the crafted-malformed-TIFF decode-path regressions, and EXIF
-# rational zero-denominator validation on TIFF write).
+# input, the crafted-malformed-TIFF decode-path regressions, EXIF
+# rational zero-denominator validation on TIFF write, Kakadu's text in J2K
+# errors, and the PNG alpha layout after libpng's tRNS/bKGD transforms).
 cc_test(
     name = "formats_test",
     srcs = [
@@ -144,6 +145,7 @@ cc_test(
         "cpp/imginfo_test.cpp",
         "cpp/j2k_channel_order_test.cpp",
         "cpp/j2k_dimension_regression_test.cpp",
+        "cpp/j2k_error_text_test.cpp",
         "cpp/j2k_metadata_regression_test.cpp",
         "cpp/j2k_palette_regression_test.cpp",
         "cpp/j2k_subsampling_test.cpp",
@@ -152,6 +154,7 @@ cc_test(
         "cpp/jpeg_metadata_segments_test.cpp",
         "cpp/jpeg_write_test.cpp",
         "cpp/malformed_tiff_test.cpp",
+        "cpp/png_alpha_layout_test.cpp",
         "cpp/png_metadata_roundtrip_test.cpp",
         "cpp/select_pyramid_level_test.cpp",
         "cpp/tiff_bilevel_regression_test.cpp",
@@ -165,6 +168,7 @@ cc_test(
         "//test:test_paths",
         "@exiv2",
         "@googletest//:gtest_main",
+        "@libpng//:png",
     ],
 )
 
