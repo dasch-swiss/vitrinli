@@ -266,6 +266,35 @@ fn docker_image_serves_iiif_image() {
     );
 }
 
+// `cmyk.tif` has no embedded ICC profile, so decoding it loads the built-in
+// USWebCoatedSWOP profile that `//tools:bin2c` compiled into the binary. A
+// binary that embedded something else fails the CMYK to sRGB conversion.
+#[test]
+fn docker_image_converts_cmyk_with_builtin_profile() {
+    let container = DockerContainer::start();
+    let c = smoke_client();
+
+    let resp = c
+        .get(format!(
+            "{}/unit/cmyk.tif/full/max/0/default.jpg",
+            container.base_url()
+        ))
+        .send()
+        .expect("CMYK IIIF request failed");
+
+    assert_eq!(
+        resp.status().as_u16(),
+        200,
+        "CMYK TIFF should convert to JPEG with the built-in profile"
+    );
+    let body = resp.bytes().expect("read body");
+    assert!(
+        body.starts_with(&[0xFF, 0xD8]),
+        "response should be a JPEG (got {} bytes)",
+        body.len()
+    );
+}
+
 #[test]
 fn docker_image_serves_static_html() {
     let container = DockerContainer::start();
