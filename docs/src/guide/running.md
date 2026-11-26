@@ -254,13 +254,14 @@ flag forms are gone.
 
 | Subcommand | Description |
 |------------|-------------|
-| `sipi query <file>` | Dump all information about the given file |
+| `sipi query <file>` | Print the header and the embedded metadata of the given file, without decoding its pixels |
 | `sipi compare <f1> <f2>` | Compare two files pixel-wise |
 
 ### Decode deadline
 
 Every offline verb (`convert`, `convert access-file`, `convert service-file`,
-`query`, `compare`) decodes its input under a 120 s wall-clock deadline. A
+`query`, `compare`) reads its input under a 120 s wall-clock deadline
+(`query` reads only the header and the embedded metadata). A
 malformed JPEG 2000 file can wedge the Kakadu decoder indefinitely; when the
 deadline passes the verb reports `decode exceeded the 120000 ms deadline` and
 exits non-zero instead of hanging the shell (or the ingest worker driving it).

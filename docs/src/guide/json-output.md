@@ -182,6 +182,11 @@ run's log lines. Show it to the user as the error ID.
   sets no ID: its documents carry `"correlation_id": ""` and its log
   lines have no prefix.
 
+`sipi query` reads only the header and the embedded metadata of its input and
+decodes no pixels. A failure in its `read` phase is a header or metadata
+failure; a file whose pixel data is corrupt but whose header reads passes
+`query`.
+
 ### Reserved fields
 
 `request_uri` is part of the internal `ImageContext` struct (it is populated
