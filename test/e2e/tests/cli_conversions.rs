@@ -1,6 +1,6 @@
 use sipi_e2e::{
-    assert_jp2_decode, assert_jp2_roundtrip, assert_metadata_fidelity, assert_verify_pipeline,
-    conversion_task, conversion_threads, run_conversions, ConversionTask,
+    assert_jp2_decode, assert_jp2_roundtrip, assert_metadata_fidelity, assert_query_jpx_header,
+    assert_verify_pipeline, conversion_task, conversion_threads, run_conversions, ConversionTask,
 };
 
 // =============================================================================
@@ -28,6 +28,8 @@ fn cli_conversions() {
         conversion_task("metadata_fidelity", assert_metadata_fidelity),
         // ADR-0009 Service → Access pipeline (convert + verify, both kinds).
         conversion_task("verify_pipeline", assert_verify_pipeline),
+        // `sipi query` on a JPX reports the header without a pixel decode.
+        conversion_task("query_jpx_header", assert_query_jpx_header),
     ];
 
     // TIFF → JP2 → TIFF round-trips over the reference set (Part 2 of the
