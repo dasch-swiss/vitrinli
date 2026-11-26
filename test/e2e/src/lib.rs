@@ -853,6 +853,22 @@ pub fn exif_app1_with_user_comment(comment: &[u8]) -> Vec<u8> {
     out
 }
 
+/// Write to `dest` a copy of the unit `MaoriFigure.jpg` with an APP13
+/// Photoshop 3.0 segment whose IPTC resource (`8BIM` 0x0404) does not parse:
+/// its one dataset claims 0x7fff length bytes, which Exiv2's
+/// `IptcParser::decode` rejects.
+pub fn write_jpeg_with_garbage_iptc(dest: &Path) {
+    let source = test_data_dir().join("images/unit/MaoriFigure.jpg");
+    let jpeg = std::fs::read(&source).unwrap_or_else(|e| panic!("read {}: {e}", source.display()));
+    let iptc = [0x1c, 0x02, 0x05, 0xff, 0xff, 0x00, 0x00, 0x00];
+    let mut payload = b"Photoshop 3.0\0".to_vec();
+    payload.extend_from_slice(b"8BIM\x04\x04\x00\x00");
+    payload.extend_from_slice(&(iptc.len() as u32).to_be_bytes());
+    payload.extend_from_slice(&iptc);
+    let out = jpeg_with_app_segment(&jpeg, 0xED, &payload);
+    std::fs::write(dest, out).unwrap_or_else(|e| panic!("write {}: {e}", dest.display()));
+}
+
 /// Decode `file<i>.jp2` from the ISO 15444-4 conformance set to TIFF and assert
 /// the output exists and is non-empty (port of `test_iso_15444_4_decode_jp2`).
 pub fn assert_jp2_decode(i: u32) {

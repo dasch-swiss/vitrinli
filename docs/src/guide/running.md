@@ -186,7 +186,8 @@ Vitrinli uses two logging modes depending on how it is running:
   This is the standard Unix convention for command-line tools. When
   `--json` is also set (see [Structured JSON output](#structured-json-output-cli)),
   every level is routed to **stderr** so `stdout` stays reserved for the
-  single JSON document.
+  single JSON document. The first line of each log call starts with
+  `[<correlation_id>] `, the ID the `--json` document carries.
 
 - **Server mode** (`sipi server --config`): JSON-formatted log lines go to **stdout**.
   This follows container best practices — Docker, Kubernetes, and log
@@ -284,7 +285,7 @@ with 503 and `/health` fails until restart (see
 
 | Flag | Description |
 |------|-------------|
-| `--json` | Emit a single JSON document to `stdout` instead of human-readable output. Accepted by `convert`, `convert access-file`, `query`, and `compare`. Useful for programmatic consumers and for full diagnostics on failures, which the CLI never reports to Sentry (see [Structured Diagnostics (CLI Mode)](#structured-diagnostics-cli-mode)). |
+| `--json` | Emit a single JSON document to `stdout` instead of human-readable output. Accepted by `convert`, `convert access-file`, `query`, and `compare` (`query` and `compare` emit it only on failure). Every document carries `correlation_id` (from `SIPI_CORRELATION_ID`, or generated), every error document an `error_code`. Useful for programmatic consumers and for full diagnostics on failures, which the CLI never reports to Sentry (see [Structured Diagnostics (CLI Mode)](#structured-diagnostics-cli-mode)). |
 
 Use cases:
 
@@ -415,6 +416,7 @@ flags.
 | `SIPI_LARGE_DECODE_THRESHOLD_BYTES` | `--large-decode-threshold-bytes` | `33554432` (32 MiB) | Estimated peak-memory at/above which a decode is charged to the full lane; below it bypasses as a tile |
 | `SIPI_DECODE_TIMEOUT_MS` | `--decode-timeout-ms` | 80 % of `SIPI_REQUEST_TIMEOUT` | Wall-clock deadline for one image decode or shape probe; must be shorter than the request timeout |
 | `SIPI_MAX_WEDGED_THREADS` | `--max-wedged-threads` | `nthreads - 1` (at least 1) | Wedged decode threads at which every request is shed with 503 and `/health` fails until restart |
+| `SIPI_CORRELATION_ID` | *(none)* | generated | Offline verbs only (`convert`, `query`, `compare`, `verify`): the run's correlation ID, 1-128 characters of `A-Z a-z 0-9 . _ : -`. It prefixes each log call and is the `correlation_id` of the `--json` document (see [`json-output.md`](json-output.md#correlation-id)). Unset or invalid: 32 random hex characters |
 
 **Configuration precedence** (highest to lowest):
 
@@ -446,13 +448,15 @@ On failure, Vitrinli prints a short error message to **stderr** indicating the f
 phase and the specific error. The format is:
 
 ```
-Error <phase> image: <details>
+[<correlation_id>] Error <phase> image: <details>
 ```
 
-Where `<phase>` is one of `reading`, `converting`, or `writing`. Example:
+Where `<phase>` is one of `reading`, `converting`, or `writing`, and
+`<correlation_id>` is the run's ID (`SIPI_CORRELATION_ID`, or generated).
+Example:
 
 ```
-Error reading image: Unsupported JPEG colorspace JCS_UNKNOWN (file=input.jpg, dimensions=2048x1536, components=4)
+[req-42] Error reading image: Unsupported JPEG colorspace JCS_UNKNOWN (file=input.jpg, dimensions=2048x1536, components=4)
 ```
 
 ### Structured Diagnostics (CLI Mode)
@@ -463,8 +467,8 @@ with `--json`, emits the full structured document described in
 [Structured JSON output (CLI)](#structured-json-output-cli) above: the same
 image-context fields (`input_file`, `output_file`, `width`, `height`,
 `channels`, `bps`, `colorspace`, `icc_profile_type`, `orientation`,
-`file_size_bytes`) plus the failing `phase` (`read`, `convert`, or `write`)
-and the error message. This is the diagnostic surface for CLI failures —
+`file_size_bytes`) plus the failing `phase` (`read`, `convert`, or `write`),
+the `error_code`, the `correlation_id` and the error message. This is the diagnostic surface for CLI failures —
 `--json` gets you full context regardless of whether `SIPI_SENTRY_DSN` is set.
 
 ### Common Failure Causes
@@ -485,11 +489,14 @@ If you call Vitrinli CLI from another service (e.g., a Java service):
 
 1. **Check the exit code.** Non-zero means failure — do not assume the output file
    exists or is valid.
-2. **Parse stderr** (optional). The first line of stderr contains a human-readable
+2. **Pass `SIPI_CORRELATION_ID`** with your own request ID, so your logs and
+   sipi's logs share one ID. Each sipi log call starts with `[<id>] `.
+3. **Parse stderr** (optional). The first line of stderr contains a human-readable
    error message with the failure phase and details.
-3. **Pass `--json`** to get full diagnostics without reproducing the failure —
-   the document's `phase`, `colorspace`, `bps`, and `output_format` fields
-   identify the failure pattern (see [Structured Diagnostics (CLI
+4. **Pass `--json`** to get full diagnostics without reproducing the failure —
+   the document's `phase` and `error_code` decide between a 4xx and a 5xx
+   ([rule for callers](json-output.md#rule-for-callers-4xx-or-5xx)), and its
+   `colorspace`, `bps`, and `output_format` fields identify the failure pattern (see [Structured Diagnostics (CLI
    Mode)](#structured-diagnostics-cli-mode) above).
 
 ## Configuration Files

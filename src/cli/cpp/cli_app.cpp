@@ -95,6 +95,8 @@ inline bool exists_file(const std::string &name)
 }
 
 
+extern "C" void sipi_cli_set_correlation_id(const char *id) { set_correlation_id(id != nullptr ? id : ""); }
+
 /*!
  * The CLI entry point, behind the FFI seam (`ffi/sipi_ffi.h`).
  *
@@ -206,15 +208,29 @@ extern "C" int sipi_cli_main(int argc, char **argv)
   // storage. The subcommand callbacks below invoke them and record the result
   // into `sipi_exit_code`.
   //
+  // `query` and `compare` print text on success; under --json only an error
+  // is a JSON document.
+  auto json_error =
+    [&](const std::string &input, const std::string &message, const std::string &phase, const std::string &error_code) {
+      if (!optJsonOutput) { return; }
+      Sipi::observability::ImageContext ctx;
+      ctx.input_file = input;
+      Sipi::emit_json_report(std::cout, ctx, message, phase, error_code);
+    };
+
   auto run_query = [&]() -> int {
     set_cli_mode(true);
+    if (optJsonOutput) { set_json_mode(true); }
     auto decoded = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optInFile);
     if (!decoded) {
-      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs).c_str());
+      const std::string msg = Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs);
+      log_err("sipi: %s", msg.c_str());
+      json_error(optInFile, msg, "read", "internal");
       return EXIT_FAILURE;
     }
     if (auto &r = decoded->status; !r) {
       log_err("sipi: unhandled exception: %s", r.error().diagnostic_message().c_str());
+      json_error(optInFile, r.error().diagnostic_message(), "read", Sipi::error_code_name(r.error().code()));
       return EXIT_FAILURE;
     }
     std::cout << decoded->img << std::endl;
@@ -334,7 +350,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
       Sipi::observability::populate_from_image(sentry_ctx, img);
       log_err("Error reading image: %s", r.error().diagnostic_message().c_str());
       if (optJsonOutput) {
-        Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "read" });
+        Sipi::emit_json_report(std::cout,
+          sentry_ctx,
+          r.error().diagnostic_message(),
+          std::string{ "read" },
+          Sipi::error_code_name(r.error().code()));
       }
       return EXIT_FAILURE;
     }
@@ -342,25 +362,33 @@ extern "C" int sipi_cli_main(int argc, char **argv)
       if (format == "jpg") {
         if (auto r = Sipi::processing::to8bps(img); !r) {
           Sipi::observability::populate_from_image(sentry_ctx, img);
-          log_err("Error reading image: %s", r.error().diagnostic_message().c_str());
+          log_err("Error converting image: %s", r.error().diagnostic_message().c_str());
           if (optJsonOutput) {
-            Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "read" });
+            Sipi::emit_json_report(std::cout,
+              sentry_ctx,
+              r.error().diagnostic_message(),
+              std::string{ "convert" },
+              Sipi::error_code_name(r.error().code()));
           }
           return EXIT_FAILURE;
         }
         if (auto r = Sipi::processing::convertToIcc(img, Sipi::Icc(Sipi::PredefinedProfiles::icc_sRGB), 8); !r) {
           Sipi::observability::populate_from_image(sentry_ctx, img);
-          log_err("Error reading image: %s", r.error().diagnostic_message().c_str());
+          log_err("Error converting image: %s", r.error().diagnostic_message().c_str());
           if (optJsonOutput) {
-            Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "read" });
+            Sipi::emit_json_report(std::cout,
+              sentry_ctx,
+              r.error().diagnostic_message(),
+              std::string{ "convert" },
+              Sipi::error_code_name(r.error().code()));
           }
           return EXIT_FAILURE;
         }
       }
     } catch (const std::exception &err) {
       Sipi::observability::populate_from_image(sentry_ctx, img);
-      log_err("Error reading image: %s", err.what());
-      if (optJsonOutput) { Sipi::emit_json_report(std::cout, sentry_ctx, err.what(), std::string{ "read" }); }
+      log_err("Error converting image: %s", err.what());
+      if (optJsonOutput) { Sipi::emit_json_report(std::cout, sentry_ctx, err.what(), std::string{ "convert" }); }
       return EXIT_FAILURE;
     }
 
@@ -391,7 +419,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
           Sipi::observability::populate_from_image(sentry_ctx, img);
           log_err("Error processing image: %s", r.error().diagnostic_message().c_str());
           if (optJsonOutput) {
-            Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "convert" });
+            Sipi::emit_json_report(std::cout,
+              sentry_ctx,
+              r.error().diagnostic_message(),
+              std::string{ "convert" },
+              Sipi::error_code_name(r.error().code()));
           }
           return EXIT_FAILURE;
         }
@@ -413,7 +445,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
           Sipi::observability::populate_from_image(sentry_ctx, img);
           log_err("Error processing image: %s", r.error().diagnostic_message().c_str());
           if (optJsonOutput) {
-            Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "convert" });
+            Sipi::emit_json_report(std::cout,
+              sentry_ctx,
+              r.error().diagnostic_message(),
+              std::string{ "convert" },
+              Sipi::error_code_name(r.error().code()));
           }
           return EXIT_FAILURE;
         }
@@ -432,7 +468,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
           Sipi::observability::populate_from_image(sentry_ctx, img);
           log_err("Error processing image: %s", r.error().diagnostic_message().c_str());
           if (optJsonOutput) {
-            Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "convert" });
+            Sipi::emit_json_report(std::cout,
+              sentry_ctx,
+              r.error().diagnostic_message(),
+              std::string{ "convert" },
+              Sipi::error_code_name(r.error().code()));
           }
           return EXIT_FAILURE;
         }
@@ -443,7 +483,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
           Sipi::observability::populate_from_image(sentry_ctx, img);
           log_err("Error processing image: %s", r.error().diagnostic_message().c_str());
           if (optJsonOutput) {
-            Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "convert" });
+            Sipi::emit_json_report(std::cout,
+              sentry_ctx,
+              r.error().diagnostic_message(),
+              std::string{ "convert" },
+              Sipi::error_code_name(r.error().code()));
           }
           return EXIT_FAILURE;
         }
@@ -496,7 +540,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
         Sipi::observability::populate_from_image(sentry_ctx, img);
         log_err("Error writing image: %s", r.error().diagnostic_message().c_str());
         if (optJsonOutput) {
-          Sipi::emit_json_report(std::cout, sentry_ctx, r.error().diagnostic_message(), std::string{ "write" });
+          Sipi::emit_json_report(std::cout,
+            sentry_ctx,
+            r.error().diagnostic_message(),
+            std::string{ "write" },
+            Sipi::error_code_name(r.error().code()));
         }
         return EXIT_FAILURE;
       }
@@ -522,31 +570,38 @@ extern "C" int sipi_cli_main(int argc, char **argv)
 
   auto run_compare = [&]() -> int {
     set_cli_mode(true);
-    if (!exists_file(optCompare[0])) {
-      log_err("File not found: %s", optCompare[0].c_str());
-      return EXIT_FAILURE;
-    }
-    if (!exists_file(optCompare[1])) {
-      log_err("File not found: %s", optCompare[1].c_str());
-      return EXIT_FAILURE;
+    if (optJsonOutput) { set_json_mode(true); }
+    for (const auto &file : optCompare) {
+      if (!exists_file(file)) {
+        const std::string msg = "File not found: " + file;
+        log_err("%s", msg.c_str());
+        json_error(file, msg, "cli_args", "cli_args");
+        return EXIT_FAILURE;
+      }
     }
 
     auto decoded1 = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optCompare[0]);
     if (!decoded1) {
-      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs).c_str());
+      const std::string msg = Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs);
+      log_err("sipi: %s", msg.c_str());
+      json_error(optCompare[0], msg, "read", "internal");
       return EXIT_FAILURE;
     }
     if (auto &r = decoded1->status; !r) {
       log_err("sipi: unhandled exception: %s", r.error().diagnostic_message().c_str());
+      json_error(optCompare[0], r.error().diagnostic_message(), "read", Sipi::error_code_name(r.error().code()));
       return EXIT_FAILURE;
     }
     auto decoded2 = Sipi::cli::read_with_deadline(Sipi::ffi::kDefaultDecodeTimeoutMs, optCompare[1]);
     if (!decoded2) {
-      log_err("sipi: %s", Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs).c_str());
+      const std::string msg = Sipi::cli::decode_deadline_message(Sipi::ffi::kDefaultDecodeTimeoutMs);
+      log_err("sipi: %s", msg.c_str());
+      json_error(optCompare[1], msg, "read", "internal");
       return EXIT_FAILURE;
     }
     if (auto &r = decoded2->status; !r) {
       log_err("sipi: unhandled exception: %s", r.error().diagnostic_message().c_str());
+      json_error(optCompare[1], r.error().diagnostic_message(), "read", Sipi::error_code_name(r.error().code()));
       return EXIT_FAILURE;
     }
     Sipi::SipiImage &img1 = decoded1->img;
@@ -573,10 +628,12 @@ extern "C" int sipi_cli_main(int argc, char **argv)
 
     if (auto r = Sipi::processing::subtract(img1, img2); !r) {
       log_err("sipi: unhandled exception: %s", r.error().diagnostic_message().c_str());
+      json_error(optCompare[0], r.error().diagnostic_message(), "convert", Sipi::error_code_name(r.error().code()));
       return EXIT_FAILURE;
     }
     if (auto r = img1.write("tif", "diff.tif"); !r) {
       log_err("sipi: unhandled exception: %s", r.error().diagnostic_message().c_str());
+      json_error(optCompare[0], r.error().diagnostic_message(), "write", Sipi::error_code_name(r.error().code()));
       return EXIT_FAILURE;
     }
     log_info("Files differ: avg: %f max: %d (%zu, %zu) See diff.tif",
@@ -642,8 +699,9 @@ extern "C" int sipi_cli_main(int argc, char **argv)
     cmd->add_flag("-k,--skipmeta", optSkipMeta, "Skip metadata of original file if flag is present.");
   };
   auto attach_output_opts = [&](CLI::App *cmd) {
-    cmd->add_flag("--json", optJsonOutput,
-      "Emit a structured JSON report (success or error) to stdout instead of human-readable messages.");
+    cmd->add_flag("--json",
+      optJsonOutput,
+      "Emit a structured JSON report to stdout (convert: success or error; query, compare: error only).");
   };
 
   // ----- Format-specific options ---------------------------------------
@@ -839,9 +897,11 @@ extern "C" int sipi_cli_main(int argc, char **argv)
     CLI11_PARSE(sipiopt, argc, argv);
   } catch (const std::exception &e) {
     log_err("sipi: unhandled exception: %s", e.what());
+    json_error(optInFile, std::string{ "unhandled exception: " } + e.what(), "unknown", "internal");
     return EXIT_FAILURE;
   } catch (...) {
     log_err("sipi: unhandled non-standard exception");
+    json_error(optInFile, "unhandled non-standard exception", "unknown", "internal");
     return EXIT_FAILURE;
   }
 

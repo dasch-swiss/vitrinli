@@ -288,6 +288,13 @@ fn run_cli(argv: &[String]) -> ExitCode {
     };
     let mut c_ptrs: Vec<*mut c_char> = c_args.iter().map(|c| c.as_ptr() as *mut c_char).collect();
 
+    let id = correlation_id(std::env::var("SIPI_CORRELATION_ID").ok().as_deref());
+    sentry::configure_scope(|scope| scope.set_tag("correlation_id", &id));
+    let c_id = CString::new(id).expect("a correlation ID holds no NUL byte");
+    // SAFETY: `c_id` is a NUL-terminated string that outlives the call; the
+    // setter copies it and retains no pointer.
+    unsafe { ffi::sipi_cli_set_correlation_id(c_id.as_ptr()) };
+
     // SAFETY: `c_ptrs` is a valid argv-shaped array of `argc` NUL-terminated
     // strings that outlive the synchronous call; the seam guarantees no C++
     // exception unwinds across the boundary (it returns a status code).
@@ -295,4 +302,79 @@ fn run_cli(argv: &[String]) -> ExitCode {
     // Process exit codes are a single byte; CLI11/command codes (0/1/105/106)
     // all fit.
     ExitCode::from(code as u8)
+}
+
+/// The correlation ID of an offline-verb run: `supplied` (`SIPI_CORRELATION_ID`)
+/// when it is 1-128 characters of `[A-Za-z0-9._:-]`, else 16 random bytes in
+/// lowercase hex. The C++ CLI splices the ID raw into its JSON fallback
+/// document and its log prefix, so only this charset may reach it.
+fn correlation_id(supplied: Option<&str>) -> String {
+    match supplied.filter(|s| !s.is_empty()) {
+        Some(id) if is_valid_correlation_id(id) => id.to_owned(),
+        Some(_) => {
+            eprintln!(
+                "sipi: SIPI_CORRELATION_ID is not 1-128 characters of [A-Za-z0-9._:-]; \
+                 using a generated ID"
+            );
+            random_correlation_id()
+        }
+        None => random_correlation_id(),
+    }
+}
+
+fn is_valid_correlation_id(id: &str) -> bool {
+    (1..=128).contains(&id.len())
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b':' | b'-'))
+}
+
+fn random_correlation_id() -> String {
+    let mut bytes = [0u8; 16];
+    // SAFETY: `bytes` is a valid, writable 16-byte buffer; getentropy accepts
+    // up to 256 bytes and writes only into it.
+    let rc = unsafe { libc::getentropy(bytes.as_mut_ptr().cast(), bytes.len()) };
+    assert_eq!(
+        rc,
+        0,
+        "getentropy failed: {}",
+        std::io::Error::last_os_error()
+    );
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[cfg(test)]
+mod correlation_id_tests {
+    use super::*;
+
+    #[test]
+    fn valid_supplied_id_is_kept() {
+        assert_eq!(correlation_id(Some("e2e-123")), "e2e-123");
+        assert_eq!(correlation_id(Some("a.b_c:d-E9")), "a.b_c:d-E9");
+        let longest = "x".repeat(128);
+        assert_eq!(correlation_id(Some(&longest)), longest);
+    }
+
+    #[test]
+    fn invalid_or_missing_id_is_generated() {
+        let too_long = "x".repeat(129);
+        for supplied in [
+            None,
+            Some(""),
+            Some("a b"),
+            Some("a\"b"),
+            Some(too_long.as_str()),
+        ] {
+            let id = correlation_id(supplied);
+            assert_eq!(id.len(), 32, "{supplied:?} gave {id}");
+            assert!(id
+                .bytes()
+                .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase()));
+        }
+    }
+
+    #[test]
+    fn generated_ids_differ() {
+        assert_ne!(random_correlation_id(), random_correlation_id());
+    }
 }

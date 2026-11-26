@@ -135,8 +135,9 @@ own failure vocabulary. What each seam catches by exception type differs:
   `src/cli/cpp/commands/convert_access_file.cpp`, `convert_service_file.cpp`,
   `verify.cpp`, `health.cpp`) — `diagnostic_message()` reaches the operator
   through the verb's own reporting path: `log_err` to stderr, plus the
-  optional `--json` report on `sipi convert` (`emit_json_report`) or
-  `report_error` on `convert access-file`. The exit code is a plain binary
+  optional `--json` report (`emit_json_report`, `report_error` on
+  `convert access-file`), whose `error_code` names the `ErrorCode`
+  (`error_code_name`). The exit code is a plain binary
   `EXIT_SUCCESS`/`EXIT_FAILURE` — a richer `HttpStatusClass`-derived exit-code
   mapping is not implemented today. Each verb body catches `SipiImageError`
   and/or `std::exception` around its own calls; none name `kdu_exception`.
