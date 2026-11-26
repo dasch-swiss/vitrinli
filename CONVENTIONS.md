@@ -333,7 +333,9 @@ A new fallible operation in the image layer (`src/image/`, `src/image_processing
 
 ## Docker
 
-- Build: `bazel run //src:image_load` (per-arch); `crane index append`
+- Build: `bazel run //src:image_load` (per-arch). The release pushes the
+  smoke-tested `//src:image_load` tarball with `crane push`
+  (`just docker-push-tarball`), never a rebuild; `crane index append`
   assembles the multi-arch manifest (see `src/BUILD.bazel`).
 - Base image: `gcr.io/distroless/base-debian12` (glibc, pinned by digest)
 - Init: `tini` (PID 1 zombie reaping, signal forwarding)

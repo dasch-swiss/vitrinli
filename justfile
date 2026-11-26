@@ -582,10 +582,12 @@ loadtest-decode concs='10,20,40' dur='20' warm='5' id='knora/load_test.jpx':
 #####################################
 # Bazel Docker (rules_oci)
 #
-# Each per-arch CI runner builds + loads the matching architecture's
-# image into its local Docker daemon (`bazel-docker-build-${arch}`) and
-# pushes per-arch digests to the registry (`bazel-docker-push-${arch}`).
-# A coordinator job runs `bazel-docker-publish-manifest` to stitch the
+# Each per-arch `validate-docker` runner builds the matching
+# architecture's release image (`bazel-docker-build-${arch}`), smoke-tests
+# it (`bazel-test-smoke-release ${arch}`) and uploads that tarball
+# (`bazel-docker-image-tarball ${arch}`). The per-arch `publish-docker` job
+# pushes the uploaded tarball without Bazel (`docker-push-tarball ${arch}`),
+# and a coordinator job runs `bazel-docker-publish-manifest` to stitch the
 # two pushed digests into a multi-arch manifest at
 # `daschswiss/sipi:v<version>` via `crane index append`.
 #
@@ -595,19 +597,19 @@ loadtest-decode concs='10,20,40' dur='20' warm='5' id='knora/load_test.jpx':
 #####################################
 
 # Build the per-arch image and load it into the local Docker daemon as
-# `daschswiss/sipi:latest`. Smoke-test consumes `latest`; CI re-tags
-# with `:v<version>-${arch}` via `bazel-docker-push-${arch}` below.
+# `daschswiss/sipi:latest`.
 # `--stamp` runs `tools/workspace_status.sh` so STABLE_SIPI_VERSION
-# (from version.txt) is baked into image labels and tag suffixes;
-# without it, tags resolve to `0.0.0-unstamped-${arch}` and `publish.yml`'s
+# (from version.txt) is baked into the binary version and image labels;
+# without it they read `0.0.0-unstamped` and `publish.yml`'s
 # version-based downstream steps (Sentry release naming) silently
 # break.
 #
 # `--config=release` is the production build: `-c opt` codegen (-O3 -DNDEBUG) +
 # `_FORTIFY_SOURCE=2` hardening (both inert at the default fastbuild `-O0`; see
-# .bazelrc). The push and debug-extract recipes below carry `--config=release`
-# too — they must agree, or the pushed image / Sentry debug symbols won't match
-# the smoke-tested binary.
+# .bazelrc). `bazel-test-smoke-release`, `bazel-docker-image-tarball` and
+# `bazel-docker-extract-debug` carry the same `--config=release --stamp
+# --platforms` flags; they must agree, or the smoke test, the pushed tarball
+# and the Sentry debug symbols are not the same build.
 bazel-docker-build-amd64 *FLAGS='':
     bazel run --config=release --stamp --platforms=//platforms:linux_x86_64 --verbose_failures {{FLAGS}} //src:image_load
 
@@ -652,19 +654,70 @@ bazel-cross-build-image arch *FLAGS='':
     esac
     bazel build --platforms="$PLATFORM" --verbose_failures {{FLAGS}} //src:sipi_image
 
-# Push the per-arch image to docker.io/daschswiss/sipi with two tags:
-# `latest-${arch}` and `v<version>-${arch}`. Driven by `oci_push`'s
-# `remote_tags` attribute consuming `:remote_tags_${arch}`. The
-# coordinator job (`bazel-docker-publish-manifest` below) reads these
-# digests off the registry to assemble the multi-arch manifest.
-bazel-docker-push-amd64 *FLAGS='':
-    bazel run --config=release --stamp --platforms=//platforms:linux_x86_64 --verbose_failures {{FLAGS}} //src:image_push_amd64
+# Run the Docker smoke test on the release image of `arch`: the flags of
+# `bazel-docker-build-${arch}`, so the `//src:image_load` tarball the test
+# loads is the one `bazel-docker-image-tarball` copies out for publishing.
+# `bazel-test-smoke` is the fastbuild variant; `ci.yml` and `image-scan` share
+# its cache.
+bazel-test-smoke-release arch *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{arch}}" in
+        amd64) PLATFORM=//platforms:linux_x86_64 ;;
+        arm64) PLATFORM=//platforms:linux_aarch64 ;;
+        *)
+            echo "ERROR: unknown arch '{{arch}}' (expected: amd64, arm64)" >&2
+            exit 1
+            ;;
+    esac
+    bazel test --config=release --stamp --platforms="$PLATFORM" --verbose_failures {{FLAGS}} //test/e2e:docker_smoke
 
-bazel-docker-push-arm64 *FLAGS='':
-    bazel run --config=release --stamp --platforms=//platforms:linux_aarch64 --verbose_failures {{FLAGS}} //src:image_push_arm64
+# Copy the release image tarball of `arch` to `sipi-image-${arch}.tar` at the
+# workspace root, for `publish.yml` to upload after the smoke test and push in
+# `publish-docker`. Same flags as `bazel-test-smoke-release`, so it is the
+# tested file. `--remote_download_toplevel` brings the tarball out of the
+# remote cache (the .bazelrc default is `--remote_download_minimal`).
+bazel-docker-image-tarball arch *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{arch}}" in
+        amd64) PLATFORM=//platforms:linux_x86_64 ;;
+        arm64) PLATFORM=//platforms:linux_aarch64 ;;
+        *)
+            echo "ERROR: unknown arch '{{arch}}' (expected: amd64, arm64)" >&2
+            exit 1
+            ;;
+    esac
+    bazel build --config=release --stamp --platforms="$PLATFORM" --verbose_failures --remote_download_toplevel {{FLAGS}} --output_groups=tarball //src:image_load
+    tar=$(bazel cquery --config=release --stamp --platforms="$PLATFORM" {{FLAGS}} --output_groups=tarball --output=files //src:image_load)
+    cp -L "$tar" "sipi-image-{{arch}}.tar"
+    echo "Image tarball copied to: sipi-image-{{arch}}.tar"
+
+# Push `sipi-image-${arch}.tar` (from `bazel-docker-image-tarball`) to
+# docker.io/daschswiss/sipi as `v<version>-${arch}`, check that the pushed
+# digest is the tarball's, then tag it `latest-${arch}`. No Bazel: the
+# release pushes the file the smoke test ran on. The platform comes from the
+# tarball's image config. Needs `crane` on PATH and Docker Hub credentials
+# in ~/.docker/config.json.
+docker-push-tarball arch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    VERSION="$(tr -d '[:space:]' < version.txt)"
+    TAR="sipi-image-{{arch}}.tar"
+    REF="docker.io/daschswiss/sipi:v${VERSION}-{{arch}}"
+    crane push "$TAR" "$REF"
+    tested="$(crane digest --tarball "$TAR")"
+    pushed="$(crane digest "$REF")"
+    echo "tested digest: ${tested}"
+    echo "pushed digest: ${pushed}"
+    if [ "$tested" != "$pushed" ]; then
+        echo "ERROR: ${REF} does not hold the tested image" >&2
+        exit 1
+    fi
+    crane tag "$REF" "latest-{{arch}}"
 
 # Assemble the multi-arch manifest at `daschswiss/sipi:v<version>` from
-# the two per-arch digests already pushed by `bazel-docker-push-*`.
+# the two per-arch digests already pushed by `docker-push-tarball`.
 # Also applies the `latest` tag to the manifest so downstream consumers
 # can pull `daschswiss/sipi:latest` and get the right arch automatically.
 #

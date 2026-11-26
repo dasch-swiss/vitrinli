@@ -3,7 +3,7 @@
 Nix's role in Vitrinli is **dev-shell provisioning only**. It assembles
 a reproducible bash environment with bazelisk, `gh` (consumed by the
 `gh_release_archive` repository_rule for the Kakadu fetch), `crane`
-(used by `bazel-docker-publish-manifest`), and `jpylyzer` (JP2
+(used by `docker-push-tarball` and `bazel-docker-publish-manifest`), and `jpylyzer` (JP2
 conformance validator). No host C/C++ build tools are needed — every
 dep is a BCR `bazel_dep` or a native `cc_library` compiled by the
 hermetic LLVM toolchain. Rust + LLVM toolchains are provisioned
@@ -69,7 +69,8 @@ Highlights:
   out to `gh release download`; `cacert` provides a TLS bundle on
   headless Linux dev shells.
 - **go-containerregistry** — provides `crane`, used by
-  `just bazel-docker-publish-manifest` to assemble the multi-arch
+  `just docker-push-tarball` to push the tested per-arch image tarball and
+  by `just bazel-docker-publish-manifest` to assemble the multi-arch
   manifest from per-arch digests.
 - **just** — recipe runner.
 - **python3Packages.jpylyzer** — JP2 conformance validator used to

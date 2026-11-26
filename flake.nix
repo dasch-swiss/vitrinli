@@ -29,7 +29,8 @@
           # C/C++ dep is a native `cc_library` compiled by the hermetic LLVM
           # toolchain — no host cmake/autotools/perl). The `kakadu_archive`
           # repository_rule shells out to `gh`; `crane` (go-containerregistry)
-          # is used by the `bazel-docker-publish-manifest` recipe.
+          # is used by the `docker-push-tarball` and
+          # `bazel-docker-publish-manifest` recipes.
           commonPackages = with pkgs; [
             bazelisk
             (writeShellScriptBin "bazel" ''exec ${bazelisk}/bin/bazelisk "$@"'')

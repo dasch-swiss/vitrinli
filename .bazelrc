@@ -101,7 +101,8 @@ build --copt=-fstack-protector-strong
 #
 # ── Release (production) build config ────────────────────────────────────────
 # `--config=release` IS the production build — the Docker image recipes
-# (`just bazel-docker-build/push-*`, `bazel-docker-extract-debug`) use it:
+# (`just bazel-docker-build-*`, `bazel-test-smoke-release`,
+# `bazel-docker-image-tarball`, `bazel-docker-extract-debug`) use it:
 # `-c opt` codegen + `_FORTIFY_SOURCE=2` hardening. The hermetic-llvm toolchain's
 # opt feature injects `-D_FORTIFY_SOURCE=1`; we undef then redefine to 2
 # (undef-then-define avoids `-Wmacro-redefined`). libmagic 5.47 conflicts with the
