@@ -367,6 +367,14 @@ _Avoid_: cache lock
 An HTTP response write that fails because the peer is gone (FIN, RST, or write timeout). Surfaces in code as `ErrorCode::kClientAbort` (`src/error/cpp/SipiValueError.h`), returned when `shttps::OUTPUT_WRITE_FAIL` is thrown from a socket write. `policy_for(ErrorCode::kClientAbort)` is `SentryPolicy::kSkip` with the `kClientDisconnected` metric hint: logged at info, **not** captured to Sentry — these are peer-side events, not server faults.
 _Avoid_: broken pipe error, peer disconnect error
 
+**Error code**:
+The `error_code` field of a CLI `--json` error document: the name of the `ErrorCode` (`Sipi::error_code_name`, `src/cli/cpp/SipiReport.h`), or `cli_args` / `internal`. With phase `read`, the codes `decode_failed`, `unsupported_format`, `malformed_input` and `metadata_parse_failed` mean the input file is invalid: a 4xx when that file is the user's upload, a 5xx when Vitrinli created it. Every other code is a 5xx. The table and the rule live in `docs/src/guide/json-output.md`.
+_Avoid_: error type, status code
+
+**Correlation ID**:
+The ID of one CLI run: the `correlation_id` field of every `--json` document and the `[<id>] ` prefix of each CLI log call. The caller passes it in `SIPI_CORRELATION_ID`; without a valid value the run makes one up. Callers show it to the user as the error ID.
+_Avoid_: request ID, trace ID (the OTel trace context is a different thing)
+
 ### Observability
 
 **Observability**:
