@@ -15,3 +15,10 @@
 # Fonts
 *.ttf filter=lfs diff=lfs merge=lfs -text
 *.woff filter=lfs diff=lfs merge=lfs -text
+
+# The ICC profiles that //tools:bin2c compiles into the binary are plain git
+# objects, so a checkout without `git lfs pull` still builds a correct sipi.
+include/ICC-Profiles/AdobeRGB1998.icc -filter -diff -merge -text
+include/ICC-Profiles/USWebCoatedSWOP.icc -filter -diff -merge -text
+include/ICC-Profiles/YCC709.icm -filter -diff -merge -text
+include/ICC-Profiles/Rec709-Rec1886.icc -filter -diff -merge -text

@@ -48,6 +48,12 @@ flags from the `bazel-rbe` composite action. `--config=rbe-darwin` is a
 local-only opt-in that CI never uses. The cross-leg flags both share live
 in one place, `.bazelrc` `build:rbe-cross`.
 
+Every repository file that `//tools:bin2c` compiles into the binary (the ICC
+profiles in `src/BUILD.bazel`) is a plain git object, never a Git LFS
+object, so a checkout without `git lfs pull` builds a correct sipi.
+`.gitattributes` exempts the built-in ICC profiles from the `*.icc`/`*.icm`
+LFS rule, and `bin2c` fails the build on an LFS pointer input.
+
 ## Build Completeness Invariant
 
 Every build target must succeed on every supported platform:

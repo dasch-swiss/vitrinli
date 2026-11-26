@@ -90,6 +90,7 @@ expand_template(
 # `add_custom_command` chain. Each genrule runs the hermetic `//tools:bin2c`
 # tool (an `xxd -i` replacement) directly on the profile, passing the C-array
 # symbol name explicitly so `src/metadata/cpp/icc.cpp` resolves it.
+# Every profile listed here must be exempted from Git LFS in `.gitattributes`.
 [
     genrule(
         name = profile + "_icc_h",
