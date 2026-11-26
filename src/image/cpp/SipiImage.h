@@ -12,6 +12,7 @@
 #ifndef _sipi_image_h
 #define _sipi_image_h
 
+#include <functional>
 #include <span>
 #include <string>
 // #include <unordered_map>
@@ -82,14 +83,17 @@ struct PixelDelta
  * images in Sipi. Please note that the map of io-classes (see \ref SipiIO) is
  * defined in `src/format_handlers/format_registry.cpp` (in //src/format_handlers, which depends
  * one-way on the engine); adding a new file format edits that registry plus the
- * read/read_shape dispatch below — see `tools/format-handlers-fanout.sh` for the full
- * list of shared edit sites.
+ * read_dispatch/read_shape dispatch below, and its handler implements
+ * `SipiIO::read_metadata` — see `tools/format-handlers-fanout.sh` for the
+ * full list of shared edit sites.
  */
 class SipiImage
 {
   static std::unordered_map<std::string, std::shared_ptr<SipiIO>>
     io;//!< member variable holding a map of I/O class instances for the different file formats
   void ensure_exif();
+  [[nodiscard]] Result<void> read_dispatch(const std::string &filepath,
+    const std::function<Result<bool>(SipiIO &handler)> &handler_read);
 
 protected:
   size_t nx;//!< Number of horizontal pixels (width)
@@ -496,6 +500,18 @@ public:
       ScalingMethod::HIGH,
       ScalingMethod::HIGH,
       ScalingMethod::HIGH });
+
+  /*!
+   * Read the header and the embedded metadata of a file, without decoding
+   * pixels: the image then holds what `read(filepath)` leaves, except the
+   * pixel buffer, which stays empty. Picks the handler and fails as `read`
+   * does. Serves `sipi query`; `read_shape` stays the shape probe (ADR-0004).
+   *
+   * \param[in] filepath A string containing the path to the image file
+   * \return `Result<void>`, or a `SipiValueError` if no registered format
+   *   handler recognises the file, or a handler recognised it and failed.
+   */
+  [[nodiscard]] Result<void> read_metadata(const std::string &filepath);
 
   /*!
    * Read an image from disk into memory. The tool makes no claim that the file

@@ -543,6 +543,29 @@ Result<bool> SipiIOJpeg::read(SipiImage *img,
   bool force_bps_8,
   ScalingQuality scaling_quality)
 {
+  return read_image(
+    img, filepath, std::move(region), std::move(size), force_bps_8, scaling_quality, /*decode_pixels=*/true);
+}
+
+Result<bool> SipiIOJpeg::read_metadata(SipiImage *img, const std::string &filepath)
+{
+  return read_image(img,
+    filepath,
+    nullptr,
+    nullptr,
+    false,
+    { ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH },
+    /*decode_pixels=*/false);
+}
+
+Result<bool> SipiIOJpeg::read_image(SipiImage *img,
+  const std::string &filepath,
+  std::shared_ptr<SipiRegion> region,
+  std::shared_ptr<SipiSize> size,
+  bool force_bps_8,
+  ScalingQuality scaling_quality,
+  bool decode_pixels)
+{
   SIPI_ZONE_N("SipiIOJpeg::read");
   int infile;
   //
@@ -752,8 +775,15 @@ Result<bool> SipiIOJpeg::read(SipiImage *img,
     return std::unexpected(SipiValueError{ ps.error().code(), filepath + ": " + ps.error().raw_message() });
   }
 
-  // icc_buffer is freed and nulled above; errors → longjmp → setjmp handler
-  jpeg_start_decompress(&cinfo);
+  // icc_buffer is freed and nulled above; errors → longjmp → setjmp handler.
+  // jpeg_calc_output_dimensions sets the output_* fields that
+  // jpeg_start_decompress sets, without reading scan data (a progressive file
+  // is read whole by jpeg_start_decompress).
+  if (decode_pixels) {
+    jpeg_start_decompress(&cinfo);
+  } else {
+    jpeg_calc_output_dimensions(&cinfo);
+  }
 
   img->set_geometry(cinfo.output_width, cinfo.output_height, cinfo.output_components, 8);
   if (auto r = validate_decode_dims(img->getNx(), img->getNy(), img->getNc(), static_cast<int>(img->getBps()), filepath);
@@ -800,6 +830,10 @@ Result<bool> SipiIOJpeg::read(SipiImage *img,
         + "\" (dimensions: " + std::to_string(img->getNx()) + "x" + std::to_string(img->getNy())
         + ", components: " + std::to_string(cinfo.output_components) + ")" });
   }
+  }
+  if (!decode_pixels) {
+    jpeg_destroy_decompress(&cinfo);
+    return true;
   }
   int sll = cinfo.output_components * cinfo.output_width * sizeof(uint8_t);
 

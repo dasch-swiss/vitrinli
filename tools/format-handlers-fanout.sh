@@ -21,7 +21,7 @@ echo "## 1. static handler registry — src/format_handlers/cpp/format_registry.
 grep -nE '#include "SipiIO|make_shared<SipiIO' src/format_handlers/cpp/format_registry.cpp
 
 echo
-echo "## 2. read + read_shape dispatch branches — src/image/cpp/SipiImage.cpp"
+echo "## 2. read_dispatch (read + read_metadata) and read_shape dispatch branches — src/image/cpp/SipiImage.cpp"
 grep -nE 'dispatched_key = "(tif|jpg|png|jpx)"' src/image/cpp/SipiImage.cpp
 
 echo
@@ -29,5 +29,7 @@ echo "## 3. Bazel target srcs/hdrs (+ any new codec dep) — src/format_handlers
 grep -nE 'SipiIO(Tiff|J2k|Jpeg|Png)\.(cpp|h)' src/format_handlers/BUILD.bazel
 
 echo
+echo "NOTE: the handler implements every pure virtual of SipiIO (read, read_shape,"
+echo "read_metadata); read_metadata shares the read code path, as the four handlers do."
 echo "NOTE: SipiImage::write() needs no shared edit — it is keyed generically by"
 echo "\`ftype\` via io.at(ftype), so a caller just passes the new format's key string."

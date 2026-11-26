@@ -416,12 +416,46 @@ static bool is_jpx(const char *fname)
 //=============================================================================
 
 
+namespace {
+  SipiValueError unsupported_bps_error(const SipiImage &img, const std::string &filepath)
+  {
+    log_err("Unsupported number of bits/sample: %ld in file %s", img.getBps(), filepath.c_str());
+    return SipiValueError{ ErrorCode::kUnsupportedFormat,
+      "Cannot read JPEG2000: unsupported bits/sample (" + std::to_string(img.getBps()) + ") in file \"" + filepath
+        + "\" (dimensions: " + std::to_string(img.getNx()) + "x" + std::to_string(img.getNy())
+        + ", channels: " + std::to_string(img.getNc()) + ")" };
+  }
+}// namespace
+
 Result<bool> SipiIOJ2k::read(SipiImage *img,
   const std::string &filepath,
   std::shared_ptr<SipiRegion> region,
   std::shared_ptr<SipiSize> size,
   bool force_bps_8,
   ScalingQuality scaling_quality)
+{
+  return read_image(
+    img, filepath, std::move(region), std::move(size), force_bps_8, scaling_quality, /*decode_pixels=*/true);
+}
+
+Result<bool> SipiIOJ2k::read_metadata(SipiImage *img, const std::string &filepath)
+{
+  return read_image(img,
+    filepath,
+    nullptr,
+    nullptr,
+    false,
+    { ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH },
+    /*decode_pixels=*/false);
+}
+
+Result<bool> SipiIOJ2k::read_image(SipiImage *img,
+  const std::string &filepath,
+  std::shared_ptr<SipiRegion> region,
+  std::shared_ptr<SipiSize> size,
+  bool force_bps_8,
+  ScalingQuality scaling_quality,
+  bool decode_pixels)
 {
   SIPI_ZONE_N("SipiIOJ2k::read");
   if (!is_jpx(filepath.c_str())) return false;// It's not a JPGE2000....
@@ -952,6 +986,20 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
     }// switch(numcol)
   }
 
+  if (!decode_pixels) {
+    // The header effects of the decode steps below: 12-bit samples decode to
+    // 16 bits, a palette expands to `numcol` channels, YCbCr converts to RGB.
+    std::size_t decoded_bps = img->getBps();
+    if (decoded_bps == 12) {
+      decoded_bps = 16;
+    } else if (decoded_bps != 8 && decoded_bps != 16) {
+      return std::unexpected(unsupported_bps_error(*img, filepath));
+    }
+    img->set_geometry(img->getNx(), img->getNy(), rlut.empty() ? img->getNc() : numcol, decoded_bps);
+    if (img->getPhoto() == PhotometricInterpretation::YCBCR) { img->setPhoto(PhotometricInterpretation::RGB); }
+    return true;
+  }
+
   //
   // the following code directly converts a 16-Bit jpx into an 8-bit image.
   // In order to retrieve a 16-Bit image, use kdu_uin16 *buffer and the apropriate signature of the pull_stripe method
@@ -1078,11 +1126,7 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
   }
   default: {
     decompressor.finish();
-    log_err("Unsupported number of bits/sample: %ld in file %s", img->getBps(), filepath.c_str());
-    return std::unexpected(SipiValueError{ ErrorCode::kUnsupportedFormat,
-      "Cannot read JPEG2000: unsupported bits/sample (" + std::to_string(img->getBps()) + ") in file \"" + filepath
-        + "\" (dimensions: " + std::to_string(img->getNx()) + "x" + std::to_string(img->getNy())
-        + ", channels: " + std::to_string(img->getNc()) + ")" });
+    return std::unexpected(unsupported_bps_error(*img, filepath));
   }
   }
   decompressor.finish();

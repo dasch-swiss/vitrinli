@@ -1124,6 +1124,29 @@ Result<bool> SipiIOTiff::read(SipiImage *img,
   bool force_bps_8,
   ScalingQuality scaling_quality)
 {
+  return read_image(
+    img, filepath, std::move(region), std::move(size), force_bps_8, scaling_quality, /*decode_pixels=*/true);
+}
+
+Result<bool> SipiIOTiff::read_metadata(SipiImage *img, const std::string &filepath)
+{
+  return read_image(img,
+    filepath,
+    nullptr,
+    nullptr,
+    false,
+    { ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH, ScalingMethod::HIGH },
+    /*decode_pixels=*/false);
+}
+
+Result<bool> SipiIOTiff::read_image(SipiImage *img,
+  const std::string &filepath,
+  std::shared_ptr<SipiRegion> region,
+  std::shared_ptr<SipiSize> size,
+  bool force_bps_8,
+  ScalingQuality scaling_quality,
+  bool decode_pixels)
+{
   SIPI_ZONE_N("SipiIOTiff::read");
   TiffDiagnosticSink tiff_diag;
   TiffOpenOptionsPtr tiff_opts = make_tiff_open_options(tiff_diag);
@@ -1544,71 +1567,76 @@ Result<bool> SipiIOTiff::read(SipiImage *img,
         tiff_diag));
     }
 
-    std::vector<uint8_t> inbuf(checked_buf_size_or_throw(roi_w, roi_h, img->getNc(), static_cast<size_t>(ps)));
-
     // The decoded bps can be promoted from the file's on-disk value (1-bit ->
-    // 8-bit via one2eight<T>()); tracked locally and applied to the image
-    // together with the pixel buffer below via set_pixels(), which is the
-    // only path that keeps buffer and geometry in lockstep.
-    size_t decoded_bps = img->getBps();
-    Result<void> decoded{};
-    if (img->getBps() <= 8) {
-      const std::span<uint8_t> samples(inbuf);
-      decoded = is_tiled ? read_tiled_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h, samples)
-                         : read_standard_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h, samples);
-      decoded_bps = 8;
-    } else if (img->getBps() <= 16) {
-      // The decoder writes into the buffer that set_pixels() takes: a second
-      // full-size buffer doubles the peak heap of a multi-GB TIFF read.
-      // operator new aligns that buffer for any fundamental type.
-      static_assert(alignof(uint16_t) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__);
-      const std::span<uint16_t> samples(reinterpret_cast<uint16_t *>(inbuf.data()), inbuf.size() / sizeof(uint16_t));
-      decoded = is_tiled ? read_tiled_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h, samples)
-                         : read_standard_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h, samples);
-      decoded_bps = 16;
-    }
-    if (!decoded) { return std::unexpected(with_tiff_diagnostic(std::move(decoded).error(), tiff_diag)); }
+    // 8-bit via one2eight<T>()); applied to the image together with the pixel
+    // buffer via set_pixels(), which is the only path that keeps buffer and
+    // geometry in lockstep, or alone when no pixels are decoded.
+    const size_t decoded_bps = 8 * static_cast<size_t>(ps);
+    if (decode_pixels) {
+      std::vector<uint8_t> inbuf(checked_buf_size_or_throw(roi_w, roi_h, img->getNc(), static_cast<size_t>(ps)));
+      Result<void> decoded{};
+      if (img->getBps() <= 8) {
+        const std::span<uint8_t> samples(inbuf);
+        decoded = is_tiled ? read_tiled_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h, samples)
+                           : read_standard_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h, samples);
+      } else if (img->getBps() <= 16) {
+        // The decoder writes into the buffer that set_pixels() takes: a second
+        // full-size buffer doubles the peak heap of a multi-GB TIFF read.
+        // operator new aligns that buffer for any fundamental type.
+        static_assert(alignof(uint16_t) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+        const std::span<uint16_t> samples(reinterpret_cast<uint16_t *>(inbuf.data()), inbuf.size() / sizeof(uint16_t));
+        decoded = is_tiled ? read_tiled_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h, samples)
+                           : read_standard_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h, samples);
+      }
+      if (!decoded) { return std::unexpected(with_tiff_diagnostic(std::move(decoded).error(), tiff_diag)); }
 
-    img->set_pixels(std::move(inbuf), roi_w, roi_h, img->getNc(), decoded_bps);
+      img->set_pixels(std::move(inbuf), roi_w, roi_h, img->getNc(), decoded_bps);
+    } else {
+      img->set_geometry(roi_w, roi_h, img->getNc(), decoded_bps);
+    }
     tif_guard.reset();
 
     if (img->getPhoto() == PhotometricInterpretation::PALETTE) {
       //
       // ok, we have a palette color image we have to convert to RGB...
       //
-      // Validate every decoded pixel value once, up front, against the
-      // colormap size before the RGB-expansion loop below indexes into
-      // rcm/gcm/bcm with it unchecked (DEV-6065).
-      std::span<const byte> palette_pixels = img->pixels_view();
-      for (size_t i = 0; i < img->getNx() * img->getNy(); i++) {
-        if (static_cast<size_t>(palette_pixels[i]) >= colmap_len) {
-          return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
-            "Palette index " + std::to_string(palette_pixels[i]) + " out of range for colormap size "
-              + std::to_string(colmap_len) + ": " + filepath });
+      if (decode_pixels) {
+        // Validate every decoded pixel value once, up front, against the
+        // colormap size before the RGB-expansion loop below indexes into
+        // rcm/gcm/bcm with it unchecked (DEV-6065).
+        std::span<const byte> palette_pixels = img->pixels_view();
+        for (size_t i = 0; i < img->getNx() * img->getNy(); i++) {
+          if (static_cast<size_t>(palette_pixels[i]) >= colmap_len) {
+            return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
+              "Palette index " + std::to_string(palette_pixels[i]) + " out of range for colormap size "
+                + std::to_string(colmap_len) + ": " + filepath });
+          }
         }
-      }
 
-      uint16_t cm_max = 0;
-      for (size_t i = 0; i < colmap_len; i++) {
-        if (rcm[i] > cm_max) cm_max = rcm[i];
-        if (gcm[i] > cm_max) cm_max = gcm[i];
-        if (bcm[i] > cm_max) cm_max = bcm[i];
-      }
-      std::vector<uint8_t> dataptr(checked_buf_size_or_throw(img->getNx(), img->getNy(), 3, 1));
-      if (cm_max <= 256) {// we have a colomap with entries form 0 - 255
-        for (size_t i = 0; i < img->getNx() * img->getNy(); i++) {
-          dataptr[3 * i] = (uint8_t)rcm[palette_pixels[i]];
-          dataptr[3 * i + 1] = (uint8_t)gcm[palette_pixels[i]];
-          dataptr[3 * i + 2] = (uint8_t)bcm[palette_pixels[i]];
+        uint16_t cm_max = 0;
+        for (size_t i = 0; i < colmap_len; i++) {
+          if (rcm[i] > cm_max) cm_max = rcm[i];
+          if (gcm[i] > cm_max) cm_max = gcm[i];
+          if (bcm[i] > cm_max) cm_max = bcm[i];
         }
-      } else {// we have a colormap with entries > 255, assuming 16 bit
-        for (size_t i = 0; i < img->getNx() * img->getNy(); i++) {
-          dataptr[3 * i] = (uint8_t)(rcm[palette_pixels[i]] >> 8);
-          dataptr[3 * i + 1] = (uint8_t)(gcm[palette_pixels[i]] >> 8);
-          dataptr[3 * i + 2] = (uint8_t)(bcm[palette_pixels[i]] >> 8);
+        std::vector<uint8_t> dataptr(checked_buf_size_or_throw(img->getNx(), img->getNy(), 3, 1));
+        if (cm_max <= 256) {// we have a colomap with entries form 0 - 255
+          for (size_t i = 0; i < img->getNx() * img->getNy(); i++) {
+            dataptr[3 * i] = (uint8_t)rcm[palette_pixels[i]];
+            dataptr[3 * i + 1] = (uint8_t)gcm[palette_pixels[i]];
+            dataptr[3 * i + 2] = (uint8_t)bcm[palette_pixels[i]];
+          }
+        } else {// we have a colormap with entries > 255, assuming 16 bit
+          for (size_t i = 0; i < img->getNx() * img->getNy(); i++) {
+            dataptr[3 * i] = (uint8_t)(rcm[palette_pixels[i]] >> 8);
+            dataptr[3 * i + 1] = (uint8_t)(gcm[palette_pixels[i]] >> 8);
+            dataptr[3 * i + 2] = (uint8_t)(bcm[palette_pixels[i]] >> 8);
+          }
         }
+        img->set_pixels(std::move(dataptr), img->getNx(), img->getNy(), 3, img->getBps());
+      } else {
+        img->set_geometry(img->getNx(), img->getNy(), 3, img->getBps());
       }
-      img->set_pixels(std::move(dataptr), img->getNx(), img->getNy(), 3, img->getBps());
       img->setPhoto(PhotometricInterpretation::RGB);
     }
 
@@ -1649,32 +1677,36 @@ Result<bool> SipiIOTiff::read(SipiImage *img,
         const size_t lab_nx = img->getNx();
         const size_t lab_ny = img->getNy();
         if (img->getBps() == 8) {
-          byte *pix = img->pixels_writable().data();
-          for (size_t y = 0; y < lab_ny; y++) {
-            for (size_t x = 0; x < lab_nx; x++) {
-              union {
-                unsigned char u;
-                signed char s;
-              } v{};
-              v.u = pix[lab_nc * (y * lab_nx + x) + 1];
-              pix[lab_nc * (y * lab_nx + x) + 1] = 128 + v.s;
-              v.u = pix[lab_nc * (y * lab_nx + x) + 2];
-              pix[lab_nc * (y * lab_nx + x) + 2] = 128 + v.s;
+          if (decode_pixels) {
+            byte *pix = img->pixels_writable().data();
+            for (size_t y = 0; y < lab_ny; y++) {
+              for (size_t x = 0; x < lab_nx; x++) {
+                union {
+                  unsigned char u;
+                  signed char s;
+                } v{};
+                v.u = pix[lab_nc * (y * lab_nx + x) + 1];
+                pix[lab_nc * (y * lab_nx + x) + 1] = 128 + v.s;
+                v.u = pix[lab_nc * (y * lab_nx + x) + 2];
+                pix[lab_nc * (y * lab_nx + x) + 2] = 128 + v.s;
+              }
             }
           }
           img->set_icc(std::make_shared<Icc>(icc_LAB));
         } else if (img->getBps() == 16) {
-          auto *data = (unsigned short *)img->pixels_writable().data();
-          for (size_t y = 0; y < lab_ny; y++) {
-            for (size_t x = 0; x < lab_nx; x++) {
-              union {
-                unsigned short u;
-                signed short s;
-              } v{};
-              v.u = data[lab_nc * (y * lab_nx + x) + 1];
-              data[lab_nc * (y * lab_nx + x) + 1] = 32768 + v.s;
-              v.u = data[lab_nc * (y * lab_nx + x) + 2];
-              data[lab_nc * (y * lab_nx + x) + 2] = 32768 + v.s;
+          if (decode_pixels) {
+            auto *data = (unsigned short *)img->pixels_writable().data();
+            for (size_t y = 0; y < lab_ny; y++) {
+              for (size_t x = 0; x < lab_nx; x++) {
+                union {
+                  unsigned short u;
+                  signed short s;
+                } v{};
+                v.u = data[lab_nc * (y * lab_nx + x) + 1];
+                data[lab_nc * (y * lab_nx + x) + 1] = 32768 + v.s;
+                v.u = data[lab_nc * (y * lab_nx + x) + 2];
+                data[lab_nc * (y * lab_nx + x) + 2] = 32768 + v.s;
+              }
             }
           }
           img->set_icc(std::make_shared<Icc>(icc_LAB));
