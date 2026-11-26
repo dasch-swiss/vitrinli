@@ -276,17 +276,21 @@ the `.github/actions/ci-setup` composite action — no Nix.
 Gate model:
 
 1. `validate-docker / {amd64, arm64}` — each per-arch runner
-   builds the Docker image via
-   `just bazel-docker-build-${arch}` and runs
-   `just bazel-test-smoke` against it.
+   builds the release image via `just bazel-docker-build-${arch}`,
+   extracts the `.debug` file via `just bazel-docker-extract-debug ${arch}`,
+   runs the smoke test on the release build via
+   `just bazel-test-smoke-release ${arch}`, copies that tarball out via
+   `just bazel-docker-image-tarball ${arch}`, and uploads the tarball and
+   the `.debug` file as the artifacts `sipi-image-${arch}` and
+   `sipi-debug-${arch}` (kept 7 days).
 2. `release-gate` — fires on `validate-docker` success.
 3. Publish jobs run after the gate:
-   - `publish-docker / {amd64, arm64}` — rebuilds the per-arch
-     image, extracts the `.debug` file via
-     `just bazel-docker-extract-debug ${arch}`, pushes via
-     `just bazel-docker-push-${arch}`, and pushes debug symbols to
-     Sentry. It does not repeat the smoke test —
-     `validate-docker` already validated the same commit.
+   - `publish-docker / {amd64, arm64}` — downloads both artifacts,
+     pushes the tarball via `just docker-push-tarball ${arch}`
+     (`crane push` to `:v<version>-${arch}`, then a check that the pushed
+     digest equals `crane digest --tarball`, then `:latest-${arch}`), and
+     uploads the debug symbols to Sentry. It runs no Bazel, so the pushed
+     image is the smoke-tested one.
    - `manifest` — needs `publish-docker`; runs
      `just bazel-docker-publish-manifest` (`crane index append`) to
      assemble the multi-arch manifest at `daschswiss/sipi:v<version>`
@@ -345,9 +349,10 @@ just bazel-test-sanitized --config=asan --config=ubsan
 
 # Docker image with split debug symbols (what publish.yml does)
 just bazel-docker-build-amd64
-just bazel-test-smoke
 just bazel-docker-extract-debug amd64
-just bazel-docker-push-amd64
+just bazel-test-smoke-release amd64
+just bazel-docker-image-tarball amd64
+just docker-push-tarball amd64
 just bazel-docker-publish-manifest
 ```
 

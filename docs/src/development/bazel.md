@@ -97,6 +97,9 @@ just bazel-docker-build-amd64    # build + load amd64 image as daschswiss/sipi:l
 just bazel-docker-build-arm64    # arm64 equivalent
 just bazel-docker-publish-manifest  # crane index append → daschswiss/sipi:v<version>
 just bazel-docker-extract-debug <arch>  # produce sipi-<arch>.debug for sentry-cli
+just bazel-test-smoke-release <arch>    # smoke test on the release build
+just bazel-docker-image-tarball <arch>  # copy the tested tarball to sipi-image-<arch>.tar
+just docker-push-tarball <arch>         # crane push it, digest checked
 ```
 
 ## `--config=` flags
@@ -170,7 +173,7 @@ See [Kakadu setup](kakadu.md) for the full version-bump procedure.
 ## Cross-platform
 
 Linux-only targets (`//src:sipi_image`, `//src:image_load`,
-`//src:image_push_*`, `//src:sipi_debug_layout`) are gated by
+`//src:sipi_debug_layout`) are gated by
 `target_compatible_with = ["@platforms//os:linux"]` — on the **target**
 OS, not the host. A macOS host builds them by setting the target
 platform explicitly (`--platforms=//bazel/platforms:linux_{amd64,arm64}`),

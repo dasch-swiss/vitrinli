@@ -61,7 +61,7 @@ specified in `Color Profile EULA.pdf` at the repo root.
 The Docker image is built by Bazel `rules_oci` (`//src:sipi_image`).
 There is no `Dockerfile` — `src/BUILD.bazel` is the
 single source of truth. A running Docker daemon is still required
-for `docker load` / `docker push`, but `docker buildx` is not used
+for `docker load`, but `docker buildx` is not used
 (multi-arch manifest assembly happens via `crane index append` on a
 coordinator job).
 
@@ -76,16 +76,17 @@ just bazel-test-smoke          # builds //src:sipi_image and probes the loaded i
 just bazel-docker-build-amd64           # build + load amd64 as daschswiss/sipi:latest
 just bazel-docker-build-arm64           # build + load arm64
 just bazel-docker-extract-debug amd64   # surface sipi-amd64.debug for sentry-cli
-just bazel-docker-push-amd64            # push as :v<version>-amd64 + :latest-amd64
-just bazel-docker-push-arm64            # push as :v<version>-arm64 + :latest-arm64
+just bazel-test-smoke-release amd64     # smoke test on the release build
+just bazel-docker-image-tarball amd64   # copy the tested tarball to sipi-image-amd64.tar
+just docker-push-tarball amd64          # crane push as :v<version>-amd64 + :latest-amd64, digest checked
 just bazel-docker-publish-manifest      # crane index append → daschswiss/sipi:v<version>
 ```
 
-Each per-arch CI runner builds + pushes only its matching
-architecture (`target_compatible_with` rejects cross-arch
-invocations). A coordinator job runs `crane index append` to stitch
-the two pushed digests into a multi-arch manifest at
-`daschswiss/sipi:v<version>`.
+Each per-arch CI runner builds and smoke-tests its matching
+architecture and uploads the tested tarball. The per-arch publish job
+pushes that tarball with `crane`, without Bazel. A coordinator job runs
+`crane index append` to stitch the two pushed digests into a multi-arch
+manifest at `daschswiss/sipi:v<version>`.
 
 ## Cross-platform builds
 
@@ -133,7 +134,9 @@ groups:
 | `bazel-build-sanitized [*FLAGS]` | `bazel build --config=asan --config=ubsan //src/cli:sipi` |
 | `bazel-cross-build-image {amd64,arm64}` | Cross-build `//src:sipi_image` for the Linux target arch (build-only; darwin→linux gate) |
 | `bazel-docker-build-{amd64,arm64}` | Build + load per-arch image as `daschswiss/sipi:latest` |
-| `bazel-docker-push-{amd64,arm64}` | Push to `daschswiss/sipi:{latest,v<version>}-${arch}` |
+| `bazel-test-smoke-release arch` | Docker smoke test on the release build of `arch` |
+| `bazel-docker-image-tarball arch` | Copy the release image tarball to `sipi-image-<arch>.tar` |
+| `docker-push-tarball arch` | `crane push` `sipi-image-<arch>.tar` to `daschswiss/sipi:{v<version>,latest}-${arch}`; fails if the pushed digest differs |
 | `bazel-docker-publish-manifest` | `crane index append` → multi-arch manifest at `daschswiss/sipi:v<version>` |
 | `bazel-docker-extract-debug arch` | Build `:sipi_debug_layout`, surface `sipi-<arch>.debug` |
 | `run` | `just bazel-build` then run sipi with the dev config |

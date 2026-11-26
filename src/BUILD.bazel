@@ -21,7 +21,7 @@ Versioning: `expand_template` regenerates `SipiVersion.h` from
 load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load("@rules_distroless//distroless:defs.bzl", "group", "passwd")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@tar.bzl", "tar")
 
 package(default_visibility = ["//visibility:private"])
@@ -705,78 +705,12 @@ oci_image(
     workdir = "/sipi",
 )
 
-# ── Image push + load ──────────────────────────────────────────────────────
-# Two ways to consume `:sipi_image`:
-#
-#   - `bazel run //src:image_load` materialises the image as a tarball
-#     and loads it into the local Docker daemon as
-#     `daschswiss/sipi:latest`. Consumed by the smoke-test workflow
-#     (`just bazel-docker-build-${arch}` plants this in C7) and by ad-
-#     hoc local `docker run daschswiss/sipi …` invocations.
-#
-#   - `bazel run //src:image_push_${arch}` pushes the per-arch image
-#     to `docker.io/daschswiss/sipi` with two tags: `latest-${arch}` and
-#     `v<version>-${arch}`. The coordinator job in `publish.yml` then
-#     runs `crane index append` to assemble the multi-arch manifest at
-#     `daschswiss/sipi:v<version>` from the two pushed digests.
-#
-# Per-arch `target_compatible_with` gates each push target to the
-# matching host CPU — `bazel run //src:image_push_amd64` from an
-# arm64 runner produces a clean "incompatible target" message rather
-# than silently pushing an arm64 image under an amd64 tag.
-
-# Per-arch tag lists. Stamped under `--stamp` (set by `:release` config
-# in .bazelrc); plain non-stamp builds use the unstamped fallback so
-# the push target is still buildable in a local diffoci scenario.
-expand_template(
-    name = "remote_tags_amd64",
-    out = "remote_tags_amd64.txt",
-    stamp_substitutions = {
-        "v0.0.0-unstamped-amd64": "v{{STABLE_SIPI_VERSION}}-amd64",
-    },
-    template = [
-        "v0.0.0-unstamped-amd64",
-        "latest-amd64",
-    ],
-)
-
-expand_template(
-    name = "remote_tags_arm64",
-    out = "remote_tags_arm64.txt",
-    stamp_substitutions = {
-        "v0.0.0-unstamped-arm64": "v{{STABLE_SIPI_VERSION}}-arm64",
-    },
-    template = [
-        "v0.0.0-unstamped-arm64",
-        "latest-arm64",
-    ],
-)
-
-oci_push(
-    name = "image_push_amd64",
-    image = ":sipi_image",
-    remote_tags = ":remote_tags_amd64",
-    repository = "docker.io/daschswiss/sipi",
-    target_compatible_with = [
-        "@platforms//cpu:x86_64",
-        "@platforms//os:linux",
-    ],
-)
-
-oci_push(
-    name = "image_push_arm64",
-    image = ":sipi_image",
-    remote_tags = ":remote_tags_arm64",
-    repository = "docker.io/daschswiss/sipi",
-    target_compatible_with = [
-        "@platforms//cpu:arm64",
-        "@platforms//os:linux",
-    ],
-)
-
-# `oci_load` produces a Docker tarball + a `bazel run` target that
-# `docker load`s it into the local daemon. The repo_tag matches the
-# smoke test's `IMAGE` constant (`daschswiss/sipi:latest`) verbatim.
+# ── Image load ─────────────────────────────────────────────────────────────
+# `bazel run //src:image_load` loads `:sipi_image` into the local Docker
+# daemon as `daschswiss/sipi:latest`, the tag the smoke test's `IMAGE`
+# constant names. Its `tarball` output group is the release artefact: the
+# smoke test `docker load`s it, and `publish.yml` pushes that same file with
+# `just docker-push-tarball`, so the pushed image is the tested one.
 oci_load(
     name = "image_load",
     image = ":sipi_image",

@@ -86,6 +86,8 @@ icc.zip
 # Debug-symbol file surfaced by `just bazel-docker-extract-debug <arch>` for
 # the Sentry upload; a large, ephemeral per-arch artifact, never committed.
 /sipi-*.debug
+# Release image tarball surfaced by `just bazel-docker-image-tarball <arch>`.
+/sipi-image-*.tar
 
 # Claude Code
 .claude/worktrees/

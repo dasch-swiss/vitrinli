@@ -183,7 +183,8 @@ single_version_override(
 
 # ── Container image rules ─────────────────────────────────────────────────
 # `rules_oci` builds the OCI image. The image is assembled per-arch by
-# `oci_image`, pushed by `oci_push`; the multi-arch manifest is built by
+# `oci_image`, written as a tarball by `oci_load` and pushed by `crane push`
+# (`just docker-push-tarball`); the multi-arch manifest is built by
 # `crane index append` on a coordinator job (NOT `oci_image_index`, which
 # only consumes same-build-graph labels — per-arch CI runners produce
 # digests that cross job boundaries).
