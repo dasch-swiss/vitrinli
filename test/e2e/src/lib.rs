@@ -965,6 +965,43 @@ pub fn assert_jp2_roundtrip(i: u32) {
     let _ = std::fs::remove_file(&output_tif);
 }
 
+/// The `nx`, `ny` and `nc` lines of a `sipi query` dump.
+fn query_header(path: &str) -> Vec<String> {
+    let result = cli_run(&["query", path]);
+    assert!(
+        result.status.success(),
+        "sipi query {path} failed: {}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    String::from_utf8_lossy(&result.stdout)
+        .lines()
+        .filter(|l| l.starts_with("nx ") || l.starts_with("ny ") || l.starts_with("nc "))
+        .map(str::to_string)
+        .collect()
+}
+
+/// `sipi query` reads only the header and metadata of a JPX: on a JPX that
+/// `sipi convert` wrote from `cmyk.tif`, it must report the source's
+/// dimensions and channel count.
+pub fn assert_query_jpx_header() {
+    let input = test_data_dir().join("images/unit/cmyk.tif");
+    let jpx = cli_tmp_path("sipi_cli_query_cmyk.jpx");
+    let r = cli_convert(input.to_str().unwrap(), jpx.to_str().unwrap(), "jpx");
+    assert!(
+        r.status.success(),
+        "TIFF→JPX for the query test failed: {}",
+        String::from_utf8_lossy(&r.stderr)
+    );
+    let source = query_header(input.to_str().unwrap());
+    assert_eq!(
+        source.len(),
+        3,
+        "expected nx, ny and nc lines, got {source:?}"
+    );
+    assert_eq!(query_header(jpx.to_str().unwrap()), source);
+    let _ = std::fs::remove_file(&jpx);
+}
+
 /// Convert a TIFF to JP2 and back, then to JPEG and PNG, asserting each output
 /// carries valid magic bytes (port of the `cli_metadata_fidelity` test).
 pub fn assert_metadata_fidelity() {
