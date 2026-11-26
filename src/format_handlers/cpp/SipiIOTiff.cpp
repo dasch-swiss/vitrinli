@@ -21,6 +21,7 @@
  * -c opt binary (ADR-0003; docs/src/development/benchmarking.md).
  */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -652,8 +653,8 @@ std::vector<T> separateToContig(std::vector<T> &&inbuf, uint32_t nx, uint32_t ny
 }
 
 template<typename T>
-static Result<std::vector<T>> read_standard_data(
-  TIFF *tif, int32_t roi_x, int32_t roi_y, uint32_t roi_w, uint32_t roi_h)
+static Result<void>
+  read_standard_data(TIFF *tif, int32_t roi_x, int32_t roi_y, uint32_t roi_w, uint32_t roi_h, std::span<T> out)
 {
   uint16_t planar;
   TIFF_GET_FIELD(tif, TIFFTAG_PLANARCONFIG, &planar, PLANARCONFIG_CONTIG)
@@ -704,7 +705,11 @@ static Result<std::vector<T>> read_standard_data(
         + ", bps=" + std::to_string(bps) });
   }
 
-  std::vector<T> inbuf(checked_buf_size_or_throw(roi_h, roi_w, nc, 1));
+  if (out.size() != checked_buf_size_or_throw(roi_h, roi_w, nc, 1)) {
+    return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
+      "TIFF pixel buffer holds " + std::to_string(out.size()) + " samples, region needs " + std::to_string(roi_w) + "x"
+        + std::to_string(roi_h) + ", channels=" + std::to_string(nc) });
+  }
   auto scanline = std::make_unique<uint8_t[]>(sll);
   std::unique_ptr<T[]> line;
   if (compression == COMPRESSION_NONE) {
@@ -717,32 +722,33 @@ static Result<std::vector<T>> read_standard_data(
               + ", dimensions=" + std::to_string(nx) + "x" + std::to_string(ny)
               + ", channels=" + std::to_string(nc) + ", bps=" + std::to_string(bps) });
         }
-        // All memcpy destination offsets use `(i - roi_y)` so the first
-        // destination row is always row 0 of `inbuf`. Previously cases 1
-        // and 4 used `i * roi_w` and overflowed for any roi_y > 0.
+        // Every memcpy destination offset uses `(i - roi_y)`, so the first
+        // ROI row lands in row 0 of `out`; `i * roi_w` overflows `out` for
+        // any roi_y > 0.
         switch (bps) {
         case 1:
           one2eight<T>(scanline.get(), line.get(), nc * nx, black, white);
-          std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
+          std::memcpy(out.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
           break;
         case 4:
           four2eight<T>(scanline.get(), line.get(), nc * nx, photo == PhotometricInterpretation::PALETTE);
-          std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
+          std::memcpy(out.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
           break;
         case 8:
-          std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x, nc * roi_w);
+          std::memcpy(out.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x, nc * roi_w);
           break;
         case 12:
           twelve2sixteen<T>(scanline.get(), line.get(), nc * nx, photo == PhotometricInterpretation::PALETTE);
-          std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w * psiz);
+          std::memcpy(out.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w * psiz);
           break;
         case 16:
-          std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x * psiz, nc * roi_w * psiz);
+          std::memcpy(out.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x * psiz, nc * roi_w * psiz);
           break;
         default:;
         }
       }
     } else if (planar == PLANARCONFIG_SEPARATE) {// RRRRR…RRR GGGGG…GGGG BBBBB…BBB
+      std::vector<T> inbuf(out.size());
       line = std::make_unique<T[]>(nx);
       for (uint32_t c = 0; c < nc; ++c) {
         for (uint32_t i = roi_y; i < roi_y + roi_h; ++i) {
@@ -778,7 +784,8 @@ static Result<std::vector<T>> read_standard_data(
           }
         }
       }
-      inbuf = separateToContig<T>(std::move(inbuf), roi_w, roi_h, nc, roi_w);
+      const auto contig = separateToContig<T>(std::move(inbuf), roi_w, roi_h, nc, roi_w);
+      std::copy(contig.begin(), contig.end(), out.begin());
     }
   } else {// we do have compression....
     if (planar == PLANARCONFIG_CONTIG) {// RGBRGBRGBRGB...
@@ -791,35 +798,34 @@ static Result<std::vector<T>> read_standard_data(
               + ", channels=" + std::to_string(nc) + ", bps=" + std::to_string(bps) });
         }
         if ((i >= roi_y) && (i < (roi_y + roi_h))) {
-          // All memcpy destination offsets use `(i - roi_y)` so that the
-          // first destination row written is always row 0 of `inbuf`,
-          // regardless of where in the image the ROI starts. Previously
-          // cases 1, 4, 12, 16 used `i * roi_w` and overflowed `inbuf` for
-          // any roi_y > 0.
+          // Every memcpy destination offset uses `(i - roi_y)`, so the first
+          // ROI row lands in row 0 of `out` wherever the ROI starts;
+          // `i * roi_w` overflows `out` for any roi_y > 0.
           switch (bps) {
           case 1:
             one2eight<T>(scanline.get(), line.get(), nc * nx, black, white);
-            std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
+            std::memcpy(out.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
             break;
           case 4:
             four2eight<T>(scanline.get(), line.get(), nc * nx, photo == PhotometricInterpretation::PALETTE);
-            std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
+            std::memcpy(out.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w);
             break;
           case 8:
-            std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x, nc * roi_w);
+            std::memcpy(out.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x, nc * roi_w);
             break;
           case 12:
             twelve2sixteen<T>(scanline.get(), line.get(), nc * nx, photo == PhotometricInterpretation::PALETTE);
-            std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w * psiz);
+            std::memcpy(out.data() + nc * (i - roi_y) * roi_w, line.get() + nc * roi_x, nc * roi_w * psiz);
             break;
           case 16:
-            std::memcpy(inbuf.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x * psiz, nc * roi_w * psiz);
+            std::memcpy(out.data() + nc * (i - roi_y) * roi_w, scanline.get() + nc * roi_x * psiz, nc * roi_w * psiz);
             break;
           default:;
           }
         }
       }
     } else if (planar == PLANARCONFIG_SEPARATE) {// RRRRR…RRR GGGGG…GGGG BBBBB…BBB
+      std::vector<T> inbuf(out.size());
       line = std::make_unique<T[]>(nx);
       for (uint32_t c = 0; c < nc; ++c) {
         for (uint32_t i = 0; i < ny; ++i) {
@@ -859,10 +865,11 @@ static Result<std::vector<T>> read_standard_data(
           }
         }
       }
-      inbuf = separateToContig<T>(std::move(inbuf), roi_w, roi_h, nc, roi_w);
+      const auto contig = separateToContig<T>(std::move(inbuf), roi_w, roi_h, nc, roi_w);
+      std::copy(contig.begin(), contig.end(), out.begin());
     }
   }
-  return inbuf;
+  return {};
 }
 
 static const float epsilon = 1.0e-4;
@@ -900,7 +907,8 @@ size_t epsilon_floor_division(float a, float b)
 }
 
 template<typename T>
-static Result<std::vector<T>> read_tiled_data(TIFF *tif, int32_t roi_x, int32_t roi_y, uint32_t roi_w, uint32_t roi_h)
+static Result<void>
+  read_tiled_data(TIFF *tif, int32_t roi_x, int32_t roi_y, uint32_t roi_w, uint32_t roi_h, std::span<T> out)
 {
   uint16_t planar;
   TIFF_GET_FIELD(tif, TIFFTAG_PLANARCONFIG, &planar, PLANARCONFIG_CONTIG)
@@ -978,8 +986,13 @@ static Result<std::vector<T>> read_tiled_data(TIFF *tif, int32_t roi_x, int32_t 
         + ", bps=" + std::to_string(bps) });
   }
 
+  if (out.size() != checked_buf_size_or_throw(roi_w, roi_h, nc, 1)) {
+    return std::unexpected(SipiValueError{ ErrorCode::kMalformedInput,
+      "TIFF pixel buffer holds " + std::to_string(out.size()) + " samples, region needs " + std::to_string(roi_w) + "x"
+        + std::to_string(roi_h) + ", channels=" + std::to_string(nc) });
+  }
+
   auto tilebuf = std::make_unique<T[]>(plane_elems);
-  auto inbuf = std::vector<T>(checked_buf_size_or_throw(roi_w, roi_h, nc, 1));
   for (uint32_t ty = starttile_y; ty < endtile_y; ++ty) {
     for (uint32_t tx = starttile_x; tx < endtile_x; ++tx) {
       const T *pixels = nullptr;
@@ -1024,14 +1037,14 @@ static Result<std::vector<T>> read_tiled_data(TIFF *tif, int32_t roi_x, int32_t 
             uint32_t pixel_offset = nc * (final_y * roi_w + final_x);
 
             for (uint32_t c = 0; c < nc; ++c) {
-              inbuf[pixel_offset + c] = pixels[(tile_x + tile_y * tile_width) * nc + c];
+              out[pixel_offset + c] = pixels[(tile_x + tile_y * tile_width) * nc + c];
             }
           }
         }
       }
     }
   }
-  return inbuf;
+  return {};
 }
 // TIFFTAG_JPEGCOLORMODE is a pseudo-tag owned by libtiff's JPEG codec and exists
 // only while that codec is bound to the directory. TIFFSetDirectory re-binds the
@@ -1538,27 +1551,23 @@ Result<bool> SipiIOTiff::read(SipiImage *img,
     // together with the pixel buffer below via set_pixels(), which is the
     // only path that keeps buffer and geometry in lockstep.
     size_t decoded_bps = img->getBps();
+    Result<void> decoded{};
     if (img->getBps() <= 8) {
-      auto pixdata_result = is_tiled ? read_tiled_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h)
-                                      : read_standard_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h);
-      if (!pixdata_result) {
-        return std::unexpected(with_tiff_diagnostic(std::move(pixdata_result).error(), tiff_diag));
-      }
-      std::vector<uint8_t> pixdata = std::move(*pixdata_result);
-
+      const std::span<uint8_t> samples(inbuf);
+      decoded = is_tiled ? read_tiled_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h, samples)
+                         : read_standard_data<uint8_t>(tif, roi_x, roi_y, roi_w, roi_h, samples);
       decoded_bps = 8;
-
-      memcpy(inbuf.data(), pixdata.data(), pixdata.size() * decoded_bps / 8);
     } else if (img->getBps() <= 16) {
-      auto pixdata_result = is_tiled ? read_tiled_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h)
-                                      : read_standard_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h);
-      if (!pixdata_result) {
-        return std::unexpected(with_tiff_diagnostic(std::move(pixdata_result).error(), tiff_diag));
-      }
-      std::vector<uint16_t> pixdata = std::move(*pixdata_result);
+      // The decoder writes into the buffer that set_pixels() takes: a second
+      // full-size buffer doubles the peak heap of a multi-GB TIFF read.
+      // operator new aligns that buffer for any fundamental type.
+      static_assert(alignof(uint16_t) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+      const std::span<uint16_t> samples(reinterpret_cast<uint16_t *>(inbuf.data()), inbuf.size() / sizeof(uint16_t));
+      decoded = is_tiled ? read_tiled_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h, samples)
+                         : read_standard_data<uint16_t>(tif, roi_x, roi_y, roi_w, roi_h, samples);
       decoded_bps = 16;
-      memcpy(inbuf.data(), pixdata.data(), pixdata.size() * decoded_bps / 8);
     }
+    if (!decoded) { return std::unexpected(with_tiff_diagnostic(std::move(decoded).error(), tiff_diag)); }
 
     img->set_pixels(std::move(inbuf), roi_w, roi_h, img->getNc(), decoded_bps);
     tif_guard.reset();

@@ -168,6 +168,18 @@ cc_test(
     ],
 )
 
+# SipiIOTiff::read pixel layouts and its peak heap (DEV-7236). Its own binary
+# because it replaces the global operator new/delete to count live bytes.
+cc_test(
+    name = "tiff_read_buffer_test",
+    srcs = ["cpp/tiff_read_buffer_test.cpp"],
+    deps = [
+        ":format_handlers",
+        "@googletest//:gtest_main",
+        "@tiff//:tiff",
+    ],
+)
+
 # Native libtiff codec-coverage proof (DEV-6563): verifies the re-enabled
 # ingest codecs (JPEG/LZMA/ZSTD/WebP/JBIG) are compiled into the vendored
 # libtiff. Exercises libtiff directly, not SipiImage, so it depends only on
