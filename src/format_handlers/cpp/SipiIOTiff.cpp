@@ -1314,7 +1314,7 @@ Result<bool> SipiIOTiff::read(SipiImage *img,
       if (auto iptc = Iptc::parse(iptc_content, iptc_length)) {
         img->set_iptc(*iptc);
       } else {
-        return std::unexpected(iptc.error());
+        return std::unexpected(SipiValueError{ iptc.error().code(), filepath + ": " + iptc.error().raw_message() });
       }
     }
 

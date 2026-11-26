@@ -749,7 +749,7 @@ Result<bool> SipiIOJpeg::read(SipiImage *img,
   // admit corrupt embedded metadata.
   if (auto ps = parse_photoshop_resources(img, photoshop_resources(cinfo.marker_list)); !ps) {
     jpeg_destroy_decompress(&cinfo);
-    return std::unexpected(ps.error());
+    return std::unexpected(SipiValueError{ ps.error().code(), filepath + ": " + ps.error().raw_message() });
   }
 
   // icc_buffer is freed and nulled above; errors → longjmp → setjmp handler
@@ -990,7 +990,7 @@ Result<SipiImgInfo> SipiIOJpeg::read_shape(const std::string &filepath)
   // admit corrupt embedded metadata.
   if (auto ps = parse_photoshop_resources(&img, photoshop_resources(cinfo.marker_list)); !ps) {
     jpeg_destroy_decompress(&cinfo);
-    return std::unexpected(ps.error());
+    return std::unexpected(SipiValueError{ ps.error().code(), filepath + ": " + ps.error().raw_message() });
   }
 
   // errors → longjmp → setjmp handler above

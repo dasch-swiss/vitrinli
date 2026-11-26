@@ -405,7 +405,7 @@ Result<bool> SipiIOPng::read(SipiImage *img,
         img->set_iptc(*iptc);
       } else {
         png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
-        return std::unexpected(iptc.error());
+        return std::unexpected(SipiValueError{ iptc.error().code(), filepath + ": " + iptc.error().raw_message() });
       }
     } else if (strcmp(png_texts[i].key, sipi_tag) == 0) {
       Essentials se = Essentials::parse_legacy(png_texts[i].text);

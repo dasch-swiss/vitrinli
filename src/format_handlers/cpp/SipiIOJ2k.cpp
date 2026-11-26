@@ -494,7 +494,8 @@ Result<bool> SipiIOJ2k::read(SipiImage *img,
             if (auto iptc = Iptc::parse(iptc_buf.get(), iptc_len)) {
               img->set_iptc(*iptc);
             } else {
-              return std::unexpected(iptc.error());
+              return std::unexpected(
+                SipiValueError{ iptc.error().code(), filepath + ": " + iptc.error().raw_message() });
             }
           } else if (memcmp(buf, exif_uuid, 16) == 0) {
             const std::int64_t exif_len = box.get_remaining_bytes();
