@@ -9,7 +9,9 @@ Two generated headers are reproduced without CMake:
       - Linux (glibc): this toolchain exposes the GNU `strerror_r` (returns
         char*), so `EXV_STRERROR_R_CHAR_P` is on — futils.cpp's `#ifdef`
         branch; without it the `#else` `const int = strerror_r(...)` fails to
-        compile. `EXV_HAVE_ICONV` is left off (matching the prior build).
+        compile. `EXV_HAVE_ICONV` is on: glibc has iconv in libc, so no
+        linkopt is added. Without it every Exif `UserComment` with charset
+        `Unicode` prints as `<unconvertible>`.
     `ICONV_ACCEPTS_CONST_INPUT` is off on both (glibc + macOS take non-const
     `char**`).
   - `exiv2lib_export.h` — a checked-in static shim (CMake's
@@ -59,8 +61,11 @@ cmake_configure_file(
         # Linux glibc under this toolchain exposes the GNU strerror_r (returns
         # char*), so futils.cpp's `#ifdef EXV_STRERROR_R_CHAR_P` branch is the
         # correct one — without it the `#else` `const int = strerror_r(...)`
-        # fails to compile (char* -> int).
-        "@platforms//os:linux": ["EXV_STRERROR_R_CHAR_P=1"],
+        # fails to compile (char* -> int). iconv is in glibc's libc.
+        "@platforms//os:linux": [
+            "EXV_HAVE_ICONV=1",
+            "EXV_STRERROR_R_CHAR_P=1",
+        ],
         "//conditions:default": [],
     }),
 )
