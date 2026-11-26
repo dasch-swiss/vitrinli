@@ -551,7 +551,9 @@ crate.spec(package = "tracing", version = "0.1")
 crate.spec(package = "tracing-subscriber", version = "0.3", features = ["env-filter", "json"])
 crate.spec(package = "percent-encoding", version = "2")
 crate.spec(package = "form_urlencoded", version = "1")
-crate.spec(package = "cookie", version = "0.18")
+# cookie: security floor for RUSTSEC-2026-0594 (private cookie nonces can
+# repeat after fork), fixed in 0.18.3.
+crate.spec(package = "cookie", version = "0.18.3")
 crate.spec(package = "serde_json", version = "1")
 crate.spec(package = "serde", version = "1", features = ["derive"])
 crate.spec(package = "toml", version = "0.8", default_features = False, features = ["parse"])
@@ -637,6 +639,11 @@ crate.spec(package = "webpki-root-certs", version = "1.0.10", default_features =
 # when given a zero-length buffer, fixed in 1.1.6. Reaches the graph via
 # `tempfile` and `polling`.
 crate.spec(package = "rustix", version = "1.1.6", default_features = False)
+
+# url: RUSTSEC-2026-0592, stack overflow in `Url::origin()` on nested `blob:`
+# URLs, fixed in 2.5.9. Reaches the graph via `reqwest`, `sentry` and
+# `tower-http`.
+crate.spec(package = "url", version = "2.5.9", default_features = False)
 
 # `cargo_lockfile` materializes a Cargo-format lock alongside the Bazel-native
 # resolution — cargo-audit/OSV-Scanner read Cargo.lock syntax, not
