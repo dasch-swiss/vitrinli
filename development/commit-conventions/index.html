@@ -1,0 +1,1723 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/commit-conventions/">
+      
+      
+        <link rel="prev" href="../downstream-dependencies/">
+      
+      
+        <link rel="next" href="../reviewer-guidelines/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Commit and PR Conventions - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#commit-and-pr-conventions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Commit and PR Conventions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fuzzing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#git-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Git Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Git Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stacked-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stacked PRs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-message-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit message schema
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commit message schema">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#removed-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-fix-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What fix: means
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scopes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scopes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit Organization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commit Organization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-body-is-written-for-an-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The body is written for an agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-context-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where context lives
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pr-description-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Description Format
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PR Description Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-format-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this format matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-goes-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What goes where
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="commit-and-pr-conventions">Commit and PR Conventions<a class="headerlink" href="#commit-and-pr-conventions" title="Permanent link">&para;</a></h1>
+<h2 id="git-workflow">Git Workflow<a class="headerlink" href="#git-workflow" title="Permanent link">&para;</a></h2>
+<p>We use a <strong>rebase workflow</strong>. All changes are made on a branch, then
+rebased onto <code>main</code> before being merged. This keeps a clean, linear
+history.</p>
+<p>The goal is a <strong>meaningful history on <code>main</code></strong>: every commit on main
+should be a deliberate, self-contained unit of change. Working commits
+("WIP", "fix typo", "address review feedback") do not belong on main.</p>
+<ul>
+<li><strong>Rebase-merge</strong>: PRs are integrated using rebase-merge (not squash or
+  merge commits). Every commit on the branch lands on main verbatim — so
+  the branch history <em>is</em> the main history. There is no squash-on-merge
+  safety net; whatever you leave on the branch is what ships.</li>
+<li><strong>The history's reader is a coding agent.</strong> This is the leading
+  principle for cleanup. An agent reaches a commit through <code>git blame</code>,
+  <code>git log -- &lt;path&gt;</code> and <code>git log -S</code>, and the commit message is where it
+  learns why the code is the way it is. Curate the branch for that reader:
+  <strong>one commit per module per slice</strong>, with a body that explains the end
+  state. See <a href="#commit-organization">Commit Organization</a>.</li>
+<li><strong>Clean up before merging (mandatory)</strong>: before a PR is merged, rewrite
+  the branch (interactive rebase) to that shape. Squash aggressively, in
+  service of that principle: fold working commits, fixups and
+  trial-and-error into the commit they belong to, reword messages, and
+  reorder as needed.</li>
+</ul>
+<h3 id="stacked-prs">Stacked PRs<a class="headerlink" href="#stacked-prs" title="Permanent link">&para;</a></h3>
+<p>When a PR depends on another open PR, stack them with
+<a href="https://gh.io/stacks"><code>gh stack</code></a> (<code>gh extension install github/gh-stack</code>),
+not by retargeting PR bases by hand. GitHub then knows the PRs form a stack, and
+the tool keeps the branches rebased on each other.</p>
+<ul>
+<li>A stack is one chain, bottom to top. Do not base two PRs on the same PR: only
+  stack work that really depends on the PR below it. Independent work gets its
+  own PR from <code>main</code>.</li>
+<li>Start with <code>gh stack init &lt;branch&gt;</code> and add layers with <code>gh stack add &lt;branch&gt;</code>.
+  <code>gh stack init &lt;bottom&gt; &lt;top&gt;</code> adopts existing branches.</li>
+<li><code>gh stack submit</code> pushes the branches, opens or updates the PRs and links them.
+  <code>gh stack rebase</code> cascades a rebase through the stack, and <code>gh stack sync</code> also
+  fetches and pushes.</li>
+<li>Merge with <code>gh stack merge --rebase</code>. The repository allows rebase merges only.</li>
+<li>The commit rules above apply to every layer: each PR is curated before merge,
+  and its commits land on <code>main</code> verbatim.</li>
+</ul>
+<h2 id="commit-message-schema">Commit message schema<a class="headerlink" href="#commit-message-schema" title="Permanent link">&para;</a></h2>
+<p>We use <a href="https://www.conventionalcommits.org/">Conventional Commits</a>.
+These prefixes drive <a href="../ci/#release-automation-release-please">release-please</a>
+to determine SemVer bumps and generate the changelog —
+<strong>using the correct prefix is required, not optional</strong>.</p>
+<div class="highlight"><pre><span></span><code>type(scope): subject
+body
+</code></pre></div>
+<p><strong>Every commit has a type and a scope</strong> — both are mandatory (see
+<a href="#scopes">Scopes</a>). This is the whole table; there are exactly eight types:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Meaning</th>
+<th>Changelog section</th>
+<th>Version bump</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>feat</code></td>
+<td>New user-visible functionality</td>
+<td>Features</td>
+<td>minor</td>
+</tr>
+<tr>
+<td><code>fix</code></td>
+<td>Bug fix (see <a href="#what-fix-means">What <code>fix:</code> means</a>)</td>
+<td>Bug Fixes</td>
+<td>patch</td>
+</tr>
+<tr>
+<td><code>perf</code></td>
+<td>Performance improvement</td>
+<td>Performance Improvements</td>
+<td>patch</td>
+</tr>
+<tr>
+<td><code>refactor</code></td>
+<td>Code restructuring, no behavior change</td>
+<td>Code Refactoring</td>
+<td>patch</td>
+</tr>
+<tr>
+<td><code>docs</code></td>
+<td>Documentation</td>
+<td>Documentation</td>
+<td>patch</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>Adding or refactoring tests</td>
+<td>Tests</td>
+<td>patch</td>
+</tr>
+<tr>
+<td><code>build</code></td>
+<td>Build system or dependencies</td>
+<td>Build System</td>
+<td>patch</td>
+</tr>
+<tr>
+<td><code>chore</code></td>
+<td>Miscellaneous maintenance</td>
+<td>Miscellaneous Chores</td>
+<td>patch</td>
+</tr>
+</tbody>
+</table>
+<p>Every type is visible in the release notes, in its own section, rendered in the
+order above. Because the scope is mandatory, every changelog line reads
+<code>concern: subject</code>. This table is the single human source for the type
+vocabulary; the machine source is
+<a href="../../../.github/release-please/config.json"><code>.github/release-please/config.json</code></a>.</p>
+<p>Breaking changes take a <code>!</code> suffix (or a <code>BREAKING CHANGE:</code> footer) and
+bump the <strong>major</strong> version:</p>
+<div class="highlight"><pre><span></span><code>feat(cache)!: remove the deprecated cache-purge endpoint
+</code></pre></div>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>feat(jwt): support more authentication methods
+</code></pre></div>
+<p>The release-please config sentence-cases subjects in the changelog, so
+write the subject in normal prose case (<code>feat(cache): add dual-limit
+eviction</code>, not <code>feat(cache): Add ...</code>).</p>
+<h3 id="removed-types">Removed types<a class="headerlink" href="#removed-types" title="Permanent link">&para;</a></h3>
+<p><code>revert</code>, <code>style</code>, and <code>ci</code> are <strong>not</strong> valid types — the commit-lint gate
+rejects them, and release-please hides them if one ever slips onto <code>main</code>.</p>
+<ul>
+<li><strong>CI/build automation</strong> → <code>chore(ci): ...</code> (lands in Miscellaneous Chores).
+  Dividing CI into concerns is not worthwhile, and a dedicated Continuous
+  Integration changelog section is noise; it belongs under maintenance.</li>
+<li><strong>Formatting-only changes</strong> → fold into the functional commit, or
+  <code>chore(&lt;scope&gt;): ...</code>. <code>rustfmt</code>/<code>clang-format</code> are enforced gates, so a
+  standalone formatting commit should be rare.</li>
+<li><strong>Reverts</strong> → <code>fix(&lt;scope&gt;): revert ...</code> or <code>chore(&lt;scope&gt;): revert ...</code>
+  depending on whether it corrects released behavior. (release-please's built-in
+  revert auto-negation no longer applies; reverts are rare and handled by hand.)</li>
+</ul>
+<h3 id="what-fix-means">What <code>fix:</code> means<a class="headerlink" href="#what-fix-means" title="Permanent link">&para;</a></h3>
+<p>A <code>fix:</code> corrects behavior that exists on <code>main</code> — a bug a deployer could
+hit today, or that a released version shipped. It earns a "Bug Fixes"
+changelog line precisely because deployers need to know. The same change
+filed as <code>chore:</code> or <code>refactor:</code> still appears in the release notes, but
+under a section nobody scanning for a regression will read.</p>
+<p>A bug you introduced earlier in the <strong>same branch</strong> is not a <code>fix:</code>. Fold
+it into the commit that introduced it (<code>git commit --fixup=&lt;sha&gt;</code>, then
+<code>git rebase --autosquash</code>) so it never lands on <code>main</code> and never generates
+a changelog entry for a bug nobody ever saw.</p>
+<p>Corollary: if you discover a genuine pre-existing <code>main</code> bug while doing
+unrelated work, give it its <strong>own</strong> <code>fix:</code> commit — don't bury it inside
+the <code>feat:</code>/<code>refactor:</code> you happened to be writing.</p>
+<h2 id="scopes">Scopes<a class="headerlink" href="#scopes" title="Permanent link">&para;</a></h2>
+<p><strong>A scope is mandatory.</strong> Every commit is <code>type(scope): subject</code>, so every
+release-notes line reads <code>concern: subject</code>. There is no scopeless form.</p>
+<p>The scope names the <strong>concern the change serves</strong> — the module whose
+responsibility it belongs to, not the directory the edited files happen to
+sit in. Telemetry code under <code>src/server/rust/</code> is <code>observability</code>; an <code>ffi</code>
+seam field whose only purpose is to carry a metric across is <code>observability</code>
+too. Scope by what the change is <em>about</em>, not where it landed. The canonical
+module list — which is also the scope vocabulary — lives in
+<a href="../../../CONVENTIONS.md"><code>CONVENTIONS.md</code> § Module Layout</a>. Use one of
+these names, lowercase:</p>
+<ul>
+<li><strong>Module scopes:</strong> <code>image</code>, <code>format_handlers</code>, <code>metadata</code>, <code>iiifparser</code>,
+  <code>scripting</code>, <code>util</code>, <code>jwt</code>, <code>cache</code>, <code>memory-budget</code>,
+  <code>memory</code>, <code>observability</code>, <code>logging</code>, <code>cli</code>, <code>ffi</code>, <code>lua</code>, <code>server</code>
+  (<code>scripting</code> = the C++ Lua runtime in <code>src/scripting/</code>; <code>lua</code> stays
+  the Lua <em>scripts</em>/config in <code>scripts/</code> + <code>config/*.lua</code>; the retired <code>handlers</code>
+  scope folded into <code>iiifparser</code> per DUNE-014)</li>
+<li><strong>Test-layer scopes</strong> (<code>e2e</code>, <code>approval</code>) — for changes to a test
+  layer's own harness or fixtures. A test <em>about</em> a specific concern takes
+  that concern's scope (<code>test(observability): ...</code>), not the layer: the
+  <code>test</code> type already says it is a test, so the scope is free to name the
+  concern. A unit-test change takes the scope of the module under test.</li>
+<li><strong>Cross-cutting scopes</strong> (changes not tied to one module): <code>deps</code>,
+  <code>bazel</code>, <code>ci</code>, <code>nix</code>, <code>docker</code>, <code>docs</code>. Use <code>docs</code> for the agent-context /
+  domain documentation that spans no single module — the root <code>CLAUDE.md</code> /
+  <code>CONVENTIONS.md</code> / <code>CONTEXT.md</code> and the ADRs. A doc
+  change about one module still takes that module's scope.</li>
+</ul>
+<p>Rules:</p>
+<ul>
+<li>Lowercase, kebab-case. <code>ci</code> not <code>CI</code>; <code>bazel</code> not <code>bazel-build</code>.</li>
+<li>A commit that spans several modules may list them comma-separated:
+  <code>refactor(cli,server): ...</code>.</li>
+<li><strong>Concern over location.</strong> When code for one module's responsibility lives
+  under another module's directory, scope by the responsibility, not the
+  enclosing directory. <code>server/rust/src/metrics.rs</code> → <code>observability</code>.</li>
+<li><strong>No catch-all.</strong> There is no <code>repo</code>/<code>all</code> scope. If none of the enumerated
+  scopes genuinely fits, ask the maintainer before inventing one — new scopes
+  are added to the canonical list in <code>CONVENTIONS.md</code> deliberately, not ad hoc.</li>
+</ul>
+<p>The commit-lint gate enforces only that a scope is <em>present</em> (it does not yet
+restrict <em>which</em> scope — there is no closed vocabulary). The list above is the
+advisory vocabulary; keep to it.</p>
+<h2 id="enforcement">Enforcement<a class="headerlink" href="#enforcement" title="Permanent link">&para;</a></h2>
+<p>Commit messages are gated in CI by
+<a href="https://github.com/KeisukeYamashita/commitlint-rs"><code>commitlint-rs</code></a> via the
+<code>commit-lint</code> job in <a href="../../../.github/workflows/ci.yml"><code>ci.yml</code></a> (a composite
+action at <code>.github/actions/commit-lint</code>). The rules live in
+<a href="../../../.commitlintrc.yml"><code>.commitlintrc.yml</code></a>: the <code>type</code> allowlist above is
+mandatory, <code>scope-empty</code> makes the scope mandatory, and the subject must be
+non-empty.</p>
+<p>Run the same check locally before pushing:</p>
+<div class="highlight"><pre><span></span><code>just commit-lint            # lints origin/main..HEAD
+just commit-lint &lt;base-ref&gt; # lints &lt;base-ref&gt;..HEAD
+</code></pre></div>
+<p><code>commitlint-rs</code> is in the Nix dev shell (<code>nix develop</code>); CI installs it with
+<code>cargo install</code>.</p>
+<p>Merge commits are skipped by the linter (message rules do not apply to them). The
+rebase workflow is enforced separately by the <code>require linear history</code>
+branch-protection rule, which blocks any merge commit from landing on <code>main</code>.</p>
+<h2 id="commit-organization">Commit Organization<a class="headerlink" href="#commit-organization" title="Permanent link">&para;</a></h2>
+<h3 id="principle">Principle<a class="headerlink" href="#principle" title="Permanent link">&para;</a></h3>
+<p>Shape the history for the agent that will read it. An agent asks two
+questions of it: "why is this line the way it is?" (<code>git blame</code>, then the
+commit body) and "how did this module get here?" (<code>git log -- &lt;path&gt;</code>).
+Both are answered best by <strong>one commit per module per slice</strong>:</p>
+<ul>
+<li><strong>Too fine</strong> (a commit per fix, per review round, per working step) makes
+  <code>git log -- &lt;path&gt;</code> a list of steps the agent must replay to learn the
+  current state, and each body explains one step rather than the design.</li>
+<li><strong>Too coarse</strong> (the whole PR as one commit when it spans several slices)
+  makes <code>git blame</code> land every line on one message that cannot explain any
+  of them.</li>
+</ul>
+<p>A slice is the unit the plan delivered: a phase, or a feature within it.
+Inside a slice, split by module (the scopes in
+<a href="../../../CONVENTIONS.md"><code>CONVENTIONS.md</code> § Module Layout</a>), so each commit
+stays within one module's paths and its scope names that module. A shared
+piece a slice adds goes in its own commit ahead of the modules that use it,
+so no commit uses something that lands after it. A small PR that is one
+slice in one module is one commit.</p>
+<h3 id="the-body-is-written-for-an-agent">The body is written for an agent<a class="headerlink" href="#the-body-is-written-for-an-agent" title="Permanent link">&para;</a></h3>
+<p>The subject says what changed. The body carries what the diff cannot:</p>
+<ul>
+<li>the decisions taken and the alternatives rejected, with the reason;</li>
+<li>the invariants the code relies on and where they are enforced;</li>
+<li>the gotchas a later change would trip over;</li>
+<li>the stable sources behind them (an ADR, a <code>DEV-</code> id, a doc page).</li>
+</ul>
+<p>It describes the end state of the slice, never the journey to it: no
+"first tried", no review-round history, no test counts or benchmark runs,
+no behaviour that existed only on the branch. A long body is fine; an agent
+reads all of it.</p>
+<h3 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Each <code>feat:</code> or <code>fix:</code> commit = one changelog entry in the sections
+   developers deploying Vitrinli read first.</li>
+<li>Internal work (<code>build:</code>, <code>ci:</code>, <code>refactor:</code>, <code>docs:</code>, <code>chore:</code>,
+   <code>test:</code>) lands in its own changelog section further down. Squash
+   aggressively, in service of the agent reader: fold every working,
+   fixup and trial-and-error commit until each commit is one module in
+   one slice, and stop there. Squashing past that point makes the history
+   too coarse for <code>git blame</code>.</li>
+<li>Ask: "would a developer deploying Vitrinli care about this change?"
+   If yes → <code>feat:</code> or <code>fix:</code>. If no → an internal-work prefix.</li>
+<li>Debugging journeys (trial-and-error, reverts of in-branch mistakes,
+   iterative fixes) belong in the PR description, not the commit history.
+   See <a href="#what-fix-means">What <code>fix:</code> means</a>.</li>
+</ol>
+<h3 id="where-context-lives">Where context lives<a class="headerlink" href="#where-context-lives" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Audience</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Commit messages</td>
+<td>Release notes readers</td>
+<td>Every change; <code>feat:</code>/<code>fix:</code> carry the user-visible ones</td>
+</tr>
+<tr>
+<td>PR description</td>
+<td>Reviewers + future developers</td>
+<td>Full context including challenges</td>
+</tr>
+<tr>
+<td>Learnings docs</td>
+<td>Future Claude + engineers</td>
+<td>Structured, searchable knowledge</td>
+</tr>
+<tr>
+<td>Code comments</td>
+<td>Code readers</td>
+<td>"Why not the obvious approach"</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pr-description-format">PR Description Format<a class="headerlink" href="#pr-description-format" title="Permanent link">&para;</a></h2>
+<p>The repository ships a <a href="../../../.github/PULL_REQUEST_TEMPLATE.md"><code>.github/PULL_REQUEST_TEMPLATE.md</code></a>
+that pre-populates this structure when you open a PR.</p>
+<h3 id="template">Template<a class="headerlink" href="#template" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Fixes LINEAR-ID, LINEAR-ID, ...
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>## Motivation
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Why the change exists. What problem it solves for users.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>## Summary
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>What it does, in a few sentences.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>## Key Changes
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>### [Topic]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>- what changed and where
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>## Review Guide
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>One section per phase in this PR.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>### [Phase]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>What to review, the key files, how it was verified, the decisions taken.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>## Decisions
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>What was tried and why the choice. The maintainer&#39;s answers to deviations.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>## Gotchas
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>What a later change would trip over. Each gotcha is actionable:
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>&quot;do X instead of Y&quot;, not &quot;this is hard&quot;.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>## Learnings
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>The files added to the learnings directory, or why there are none.
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>## Test Plan
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>- [ ] how each verification step was met, or why it does not apply
+</code></pre></div>
+<p>Use <code>Part of LINEAR-ID</code> instead of <code>Fixes LINEAR-ID</code> when the PR advances
+an umbrella issue it does not close.</p>
+<h3 id="why-this-format-matters">Why this format matters<a class="headerlink" href="#why-this-format-matters" title="Permanent link">&para;</a></h3>
+<p>The "Decisions" section captures the debugging journey
+that the curated commit history deliberately omits. The
+<code>/eng:workflows:compound</code> skill reads PR descriptions to generate
+structured learnings — well-structured decisions become high-quality
+learnings automatically.</p>
+<h3 id="what-goes-where">What goes where<a class="headerlink" href="#what-goes-where" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Information</th>
+<th>Put it in...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New feature / breaking change</td>
+<td>Commit message (<code>feat:</code> / <code>feat!:</code>)</td>
+</tr>
+<tr>
+<td>Bug fix</td>
+<td>Commit message (<code>fix:</code>)</td>
+</tr>
+<tr>
+<td>Build/CI/refactor details</td>
+<td>Commit message (<code>build:</code> / <code>ci:</code> / <code>refactor:</code>)</td>
+</tr>
+<tr>
+<td>Why the work was needed</td>
+<td>PR Motivation section</td>
+</tr>
+<tr>
+<td>What was tried and failed</td>
+<td>PR Decisions section</td>
+</tr>
+<tr>
+<td>Architecture decisions + rationale</td>
+<td>PR Decisions section</td>
+</tr>
+<tr>
+<td>Things to watch out for</td>
+<td>PR Gotchas section</td>
+</tr>
+<tr>
+<td>Structured, searchable knowledge</td>
+<td>Learnings doc (dasch-specs)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

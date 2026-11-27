@@ -1,0 +1,1775 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://sipi.io/development/fuzzing/">
+      
+      
+        <link rel="prev" href="../error-model/">
+      
+      
+        <link rel="next" href="../benchmarking/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Fuzz Testing - Vitrinli Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-blue" data-md-color-accent="deep-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#fuzz-testing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Vitrinli Documentation" class="md-header__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Vitrinli Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Fuzz Testing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Vitrinli Documentation" class="md-nav__button md-logo" aria-label="Vitrinli Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    Vitrinli Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/vitrinli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/vitrinli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/sipi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/json-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/lua-image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lua Image Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lua/sqlite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building with Bazel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nix dev shell
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote Build Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rbe-write-pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RBE Write Pressure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fuzz Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-production-iiif-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The production IIIF parser
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The production IIIF parser">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-crust-shim-seam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The C++→Rust shim seam
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-c-codec-decode-handlers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The C++ codec decode handlers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The C++ codec decode handlers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-temp-file-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The temp-file mechanism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-reject-vs-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected-reject vs finding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-decode-size-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The decode-size budget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-target-knobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-target knobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#detect_leaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        detect_leaks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-modes-one-target-family" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two modes, one target family
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two modes, one target family">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asan-pairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ASan pairing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linux-and-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linux and macOS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recipes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corpus-policy-two-tiers-plus-the-merge-path-between-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Corpus policy — two tiers plus the merge path between them
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nightly-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nightly CI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crash-triage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crash triage
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allocator-replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downstream-dependencies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downstream Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commit-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit and PR Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewer-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviewer Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/admission-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Admission Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/memory-budget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Budget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operation/health-endpoint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="fuzz-testing">Fuzz Testing<a class="headerlink" href="#fuzz-testing" title="Permanent link">&para;</a></h1>
+<p>Coverage-guided libFuzzer fuzzing across two families of attacker-controlled
+input: the production IIIF URL parser, and the C++ codec decode handlers
+(TIFF, JPEG, PNG, JPEG 2000; DEV-7066). Both compose the same way — a
+<code>cc_fuzz_test</code> from <code>rules_fuzzing</code>, <code>--config=fuzz</code> for the mutation loop,
+<code>--config=fuzz --config=asan</code> for the sanitizer-paired pass — but they fuzz
+different code and different bug classes, and the sections below call out
+where the two diverge.</p>
+<h2 id="the-production-iiif-parser">The production IIIF parser<a class="headerlink" href="#the-production-iiif-parser" title="Permanent link">&para;</a></h2>
+<p>Fuzzing of <code>iiif_parser::parse_request</code> (<code>src/iiifparser/rust/request.rs</code>).
+That function is the first parser every HTTP request hits: it classifies the
+URI (<code>Iiif | InfoJson | KnoraJson | Redirect | FileDownload</code>) and parses
+<code>{region}/{size}/{rotation}/{quality}.{format}</code> out of attacker-controlled
+input, so a panic there is a remote-triggerable request failure.</p>
+<p>The harness lives entirely inside Bazel. The target is
+<code>//src/iiifparser/fuzz:parse_request_fuzz</code>, a <code>cc_fuzz_test</code> from
+<code>rules_fuzzing</code>, seeded from the shared regression corpus
+<code>//src/iiifparser/corpus:seed_corpus</code>. It replaces the C++ libFuzzer harness that
+fuzzed the oracle-only classifier and was retired with the oracle
+(<a href="../../adr/0020-oracle-removal.md">ADR-0020</a>).</p>
+<h3 id="the-crust-shim-seam">The C++→Rust shim seam<a class="headerlink" href="#the-crust-shim-seam" title="Permanent link">&para;</a></h3>
+<p>libFuzzer's entry point is <code>LLVMFuzzerTestOneInput</code>, a C symbol, and
+<code>rules_fuzzing</code> is a C++/Java rule set — so the Rust parser is entered through a
+small <code>extern "C"</code> shim:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>src/iiifparser/fuzz/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── BUILD.bazel       # rust_static_library shim + cc_fuzz_test
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── shim.rs           # extern &quot;C&quot; sipi_fuzz_parse_request → parse_request
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>└── fuzz_target.cc    # LLVMFuzzerTestOneInput → shim
+</code></pre></div>
+<p>This is the repo's only <strong>C++-calls-Rust</strong> link — every other FFI edge
+(<code>src/ffi/</code>, <code>src/server/rust/src/ffi.rs</code>) is Rust→C++. The declaration in
+<code>fuzz_target.cc</code> is hand-mirrored from the Rust signature, following the
+<code>src/ffi/cpp/sipi_ffi.h</code> convention (no cbindgen).</p>
+<p>The seam never leaves the package, and Bazel enforces that rather than merely
+documenting it: both targets are <code>testonly</code> (<code>cc_fuzz_test</code> forwards <code>testonly</code>
+to its raw <code>cc_binary</code>, and marks every target it generates <code>testonly</code> itself),
+and the package declares no default visibility. Nothing that ships can even name
+the shim, let alone depend on it. Naming a target on the command line needs no
+visibility, so <code>just fuzz</code> and the nightly still build <code>:parse_request_fuzz_bin</code>
+directly.</p>
+<p>The shim rejects invalid UTF-8 rather than lossy-converting it: every production
+caller (axum path extraction) hands the parser a valid <code>&amp;str</code>, so a U+FFFD input
+would only yield findings unreachable from a real request. The parse result is
+discarded — <code>Err</code> is a normal outcome for a malformed URI; the contract under
+test is that no input panics. This is also what a corpus file <em>means</em> here: a
+seed is fed to the parser verbatim, and a non-UTF-8 seed is a no-op. Note that
+<code>corpus_regression_test</code> sweeps the same files with a <strong>lossy</strong> decode, so it can
+exercise a byte sequence this harness skips.</p>
+<h2 id="the-c-codec-decode-handlers">The C++ codec decode handlers<a class="headerlink" href="#the-c-codec-decode-handlers" title="Permanent link">&para;</a></h2>
+<p>Fuzzing of the <code>SipiIO</code> decode entry points — <code>read_shape</code> and <code>read</code> — for
+each of the four format handlers: <code>SipiIOTiff</code>, <code>SipiIOJpeg</code>, <code>SipiIOPng</code>,
+<code>SipiIOJ2k</code> (DEV-7066). Eight targets live in <code>src/format_handlers/fuzz/</code>:
+a decode-only target per handler (<code>//src/format_handlers/fuzz:tiff_decode_fuzz</code>,
+<code>:jpeg_decode_fuzz</code>, <code>:png_decode_fuzz</code>, <code>:j2k_decode_fuzz</code>) and a matching
+decode-then-encode round-trip target (<code>:tiff_roundtrip_fuzz</code>, <code>:jpeg_roundtrip_fuzz</code>,
+<code>:png_roundtrip_fuzz</code>, <code>:j2k_roundtrip_fuzz</code>). This reopens the codec-level gap
+<a href="../../adr/0020-oracle-removal.md">ADR-0020</a> left when the oracle-only C++
+fuzz harness was retired — no other test layer feeds these handlers arbitrary
+byte streams. The motivating bug class is crafted-input memory corruption in
+header/marker parsing (TIFF IFD entries, JPEG APPn segments, PNG chunks,
+JP2 boxes) that no unit test catches and that hand review finds only by luck.</p>
+<p>The decode-only targets never call <code>SipiIO::write</code>, so every encoder was
+unreachable from the fuzzer — the blind spot a JP2-encode bug and a
+JPEG-marker-write bug both shipped through undetected. The round-trip targets
+close it: <code>run_roundtrip</code> (<code>codec_fuzz_harness.h</code>) decodes exactly like the
+decode-only pass, then, if the decode produced an image, re-encodes it through
+every format <code>SipiImage::write</code> supports ("tif", "jpx", "png", "jpg"). A write
+failure or thrown exception is a valid fuzz outcome, same as a decode
+rejection; only a crash or sanitizer report is a finding.</p>
+<h3 id="the-temp-file-mechanism">The temp-file mechanism<a class="headerlink" href="#the-temp-file-mechanism" title="Permanent link">&para;</a></h3>
+<p><code>SipiIO</code> has no in-memory decode overload anywhere — every handler's
+<code>read_shape</code>/<code>read</code> take a filesystem path — so the shared harness
+(<code>src/format_handlers/fuzz/codec_fuzz_harness.h</code>) writes each fuzzer-supplied buffer to
+one fixed per-process temp path before driving the handler over it. The path
+name embeds <code>getpid()</code>: libFuzzer runs each process single-threaded, so a
+per-iteration temp file with a stable, truncated-and-rewritten name avoids
+filesystem churn, and the pid keeps parallel <code>-jobs=N</code> workers from colliding
+on the same path. <code>TEST_TMPDIR</code> is honoured when set (Bazel's <code>cc_fuzz_test</code>
+replay engine sets it), falling back to the platform temp directory otherwise.</p>
+<h3 id="expected-reject-vs-finding">Expected-reject vs finding<a class="headerlink" href="#expected-reject-vs-finding" title="Permanent link">&para;</a></h3>
+<p>Each call to <code>read_shape</code> and <code>read</code> returns a <code>Result</code>, and the harness
+checks it only for presence: a codec rejecting malformed input reports that
+through the <code>Result</code> holding no value, not through an exception — so a clean
+rejection from <code>read_shape</code> still lets <code>read</code> run. Each call is additionally
+wrapped in its own try/catch, because a decoder can still throw en route to
+producing that <code>Result</code>: <code>std::bad_alloc</code>, the allocation-guard throws that
+stay exception-based by design (<code>checked_buf_size_or_throw</code>, <code>memTiffOpen</code>'s
+raw <code>malloc</code> failures), and Kakadu's <code>kdu_exception</code>. Findings are what
+escapes both catch blocks entirely: SIGSEGV, SIGABRT, sanitizer reports. The
+harness also has a bare <code>catch (...)</code> alongside <code>catch (const std::exception
+&amp;)</code>, because <code>kdu_exception</code> is an <code>int</code>-like type, not a <code>std::exception</code> —
+without it, a Kakadu-thrown rejection on a malformed JP2 would itself register
+as an uncaught-exception finding.</p>
+<h3 id="the-decode-size-budget">The decode-size budget<a class="headerlink" href="#the-decode-size-budget" title="Permanent link">&para;</a></h3>
+<p>The shape probe (<code>read_shape</code>) always runs, on every input — the full second
+step, <code>read</code>, does not. The harness estimates the decode buffer implied by the
+probe's geometry and skips <code>read</code> entirely once that estimate exceeds 512 MiB
+(<code>kMaxHarnessDecodeBytes</code> in <code>codec_fuzz_harness.h</code>); container/header parsing
+coverage is untouched by the skip, since <code>read_shape</code> is where that coverage
+lives.</p>
+<p>The budget exists because <code>validate_decode_dims</code> (<code>src/image/cpp/SipiIO.h</code>)
+caps each dimension and the channel count individually, but never their
+product — so a small, cheaply crafted header can legally claim a
+multi-gigabyte decode buffer and still pass the guard. In production, that
+claim is bounded at the FFI seam by the full-lane decode memory budget
+(<code>MemoryBudgetGuard</code>, <code>src/ffi/cpp/serve_image.cpp</code>); the harness drives the
+handler directly and has no equivalent budget, so without the skip a
+275-byte file can end a fuzzing leg on an out-of-memory that says nothing
+about codec correctness.</p>
+<p>Raising <code>-rss_limit_mb</code> is not a substitute: a crafted header can claim
+dimensions up to the per-dimension cap on both axes at once, so no fixed RSS
+limit survives that argument — only skipping the oversized decode does.</p>
+<h3 id="per-target-knobs">Per-target knobs<a class="headerlink" href="#per-target-knobs" title="Permanent link">&para;</a></h3>
+<p>Each codec target passes <code>-max_len</code> and (except J2K) a <code>-dict=</code> flag; all nine
+targets (including the parser) pass <code>-timeout=25</code>.</p>
+<ul>
+<li><strong><code>-max_len</code> caps</strong>: 16 KB for TIFF and JPEG (decode and round-trip alike),
+  8 KB for PNG (decode and round-trip), 32 KB for the J2K decode target, 16 KB
+  for the J2K round-trip target. The bug class these harnesses hunt is
+  header/marker parsing at the front of the file, so a small cap concentrates
+  the mutation budget there instead of on bulk pixel data a full-size image
+  would carry.</li>
+<li><strong>Dictionaries</strong>: <code>src/format_handlers/fuzz/dicts/{tiff,jpeg,png}.dict</code>, vendored
+  verbatim from AFL++ (see the package README for provenance and license).
+  Each round-trip target reuses its decode-side counterpart's dictionary.
+  There is no canonical J2K dictionary upstream, so neither J2K target runs
+  with one. They are passed as explicit <code>-dict=</code> flags from the <code>justfile</code> recipes
+  rather than through <code>rules_fuzzing</code>'s <code>dictionary</code> <code>cc_fuzz_test</code> attribute:
+  that attribute only reaches libFuzzer through the rule's Python launcher via
+  <code>FUZZER_DICTIONARY_PATH</code>, and this repo executes the built <code>..._bin</code> binary
+  directly rather than through the launcher — running via <code>bazel run</code> (which
+  the launcher needs) would sandbox away corpus growth (see Recipes below).</li>
+<li><strong><code>-timeout=25</code></strong>: applied uniformly, including to the parser target and to
+  <code>fuzz-corpus-merge</code>'s <code>-merge=1</code> pass — libFuzzer's 1200s per-input default
+  exceeds any of these budgets, so a hang would silently consume a run instead
+  of being reported as a finding.</li>
+</ul>
+<h3 id="detect_leaks"><code>detect_leaks</code><a class="headerlink" href="#detect_leaks" title="Permanent link">&para;</a></h3>
+<p>The ASan-paired pass (below) sets <code>ASAN_OPTIONS=detect_leaks=0</code> for the JPEG
+and PNG legs only. libjpeg-turbo's and libpng's error paths raise via
+<code>setjmp</code>/<code>longjmp</code>, which skips destructors past the jump — a documented LSan
+false-positive source, not a real leak. TIFF and J2K unwind via real C++
+exceptions and keep leak detection on, and the parser target carries no ASan
+special-casing at all. This is never disabled repo-wide, and it is an
+outcome adopted up front rather than one found by running the pass: LSan is a
+Linux-only ASan feature, and the local macOS ASan link is broken (see the
+sanitizer gate notes), so it cannot be verified on a developer Mac — the first
+nightly run against real crafted-JPEG/PNG input is what confirms the
+false-positive theory rather than an unrelated leak.</p>
+<h2 id="two-modes-one-target-family">Two modes, one target family<a class="headerlink" href="#two-modes-one-target-family" title="Permanent link">&para;</a></h2>
+<p><code>rules_fuzzing</code>'s default engine is <code>//fuzzing/engines:replay</code> with
+instrumentation <code>none</code>, so <strong>without</strong> <code>--config=fuzz</code> every target — the
+parser and all eight codec handlers (decode and round-trip) — needs no
+libFuzzer runtime and, e.g.,</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//src/iiifparser/fuzz:parse_request_fuzz
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//src/format_handlers/fuzz:tiff_decode_fuzz
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//src/format_handlers/fuzz:tiff_roundtrip_fuzz
+</code></pre></div>
+<p>is a corpus-replay regression run: every seed through the harness, asserting no
+crash. All nine build and run on every platform — macOS included — and ride
+along in the <code>//src/...</code> sweeps (<code>just bazel-test</code>, <code>bazel-test-unit</code>,
+<code>bazel-test-sanitized</code>, <code>bazel-coverage</code>), so every PR replays every corpus, and
+the sanitizer leg replays them under ASan/UBSan.</p>
+<p><code>--config=fuzz</code> (<code>.bazelrc</code> §Fuzzing) switches to the real libFuzzer engine and
+arms SanitizerCoverage. That is the mutation loop. For the parser target this
+also arms coverage on the Rust crate graph (below); for the codec targets it
+arms coverage across the linked C++ handler code directly, since those targets
+have no Rust in their dependency graph.</p>
+<p><strong>Coverage instrumentation of the Rust side</strong> (parser target only) uses only
+stable rustc flags — <code>-Cpasses=sancov-module</code> plus
+<code>-Cllvm-args=-sanitizer-coverage-*</code>, applied config-wide through <code>rules_rust</code>'s
+singular <code>extra_rustc_flag</code> build setting (target config only; exec-config
+proc-macros and build scripts are untouched). No nightly toolchain, no
+<code>-Zsanitizer</code>, no Cargo. libFuzzer observes the Rust edges: 894 inline 8-bit
+counters versus 8 for a shim-only build, and a recommended dictionary of
+substrings of Rust-only string literals (<code>ault</code> from <code>default</code>) that exist
+nowhere in the C++ shim.</p>
+<p>The config also sets <code>--compilation_mode=opt</code>. Fuzzing throughput <em>is</em> coverage —
+a nightly has a fixed wall-clock window — and there is nothing to step through in
+a debugger, since a finding is a saved reproducer replayed separately. Two flags
+come back on top of it, for the Rust parser target:</p>
+<ul>
+<li><code>-Cdebug-assertions=on</code> and <code>-Coverflow-checks=on</code>, which <code>-c opt</code> turns off.
+  An integer overflow in a coordinate or dimension parser is exactly the bug
+  class this target hunts, and it is a panic in debug and a silent wraparound in
+  release — turning the checks back on is what makes the fuzzer see it.</li>
+<li><code>std::hint::black_box</code> around the discarded parse result in <code>shim.rs</code>, so LLVM
+  cannot prove the call dead and delete the code under test.</li>
+</ul>
+<p><code>-Cpanic=abort</code> is deliberately <strong>not</strong> set. It would apply config-wide and so
+break <code>bazel test --config=fuzz</code> on every Rust test target (the prebuilt
+sysroot's <code>test</code> crate is unwind-compiled), and it buys nothing: a Rust panic
+unwinding out of an <code>extern "C"</code> fn has aborted since Rust 1.71, so the
+panic→SIGABRT→libFuzzer-crash path through <code>sipi_fuzz_parse_request</code> is a
+language guarantee. Verified with an injected panic: the abort arrives via
+<code>core::panicking::panic_cannot_unwind</code>, exit code 77, reproducer saved.</p>
+<h3 id="asan-pairing">ASan pairing<a class="headerlink" href="#asan-pairing" title="Permanent link">&para;</a></h3>
+<p><code>--config=fuzz --config=asan</code> composes — the repo's own sanitizer config, not
+<code>rules_fuzzing</code>'s <code>cc_engine_sanitizer</code> (which injects <code>-fsanitize=…</code> without
+provisioning a runtime and must stay at its <code>none</code> default). For the codec
+targets, ASan instruments the actual decoder C++ code directly (TIFF/JPEG/
+PNG/J2K are C++ all the way down from the harness to the handler), so this is
+the primary sanitizer coverage for that bug class, not a boundary check. For
+the parser target, mind the narrower scope: ASan instruments the C++ shim,
+libFuzzer itself, and the linked native runtime — <strong>not</strong> the Rust crate graph
+(that would need nightly <code>-Zsanitizer</code>, which this design avoids). The value
+of the paired pass there is the shim boundary (<code>*const u8, usize</code> → <code>&amp;[u8]</code> →
+<code>&amp;str</code>), libFuzzer's own buffer handling, and the runtime; the Rust parser is
+safe code that already runs under the ASan/UBSan CI leg via its unit,
+corpus-regression, and replay tests.</p>
+<h3 id="linux-and-macos">Linux and macOS<a class="headerlink" href="#linux-and-macos" title="Permanent link">&para;</a></h3>
+<p><code>--config=fuzz</code> links on both platforms. Since <strong>0.8.18</strong>, hermetic-llvm stages
+the compiler-rt libFuzzer runtime for darwin (<code>libclang_rt.fuzzer_osx.a</code>, upstream
+<a href="https://github.com/hermeticbuild/hermetic-llvm/pull/700">PR #700</a>), closing the
+gap where <code>@llvm//toolchain:resource_dir</code> used to select <code>[]</code> for
+<code>@platforms//os:macos</code>. The clang driver also links <code>libclang_rt.ubsan_osx_dynamic</code>
+on darwin, so <code>--@llvm//config:ubsan=true</code> is required there too (already set by
+<code>--config=fuzz</code>). This applies uniformly to all nine targets, including the
+Kakadu-linked J2K harnesses (decode and round-trip) — Kakadu itself is a
+native <code>cc_library</code> dependency with no darwin-specific gap here.</p>
+<p>One macOS-only wrinkle, unrelated to the LLVM runtime: <code>rules_fuzzing</code>'s Python
+launcher deps (<code>absl-py</code>) resolve as an sdist, and <code>rules_python</code>'s macOS sdist
+path shells out to <code>xcrun xcodebuild</code>, which the Nix dev shell's SDK stub lacks.
+<code>.bazelrc</code> handles this globally by pointing the <strong>repo-rule</strong> <code>DEVELOPER_DIR</code> at
+the Command Line Tools (<code>/Library/Developer/CommandLineTools</code>), which makes
+<code>rules_python</code> take its non-Xcode branch and skip the <code>xcodebuild</code> call — for the
+replay build in the <code>//src/...</code> sweep as well as <code>--config=fuzz</code>. Build actions
+are unaffected; they compile against the hermetic-llvm SDK. A macOS dev therefore
+needs the Command Line Tools installed (<code>xcode-select --install</code>); no full Xcode.</p>
+<p>The broader <code>--config=fuzz --config=asan</code> pairing stays Linux-only for the
+nightly mutation loop — the macOS ASan header path is still gapped (see the
+sanitizer gate) — but the plain replay-mode <code>bazel test</code> of every target,
+codec targets included, runs on macOS same as Linux.</p>
+<h2 id="recipes">Recipes<a class="headerlink" href="#recipes" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>just<span class="w"> </span>bazel-build-fuzz<span class="w">                        </span><span class="c1"># build all five instrumented binaries (Linux + macOS; CI-invoked, RBE-eligible)</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>just<span class="w"> </span>fuzz<span class="w"> </span>tiff<span class="w"> </span>-max_total_time<span class="o">=</span><span class="m">60</span><span class="w">             </span><span class="c1"># run the mutation loop locally; TARGET selects the harness, FLAGS pass through to libFuzzer</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>just<span class="w"> </span>fuzz-corpus-merge<span class="w"> </span>tiff<span class="w">                   </span><span class="c1"># import coverage-adding inputs from the latest nightly artifact for TARGET</span>
+</code></pre></div>
+<p><code>TARGET</code> is a short name, not a Bazel label: <code>parse_request</code> (the default),
+<code>tiff</code>, <code>jpeg</code>, <code>png</code>, <code>j2k</code>.</p>
+<p><code>bazel-build-fuzz</code> builds the <code>_bin</code> and <code>_corpus</code> targets for all five
+harnesses in one invocation — e.g.
+<code>//src/iiifparser/fuzz:parse_request_fuzz_bin</code> and
+<code>//src/format_handlers/fuzz:tiff_decode_fuzz_bin</code> — the <code>_bin</code> target, not the test
+target: <code>_bin</code> is what the loop executes, and only a top-level target
+materialises locally under the <code>--remote_download_minimal</code> default. Each
+target's path (e.g.
+<code>bazel-bin/src/iiifparser/fuzz/parse_request_fuzz_bin</code>) is a stable symlink
+<code>fuzzing_binary</code> declares into the transitioned config's config-hashed
+<code>…_raw_</code> path; never hardcode the latter. Every generated target except the
+test itself is <code>manual</code>-tagged upstream, so the <code>_bin</code>/<code>_corpus</code> targets are
+built by naming them explicitly, not by a <code>//src/...</code> wildcard.</p>
+<p><code>just fuzz</code> and the nightly both execute the built binary <strong>directly</strong>, not via
+<code>bazel run</code> — the sandbox would silently discard corpus growth. The working
+corpus for a given <code>TARGET</code> lives under the gitignored <code>.fuzz/corpus/&lt;TARGET&gt;/</code>
+— strictly per-format, never shared across targets — re-seeded on every run
+from the target's built <code>_corpus</code> target under <code>bazel-bin</code>, which already
+merges both corpus tiers (below), so there is no separate seed list to
+duplicate. Crash reproducers land in <code>.fuzz/artifacts/</code>.</p>
+<p>Each <code>cc_fuzz_test</code> also generates a <code>&lt;name&gt;_fuzz_run</code> launcher for
+<code>bazel run</code>; it is not what CI or the recipes use, for the sandbox reason above.</p>
+<h2 id="corpus-policy-two-tiers-plus-the-merge-path-between-them">Corpus policy — two tiers plus the merge path between them<a class="headerlink" href="#corpus-policy-two-tiers-plus-the-merge-path-between-them" title="Permanent link">&para;</a></h2>
+<p>The parser and the codec targets share the same two-tier shape, but source
+the hand-picked tier differently.</p>
+<ol>
+<li><strong>Checked-in seed corpus.</strong></li>
+<li>Parser: <code>src/iiifparser/corpus/</code> (241 files, exposed as
+     <code>//src/iiifparser/corpus:seed_corpus</code>), shared with the C++ classifier
+     test and <code>//src/iiifparser/rust:corpus_regression_test</code>.</li>
+<li>Codec targets: two separate locations merged by the <code>seed_corpus</code>
+     filegroup in each <code>src/format_handlers/corpus/&lt;fmt&gt;/BUILD.bazel</code> — the
+     hand-picked fixtures reached through
+     <code>//test/_test_data:fuzz_seeds_{tiff,jpeg,png,j2k}</code> (crafted-malformed
+     images already used by that codec's unit tests, plus a smallest-valid
+     fixture; these are Git LFS), and the checked-in <code>src/format_handlers/corpus/&lt;fmt&gt;/</code>
+     directory itself as the growth tier (empty today).</li>
+</ol>
+<p>Both cases grow only deliberately: a human-committed merge (below), or a
+   crash reproducer committed alongside the fix for the bug it reproduces. CI
+   never writes either.</p>
+<ol>
+<li>
+<p><strong>Live working corpus</strong> — chained between nightly runs as a GitHub Actions
+   <strong>artifact</strong> per target, <code>fuzz-corpus-&lt;target&gt;</code>, not a cache. Artifacts
+   chain explicitly across runs, are downloadable for the manual merge step,
+   and are not subject to cache eviction. Each nightly leg seeds
+   <code>.fuzz/corpus</code> from that target's generated two-tier corpus (the built
+   <code>_corpus</code> Bazel target — for the codec targets, that generated directory is
+   what makes the <code>test/_test_data</code> fixture seeds reachable at all by a binary
+   executed outside Bazel) plus the artifact of the last successful run
+   (falling back to the generated seeds alone on the first run or after the
+   90-day retention expires), fuzzes, minimizes with libFuzzer <code>-merge=1</code>, and
+   uploads the result as this run's artifact.</p>
+</li>
+<li>
+<p><strong>Periodic pull-into-repo</strong> — <code>just fuzz-corpus-merge &lt;target&gt;</code> downloads
+   the latest <code>fuzz-corpus-&lt;target&gt;</code> artifact and <code>-merge=1</code>s it into that
+   target's checked-in corpus directory (<code>src/iiifparser/corpus/</code> or
+   <code>src/format_handlers/corpus/&lt;fmt&gt;/</code>), so only coverage-adding inputs are imported,
+   then prints the diff. Reviewing and committing is manual. This is the only
+   path from the live corpus to the checked-in one.</p>
+</li>
+</ol>
+<p><strong>Known imprecision for the codec targets</strong>: the checked-in tier
+   (<code>src/format_handlers/corpus/&lt;fmt&gt;/</code>) does not contain the <code>test/_test_data</code>
+   fixture seeds — those live in a separate package. <code>-merge=1</code> only sees
+   coverage relative to its destination directory, so it can propose importing
+   an input whose coverage the fixtures already reach but the checked-in
+   directory does not yet contain. The recipe does not attempt to correct for
+   this; it stops at a diff precisely so a maintainer reviews what is actually
+   being added rather than trusting the merge blindly.</p>
+<p><code>-merge=1 &lt;dst&gt; &lt;src&gt;</code> is libFuzzer's own minimization — it copies an input into
+the destination only if it adds coverage the destination lacks, which is why it
+needs the instrumented binary.</p>
+<h2 id="nightly-ci">Nightly CI<a class="headerlink" href="#nightly-ci" title="Permanent link">&para;</a></h2>
+<p><code>.github/workflows/fuzz.yml</code>, scheduled <code>17 3 * * *</code> (03:17 UTC — off-peak for
+the team and off the congested top of the hour), plus <code>workflow_dispatch</code> for
+manual runs. One job, a <strong>9-leg matrix</strong> (<code>parse_request</code>, <code>tiff</code>, <code>jpeg</code>,
+<code>png</code>, <code>j2k</code>, <code>tiff_roundtrip</code>, <code>jpeg_roundtrip</code>, <code>png_roundtrip</code>,
+<code>j2k_roundtrip</code>) on <code>ubuntu-24.04</code> with <code>fail-fast: false</code> — a crash in one leg
+must never discard another target's corpus growth for the night. Each leg runs
+the same five phases: build, restore the working corpus, fuzz for 600s,
+minimize and upload the <code>fuzz-corpus-&lt;target&gt;</code> artifact, then a 300s
+ASan-paired pass over the minimized corpus.</p>
+<p>The minimize-and-upload steps run on <code>!cancelled()</code>, and the ASan pass comes
+after them, so a finding anywhere still chains that leg's corpus growth
+forward — losing a night of coverage to a crash would be a second injury. This
+is safe because libFuzzer writes reproducers to <code>-artifact_prefix</code> and never
+into the corpus directory, so a crashing input cannot enter the chain via the
+merge. The ASan pass's own corpus additions are deliberately discarded — it
+exists to exercise the codec/shim/runtime boundary, not to grow coverage.</p>
+<p>Two requirements are specific to the codec legs:</p>
+<ul>
+<li><strong>Git LFS must be checked out</strong> (<code>lfs: true</code> on the checkout, plus
+  <code>lfs: "true"</code> into the CI-setup composite action). The codec seed corpora
+  route through <code>test/_test_data</code>, which is Git LFS. Without it, those
+  fixtures materialise as ~131-byte pointer files, and the codec harnesses
+  would spend their whole budget fuzzing pointer text instead of image bytes
+  — silently worthless coverage, not a loud failure, which is why this is
+  called out rather than left implicit.</li>
+<li><strong><code>GH_TOKEN</code> must be job-level</strong>, not step-level: <code>kakadu_archive</code>'s
+  <code>gh_release_archive</code> repository rule re-evaluates on every <code>bazel</code>
+  invocation, and each leg invokes <code>bazel</code> (via <code>bazel-build-fuzz</code>) twice —
+  the plain build and the ASan-paired build. A step-scoped token would miss
+  whichever invocation didn't carry it. The parser-only leg builds Kakadu too
+  (one <code>bazel-build-fuzz</code> invocation builds all five binaries) even though it
+  doesn't read it, so the job-level token covers every leg uniformly.</li>
+</ul>
+<p><code>-timeout=25</code> is passed to both loops and to the merge in every leg: libFuzzer's
+1200s per-input default exceeds the whole budget, so a hang would silently
+consume the run instead of being reported. The merge also gets
+<code>-rss_limit_mb=4096</code>, since <code>-merge=1</code> holds the whole feature set in memory as
+the corpus grows.</p>
+<p>The two J2K legs (<code>j2k</code>, <code>j2k_roundtrip</code>) additionally run both loops in
+libFuzzer fork mode with <code>-fork=1 -ignore_timeouts=1 -ignore_ooms=0
+-timeout_exitcode=0</code> (matrix column <code>libfuzzer_extra</code>). Kakadu's box parser has an unpatchable hang class
+(DEV-7080) that the seam deadline in <code>serve_image.cpp</code> contains in production,
+but the codec harness drives <code>SipiIOJ2k::read_shape</code> directly, below that
+seam, and the mutator finds a fresh instance on most nights. In fork mode the
+parent keeps fuzzing past a timed-out child; the child still writes its
+<code>timeout-*</code> reproducer to <code>-artifact_prefix</code>, so the instance is recorded in
+the <code>fuzz-crashes-&lt;target&gt;</code> artifact of a green leg. <code>-timeout_exitcode=0</code>
+is needed on top of <code>-ignore_timeouts=1</code> because the fork parent exits with
+its <em>last</em> child's exit code, so a tolerated timeout in the final child would
+otherwise still fail the step with 70. Crashes and OOMs still fail the leg. The other seven legs keep the strict per-input timeout: a hang
+in libtiff/libjpeg/libpng or in Vitrinli's own code is a fixable finding.</p>
+<p>The ASan pass runs every leg with <code>ASAN_OPTIONS=detect_container_overflow=0</code>.
+The fuzz binary links the libFuzzer runtime, which hermetic-llvm builds
+unsanitized (<code>cc_unsanitized_library</code>) against the same libc++ the
+instrumented code uses, so libc++'s container annotations are updated by some
+objects in the link and checked by others — the documented false-positive
+shape for that one detector. It fired three times with no defect behind it:
+the Rust parser leg (DEV-7081), <code>Exiv2::append</code> on <code>tiff_roundtrip</code> (the
+identical decode-then-JP2-write path is green under the <code>asan-ubsan</code> CI job,
+which links no libFuzzer; the reproducer is pinned as
+<code>tiff_exif_make_jp2_roundtrip.tif</code>), and libFuzzer's own fork driver on the
+j2k legs before a single input ran. Heap, stack, and global overflow detection
+are unaffected, and the container detector stays on for the <code>asan-ubsan</code>
+job's unit and e2e tests, which cover the same code without libFuzzer.</p>
+<p>Both loops run with <code>RUST_BACKTRACE=1</code> and the hermetic <code>llvm-symbolizer</code>
+(resolved to <code>.fuzz/llvm-symbolizer</code> by <code>just bazel-build-fuzz</code>) wired into the
+sanitizer runtime that prints the crash trace — <code>UBSAN_OPTIONS=external_symbolizer_path</code>
+for the plain loop, <code>ASAN_SYMBOLIZER_PATH</code> for the ASan pass. Without it,
+first-party frames print as bare <code>binary+0xOFFSET</code>.</p>
+<p><strong>Crash semantics.</strong> A Rust panic aborts at the <code>extern "C"</code> boundary → SIGABRT
+(parser target); a memory-safety finding in a codec handler raises a signal
+directly (SIGSEGV/SIGABRT) or trips a sanitizer report under the ASan pass.
+Either way libFuzzer writes the input as <code>crash-&lt;sha1&gt;</code> under
+<code>-artifact_prefix</code> and exits <strong>77</strong>. That exit code fails the step, so the
+workflow needs no crash-detection logic of its own — only preservation: the
+reproducers and the libFuzzer logs are uploaded as a <code>fuzz-crashes-&lt;target&gt;</code>
+artifact (30-day retention) on failure. Triage is manual; no issue is
+auto-filed.</p>
+<p><strong>Why nightly is enough.</strong> The per-PR regression net for every target is the
+replay-mode <code>bazel test</code> (the target's corpus through the harness and the
+engine path, on every platform, and under ASan/UBSan on the sanitizer leg),
+plus — for the parser only — <code>//src/iiifparser/rust:corpus_regression_test</code>
+(the crate API swept directly over the whole corpus). A newly introduced crash
+that the existing corpus already reaches fails the PR. Only a crash that
+requires <em>mutation</em> to reach waits for the next nightly, and up to 24h of
+latency on that class of finding is accepted deliberately — the alternative is
+a long-running loop in the PR path.</p>
+<h2 id="crash-triage">Crash triage<a class="headerlink" href="#crash-triage" title="Permanent link">&para;</a></h2>
+<p>A nightly failure is a manual triage, not an auto-filed issue:</p>
+<ol>
+<li><strong>Reproduce</strong> from the saved artifact — <code>.fuzz/artifacts/</code> locally, or the
+   <code>fuzz-crashes-&lt;target&gt;</code> CI artifact — by running the leg's built binary
+   directly against the single reproducer file, e.g.:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>just<span class="w"> </span>bazel-build-fuzz
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>./bazel-bin/src/format_handlers/fuzz/tiff_decode_fuzz_bin<span class="w"> </span>path/to/crash-&lt;sha1&gt;
+</code></pre></div>
+<p>The artifact directory is not exclusively crashes: libFuzzer names a saved
+   reproducer <code>crash-</code>, <code>oom-</code>, or <code>timeout-</code> depending on how the process
+   died, and the CI artifact is uploaded as <code>fuzz-crashes-&lt;target&gt;</code> regardless
+   of which prefix it holds.</p>
+<ol>
+<li><strong>Classify the finding</strong> before deciding what to do with it — a nightly
+   failure is not automatically a codec bug:</li>
+<li><strong>Sanitizer report inside Vitrinli code.</strong> A real bug. Steps 3-5 below apply
+     as written.</li>
+<li><strong>Sanitizer report whose stack is entirely inside libFuzzer or the C++
+     runtime.</strong> Not a Vitrinli finding. One observed instance was an ASan report
+     inside libFuzzer's own <code>Sha1ToString</code> → <code>std::basic_stringbuf::str()</code> →
+     libc++'s internal-buffer initialisation, with the saved reproducer being
+     the <em>empty input</em> — a tell that the finding sits outside the target
+     entirely. This gets its own issue against the toolchain, not a <code>fix:</code> on
+     a codec.</li>
+<li><strong>Out-of-memory (<code>oom-</code> prefix).</strong> Check the reproducer's claimed
+     geometry first. An allocation the decode-size budget above is meant to
+     prevent means the harness needs adjusting, not the codec — the codec
+     never got the chance to reject it. An allocation the codec should have
+     refused on its own is a real bug.</li>
+<li><strong>Timeout (<code>timeout-</code> prefix).</strong> Reproduce with the timeout raised before
+     dismissing it as a slow decode. A genuine hang inside a third-party codec
+     is still a finding — it is an availability bug on the production
+     <code>read_shape</code>/<code>read</code> path, even though the fix cannot be a patch to that
+     codec's source. <strong>Never pin a hanging input into the seed corpus</strong>: the
+     corpus is replayed by <code>bazel test</code> on every PR, so a hanging seed would
+     hang the test suite instead of failing it.</li>
+<li><strong>Fix as its own commit</strong>, typed <code>fix:</code> — the bug already exists on <code>main</code>,
+   so <code>fix:</code> is the correct Conventional Commit type regardless of when the
+   fuzz target that found it landed.</li>
+<li><strong>Commit the reproducer</strong> into the target's checked-in corpus directory
+   (<code>src/iiifparser/corpus/</code> or <code>src/format_handlers/corpus/&lt;fmt&gt;/</code>) alongside the fix,
+   so it replays forever in the <code>//src/...</code> sweeps rather than only living in a
+   30-day CI artifact. Skip this for a finding classified outside Vitrinli code, and
+   never do it for a timeout.</li>
+<li><strong>Open a Linear issue</strong> tracking the finding and its fix.</li>
+</ol>
+<p>No step here is automated: the nightly preserves the reproducer and fails
+loudly, and a person decides what — if anything — a given finding is worth.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2017 - 2026 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.sections", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
