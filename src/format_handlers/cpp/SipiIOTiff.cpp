@@ -872,40 +872,6 @@ static Result<void>
   return {};
 }
 
-static const float epsilon = 1.0e-4;
-
-size_t epsilon_ceil(float a)
-{
-  if (fabs(floor(a) - a) < epsilon) { return static_cast<size_t>(floorf(a)); }
-  return static_cast<size_t>(ceilf(a));
-}
-
-size_t epsilon_ceil_division(float a, float b)
-{
-  //
-  // epsilontic:
-  // if a/b is x.00002, the result will be floorf(x), otherwise ceilf(x)
-  //
-  if (fabs(floorf(a / b) - (a / b)) < epsilon) { return static_cast<size_t>(floorf(a / b)); }
-  return static_cast<size_t>(ceilf(a / b));
-}
-
-size_t epsilon_floor(float a)
-{
-  if (fabs(ceilf(a) - a) < epsilon) { return static_cast<size_t>(ceilf(a)); }
-  return static_cast<size_t>(floorf(a));
-}
-
-size_t epsilon_floor_division(float a, float b)
-{
-  //
-  // epsilontic:
-  // if a/b is x.9998, the result will be ceilf(x), otherwise floor(x)
-  //
-  if (fabs(ceilf(a / b) - (a / b)) < epsilon) { return static_cast<size_t>(ceilf(a / b)); }
-  return static_cast<size_t>(floorf(a / b));
-}
-
 template<typename T>
 static Result<void>
   read_tiled_data(TIFF *tif, int32_t roi_x, int32_t roi_y, uint32_t roi_w, uint32_t roi_h, std::span<T> out)
@@ -929,8 +895,8 @@ static Result<void>
   TIFF_GET_FIELD(tif, TIFFTAG_SAMPLESPERPIXEL, &stmp, 1)
   nc = static_cast<uint32_t>(stmp);
 
-  uint32_t ntiles_x = epsilon_ceil_division(static_cast<float>(nx), static_cast<float>(tile_width));
-  uint32_t ntiles_y = epsilon_ceil_division(static_cast<float>(ny), static_cast<float>(tile_length));
+  const uint32_t ntiles_x = (nx + tile_width - 1) / tile_width;
+  const uint32_t ntiles_y = (ny + tile_length - 1) / tile_length;
   uint32_t ntiles = TIFFNumberOfTiles(tif);
   // For PLANARCONFIG_SEPARATE, each of the nc samples is stored as its own
   // set of spatial tiles, so the on-disk tile count is nc times the spatial
@@ -944,10 +910,13 @@ static Result<void>
         + ", dimensions=" + std::to_string(nx) + "x" + std::to_string(ny)
         + ", tile=" + std::to_string(tile_width) + "x" + std::to_string(tile_length) });
   }
-  uint32_t starttile_x = epsilon_floor_division(static_cast<float>(roi_x), static_cast<float>(tile_width));
-  uint32_t starttile_y = epsilon_floor_division(static_cast<float>(roi_y), static_cast<float>(tile_length));
-  uint32_t endtile_x = epsilon_ceil_division(static_cast<float>(roi_x + roi_w), static_cast<float>(tile_width));
-  uint32_t endtile_y = epsilon_ceil_division(static_cast<float>(roi_y + roi_h), static_cast<float>(tile_length));
+  // The region lies inside the image, so its origin is non-negative.
+  const auto rx = static_cast<uint32_t>(roi_x);
+  const auto ry = static_cast<uint32_t>(roi_y);
+  const uint32_t starttile_x = rx / tile_width;
+  const uint32_t starttile_y = ry / tile_length;
+  const uint32_t endtile_x = (rx + roi_w + tile_width - 1) / tile_width;
+  const uint32_t endtile_y = (ry + roi_h + tile_length - 1) / tile_length;
 
   TIFF_GET_FIELD(tif, TIFFTAG_BITSPERSAMPLE, &stmp, 8)
   bps = static_cast<uint32_t>(stmp);
@@ -1028,19 +997,18 @@ static Result<void>
         pixels = tilebuf.get();
       }
 
-      for (uint32_t tile_x = 0; tile_x < tile_width; tile_x++) {
-        for (uint32_t tile_y = 0; tile_y < tile_length; tile_y++) {
-          uint32_t final_x = (tx - starttile_x) * tile_width + tile_x;
-          uint32_t final_y = (ty - starttile_y) * tile_length + tile_y;
-
-          if (final_x < roi_w && final_y < roi_h) {
-            uint32_t pixel_offset = nc * (final_y * roi_w + final_x);
-
-            for (uint32_t c = 0; c < nc; ++c) {
-              out[pixel_offset + c] = pixels[(tile_x + tile_y * tile_width) * nc + c];
-            }
-          }
-        }
+      // Copy the part of this tile that lies inside the region, in image
+      // coordinates: the region's origin need not be on a tile boundary.
+      const uint32_t tile_x0 = tx * tile_width;
+      const uint32_t tile_y0 = ty * tile_length;
+      const uint32_t x0 = std::max(tile_x0, rx);
+      const uint32_t x1 = std::min(tile_x0 + tile_width, rx + roi_w);
+      const uint32_t y0 = std::max(tile_y0, ry);
+      const uint32_t y1 = std::min(tile_y0 + tile_length, ry + roi_h);
+      for (uint32_t y = y0; y < y1; ++y) {
+        const T *src = pixels + (static_cast<size_t>(y - tile_y0) * tile_width + (x0 - tile_x0)) * nc;
+        T *dst = out.data() + (static_cast<size_t>(y - ry) * roi_w + (x0 - rx)) * nc;
+        std::copy_n(src, static_cast<size_t>(x1 - x0) * nc, dst);
       }
     }
   }

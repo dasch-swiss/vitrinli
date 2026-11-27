@@ -172,8 +172,15 @@ void write_tiff(const std::string &path, const TiffSpec &spec)
     TIFFSetField(t, TIFFTAG_TILELENGTH, kTile);
     for (uint32_t ty = 0; ty < spec.ny; ty += kTile) {
       for (uint32_t tx = 0; tx < spec.nx; tx += kTile) {
-        auto tile = make_samples(spec, tx, ty, kTile, kTile, 0, spec.nc);
-        ASSERT_GE(TIFFWriteTile(t, tile.data(), tx, ty, 0, 0), 0);
+        if (spec.planar == PLANARCONFIG_CONTIG) {
+          auto tile = make_samples(spec, tx, ty, kTile, kTile, 0, spec.nc);
+          ASSERT_GE(TIFFWriteTile(t, tile.data(), tx, ty, 0, 0), 0);
+        } else {
+          for (uint16_t c = 0; c < spec.nc; ++c) {
+            auto tile = make_samples(spec, tx, ty, kTile, kTile, c, 1);
+            ASSERT_GE(TIFFWriteTile(t, tile.data(), tx, ty, 0, c), 0);
+          }
+        }
       }
     }
   } else {
@@ -276,12 +283,33 @@ TEST(TiffReadBuffer, Strip16BitRgbRegion)
     std::make_shared<Sipi::SipiRegion>(5, 7, 20, 11));
 }
 
-// Tile-aligned origin: an unaligned one returns shifted pixels (DEV-8115).
 TEST(TiffReadBuffer, Tiled8BitRgbRegion)
 {
   expect_pixels({ 40, 27, 3, 8, true, PLANARCONFIG_CONTIG, COMPRESSION_NONE },
     "tiled8_region.tif",
     std::make_shared<Sipi::SipiRegion>(16, 16, 20, 11));
+}
+
+// The tiles are 16x16, so these regions start inside a tile (DEV-8115).
+TEST(TiffReadBuffer, Tiled8BitRgbUnalignedRegion)
+{
+  expect_pixels({ 40, 27, 3, 8, true, PLANARCONFIG_CONTIG, COMPRESSION_NONE },
+    "tiled8_unaligned.tif",
+    std::make_shared<Sipi::SipiRegion>(3, 5, 30, 17));
+}
+
+TEST(TiffReadBuffer, Tiled16BitGrayUnalignedRegionToEdge)
+{
+  expect_pixels({ 40, 27, 1, 16, true, PLANARCONFIG_CONTIG, COMPRESSION_NONE },
+    "tiled16_unaligned_edge.tif",
+    std::make_shared<Sipi::SipiRegion>(19, 10, 21, 17));
+}
+
+TEST(TiffReadBuffer, TiledPlanarSeparate8BitRgbUnalignedRegion)
+{
+  expect_pixels({ 40, 27, 3, 8, true, PLANARCONFIG_SEPARATE, COMPRESSION_NONE },
+    "tiled_planar8_unaligned.tif",
+    std::make_shared<Sipi::SipiRegion>(7, 2, 9, 20));
 }
 
 TEST(TiffReadBuffer, PlanarSeparate8BitRgb)
