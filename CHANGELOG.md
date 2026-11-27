@@ -1,5 +1,102 @@
 # Changelog
 
+## [10.2.0](https://github.com/dasch-swiss/vitrinli/compare/v10.1.0...v10.2.0) (2026-11-27)
+
+
+### Features
+
+* **cli:** Give every --json error a code and every document a correlation ID ([e479847](https://github.com/dasch-swiss/vitrinli/commit/e4798473d787c6db20426b396e462629d61bec12))
+* **logging:** Prefix CLI log calls with the run's correlation ID ([c71c272](https://github.com/dasch-swiss/vitrinli/commit/c71c272734fccfef7954cc28d128ff214836836e))
+
+
+### Bug Fixes
+
+* **cli:** Make sipi query read header and metadata only ([7830b47](https://github.com/dasch-swiss/vitrinli/commit/7830b4732d6dc7a26eb3e30084caaf075146a318))
+* **deps:** Raise cookie to 0.18.3 and url to 2.5.9 past RustSec advisories ([0b7acf4](https://github.com/dasch-swiss/vitrinli/commit/0b7acf408311b908043fce68752ff61b1eb8ffe1))
+* **deps:** Raise quinn-udp to 0.5.16 past RUSTSEC-2026-0538 ([878af8b](https://github.com/dasch-swiss/vitrinli/commit/878af8b78175d8a187ca748834c2f814749404fb))
+* **docker:** Publish the image that validate-docker smoke-tested ([a121091](https://github.com/dasch-swiss/vitrinli/commit/a121091005dc26c0ecac01822fd003acaf36f98c))
+* **docker:** Store the compiled-in ICC profiles in plain git ([a0872c6](https://github.com/dasch-swiss/vitrinli/commit/a0872c6dbe867117142e4db9adea2be58d4a57a0))
+* **e2e:** Signal only spawned servers and skip busy ports ([bfe6494](https://github.com/dasch-swiss/vitrinli/commit/bfe649495ea67a5320737a791517adbd49ebe9ec))
+* **ffi:** Apply the restricted rewrite to XMP and IPTC promoted from EXIF IFD0 ([ec4b58f](https://github.com/dasch-swiss/vitrinli/commit/ec4b58f5046998c9855291501bbe3310d0a8c54f))
+* **ffi:** Bound the Lua SipiImage.dims probe by the decode deadline ([a4a69da](https://github.com/dasch-swiss/vitrinli/commit/a4a69da069f8c9c38588af3718d3567f7fbd3c17))
+* **ffi:** Never cache watermarked image responses ([4657bf8](https://github.com/dasch-swiss/vitrinli/commit/4657bf89db78241943a8da004d5243a5bff77255))
+* **format_handlers:** Carry Kakadu's text in JPEG 2000 errors and write alpha PNGs as JPX ([80893b3](https://github.com/dasch-swiss/vitrinli/commit/80893b335dfe4ac83211e1add542a1c68e9b0604))
+* **format_handlers:** Name the file in an IPTC read error ([0702a09](https://github.com/dasch-swiss/vitrinli/commit/0702a0935380b8d01ba4df23c74f0a9155f65eb8))
+* **format_handlers:** Read a PNG's XMP from the whole iTXt chunk ([b49156a](https://github.com/dasch-swiss/vitrinli/commit/b49156a90baf1e1564aad4776467b8c348e05d07))
+* **format_handlers:** Read ExtendedXMP back from JPEG ([a7366e3](https://github.com/dasch-swiss/vitrinli/commit/a7366e3d2cbc39e04763df253d5601dc4c2317ea))
+* **format_handlers:** Read tiled TIFF regions from the region's origin ([ab72c58](https://github.com/dasch-swiss/vitrinli/commit/ab72c5875d3e975dc96e19f204f14aea704094cf))
+* **format_handlers:** Write a TIFF's YResolution from the source YResolution ([4e3001d](https://github.com/dasch-swiss/vitrinli/commit/4e3001d0e7ba1c5022353747101f81d58d566a6d))
+* **image,format_handlers:** Read the header and metadata without a pixel decode ([3b4ab3c](https://github.com/dasch-swiss/vitrinli/commit/3b4ab3cad3898f847abaffaeaa6b03fd57ef474a))
+* **image:** Write XMP and IPTC held only in EXIF IFD0 copies as the primary blocks ([2ce984f](https://github.com/dasch-swiss/vitrinli/commit/2ce984fe695ff69857747c8e56bd718db0b2b2a5))
+* **metadata:** Join ExtendedXMP back into its StandardXMP ([3f0aee3](https://github.com/dasch-swiss/vitrinli/commit/3f0aee36bdab5ad3a093c853fdcaf5c9cfb97299))
+* **metadata:** Print an Exif value that cannot be converted as a placeholder ([e28c8a3](https://github.com/dasch-swiss/vitrinli/commit/e28c8a323fdfb8f827c9722bc8403731300e3057))
+* **metadata:** Read and check the raw XMP and IPTC copies EXIF IFD0 holds ([ccbbae5](https://github.com/dasch-swiss/vitrinli/commit/ccbbae549be70186f10d27cd6085a837bd443f61))
+* **metadata:** Say why an IPTC block does not parse ([999e12c](https://github.com/dasch-swiss/vitrinli/commit/999e12cf5353322b05da9934e5ee15f1dc12e4b2))
+* **server,ffi,cli:** Bound the server decode deadline below the request timeout ([e31323a](https://github.com/dasch-swiss/vitrinli/commit/e31323a26646508c531a221aadf4b05a4de4c75f))
+* **server,ffi:** Run size-restricted image decodes in the Full admission lane ([f5f9ae0](https://github.com/dasch-swiss/vitrinli/commit/f5f9ae0ba7792524c3cd627faed8f2ffb1635af3))
+* **server:** Keep credential-dependent responses out of shared caches ([fe6c6a2](https://github.com/dasch-swiss/vitrinli/commit/fe6c6a29ee756f7c41c6b47bc43f6d6dd30381f8))
+* **throttling,server,cli:** Shed all admissions and fail /health at the wedged-thread cap ([636bd0d](https://github.com/dasch-swiss/vitrinli/commit/636bd0d6fe8e32ad0754f88533e1e5612d3477f4))
+
+
+### Performance Improvements
+
+* **format_handlers:** Decode TIFF pixels into the image's own buffer ([3ad9f96](https://github.com/dasch-swiss/vitrinli/commit/3ad9f96a45229db693b335f235e84fdc0cdd221d))
+
+
+### Code Refactoring
+
+* **cli:** Take the offline decode deadline from the ffi constant ([d46a37d](https://github.com/dasch-swiss/vitrinli/commit/d46a37d4575cde281b771917a1e9f4d20590bf76))
+* **ffi:** Name the default decode deadline once ([794b414](https://github.com/dasch-swiss/vitrinli/commit/794b414430d23f1e0e04461e135f1b1deca60fdd))
+* **format_handlers:** Give memTiffOpen C++ linkage ([96238c5](https://github.com/dasch-swiss/vitrinli/commit/96238c51312dc3ac860c8c87012921245ea0949a))
+* **server,cli:** Pass the serve knobs as one ServeKnobs struct ([bd92f4d](https://github.com/dasch-swiss/vitrinli/commit/bd92f4d7bc7497668fe429507c55e9297f19735f))
+* **throttling:** Report the partition a permit was admitted to ([d6a6283](https://github.com/dasch-swiss/vitrinli/commit/d6a6283f40e9236be9a8e436b7333114be140f8f))
+
+
+### Documentation
+
+* **docs:** Map read_metadata, the correlation ID and Kakadu error text ([3cfc2cf](https://github.com/dasch-swiss/vitrinli/commit/3cfc2cfbbb70ce220e7dc6cd067f1cc108028f4a))
+* **docs:** Map the bug-fix stack in ARCH-MAP and CONTEXT ([0c4b77a](https://github.com/dasch-swiss/vitrinli/commit/0c4b77a1df2a76fcdb5ff1e7d9db835db69fb8b7))
+* **format_handlers:** Record that libpng transforms change the channel count ([1b86d21](https://github.com/dasch-swiss/vitrinli/commit/1b86d219b0342dc80b129a3a8bbe50bd9fc7f773))
+* **metadata:** Record that a printed CIELab ICC profile carries the wall clock ([18f9336](https://github.com/dasch-swiss/vitrinli/commit/18f93365cb4bf0394fd4c1ee46d423e84de94d55))
+* **metadata:** Record that input caps do not bound copied parse state ([bc9e106](https://github.com/dasch-swiss/vitrinli/commit/bc9e106bbb6f8f2a0ea5335e2493932f35bfaca0))
+* **specs:** Add the extended-xmp thread journal ([98f6275](https://github.com/dasch-swiss/vitrinli/commit/98f6275d683d46064ec08caad55f606515ff382e))
+* **specs:** Journal of the headers unit of the Linear bug-fix plan ([67f385a](https://github.com/dasch-swiss/vitrinli/commit/67f385af5a08446ddf58ddd80d65a8ebabe9428c))
+* **specs:** Journal the admission unit of the Linear bug-fix plan ([4bc7001](https://github.com/dasch-swiss/vitrinli/commit/4bc7001a0c69f245123991ef6881f67d2875552c))
+* **specs:** Journal the cli-errors unit ([9baacd7](https://github.com/dasch-swiss/vitrinli/commit/9baacd7d496a8b927c3c1e61db23e0f07cfdc814))
+* **specs:** Journal the deadline unit of the Linear bug-fix plan ([7325d3f](https://github.com/dasch-swiss/vitrinli/commit/7325d3f9c55d79a991103a38376f456fb36d7142))
+* **specs:** Journal the exif-charset unit ([42bded6](https://github.com/dasch-swiss/vitrinli/commit/42bded626cf5806a8931990c69af7b0494326ebf))
+* **specs:** Journal the ifd0-rights unit ([88569ce](https://github.com/dasch-swiss/vitrinli/commit/88569ce3b0ed9b30c2b75168ad3fdd0a1a20817c))
+* **specs:** Journal the kakadu-errors unit ([1b59843](https://github.com/dasch-swiss/vitrinli/commit/1b598430448b7a83c9448cae0bc647515396d4f4))
+* **specs:** Journal the query unit ([28f5617](https://github.com/dasch-swiss/vitrinli/commit/28f5617a30cb82bd4ac4d0898cd0130e1211339f))
+* **specs:** Journal the release-image unit ([4dafaa3](https://github.com/dasch-swiss/vitrinli/commit/4dafaa364d11a1c109db39b748997a49bbda5778))
+* **specs:** Journal the tiff-buffer unit ([1453b3a](https://github.com/dasch-swiss/vitrinli/commit/1453b3af26292d54a66dfb498c264b47ab25692a))
+* **specs:** Journal the tiff-writer unit ([befba35](https://github.com/dasch-swiss/vitrinli/commit/befba35c750d993b6a7a79de7df3a75c512e740a))
+* **specs:** Journal the watermark-cache unit ([534cb44](https://github.com/dasch-swiss/vitrinli/commit/534cb4433216cec085de38c060e7c40d9a3f21e7))
+* **specs:** Plan the fixes for the sipi failures in the rdu-13 bulk ingest ([8aec317](https://github.com/dasch-swiss/vitrinli/commit/8aec317225bbebae72cb11fae3fcd5cb923d80ab))
+* **specs:** Plan the open Linear bug fixes as parallel threads ([36f954a](https://github.com/dasch-swiss/vitrinli/commit/36f954acd13fb296d548a5e9ed9900eb62ed49e0))
+* **throttling:** Record the Full-lane swap for size-restricted requests ([6e049b5](https://github.com/dasch-swiss/vitrinli/commit/6e049b5d144cd3036e4eb94fab7383b344f15a71))
+
+
+### Tests
+
+* **docker:** Smoke-test a CMYK conversion with the built-in profile ([f53a5f4](https://github.com/dasch-swiss/vitrinli/commit/f53a5f487e1be026b149bcc92b4dadc5cf6d1a19))
+* **e2e:** Query a JPX converted from cmyk.tif ([4ff0337](https://github.com/dasch-swiss/vitrinli/commit/4ff03372e432c0dcd94b14be2bdacd644b3a3049))
+* **metadata:** E2e sipi query on a JPEG with a UCS-2LE UserComment ([94ba671](https://github.com/dasch-swiss/vitrinli/commit/94ba6716e423c9a4e66db740c4639be54135f412))
+* **throttling:** Serve a size-restricted region request after the lane swap ([ece026b](https://github.com/dasch-swiss/vitrinli/commit/ece026b20740a2feda75b9322fa826dde7c4a612))
+
+
+### Build System
+
+* **bazel:** Build Exiv2 with iconv on Linux ([bd49c9f](https://github.com/dasch-swiss/vitrinli/commit/bd49c9f81b3bc19363abeea86948fbe05c076091))
+* **bazel:** Fail bin2c on a Git LFS pointer input ([2f57e82](https://github.com/dasch-swiss/vitrinli/commit/2f57e82304aa62b89d3ced1ac445eb78f49a5af0))
+
+
+### Miscellaneous Chores
+
+* **ci:** Drop Docker Scout from CI ([c3e8885](https://github.com/dasch-swiss/vitrinli/commit/c3e8885a1f8aeed39f1139747083cdae1875b97c))
+* **ci:** Fail CI when a test can signal a process it did not spawn ([82e0604](https://github.com/dasch-swiss/vitrinli/commit/82e060459cfc77e3057702b9ee12d2e2d188baa3))
+* **deps:** Ignore the new actix-http and chrono advisories ([2144610](https://github.com/dasch-swiss/vitrinli/commit/2144610e920fe7fc094dc21c894c883b8a1bcebe))
+
 ## [10.1.0](https://github.com/dasch-swiss/vitrinli/compare/v10.0.1...v10.1.0) (2026-11-12)
 
 
