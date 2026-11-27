@@ -131,7 +131,7 @@ engine-side memory budget under one component. Supersedes the former
   - Kakadu error text is per thread (`thread_local` in `KduSipiError`): a returned J2K error carries the text Kakadu raised on the calling thread only; text raised on a `kdu_thread_env` worker is logged but not returned. *Enforcement: `review`* (the `kdu_failure` comment).
   - Adding a format touches a shared registry + dispatch fan-out (~4 sites across 3 files, listed by `tools/format-handlers-fanout.sh`). *Enforcement: `docs-only`* (DUNE-005 deferred a descriptor table until a real 5th format; ADR-0006 is the prior art to check first).
 - **Durable state:** `SipiImage::io` (single writer here); no runtime state.
-- **Fingerprint:** `bd4909f40eab`
+- **Fingerprint:** `ce1c580c19f1`
 
 ### iiifparser
 
